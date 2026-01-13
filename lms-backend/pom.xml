@@ -117,6 +117,13 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- PostgreSQL Driver for Production (Render) -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <scope>runtime</scope>
+        </dependency>
+
         <!-- H2 for integration tests (no MySQL required) -->
         <dependency>
             <groupId>com.h2database</groupId>
