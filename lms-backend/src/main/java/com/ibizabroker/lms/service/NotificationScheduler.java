@@ -7,6 +7,8 @@ import com.ibizabroker.lms.entity.LoanStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -14,6 +16,8 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 public class NotificationScheduler {
+
+    private static final Logger logger = LoggerFactory.getLogger(NotificationScheduler.class);
 
     private final LoanRepository loanRepository;
     private final UsersRepository usersRepository;
@@ -23,7 +27,7 @@ public class NotificationScheduler {
     @SuppressWarnings("null")
     @Scheduled(cron = "0 0 8 * * ?")
     public void sendDueDateReminders() {
-        System.out.println("Running scheduled task: Sending due date reminders...");
+        logger.info("🔔 Running scheduled task: Sending due date reminders...");
 
         // Gửi nhắc nhở cho sách sắp hết hạn (còn 2 ngày)
         LocalDate dueDateInTwoDays = LocalDate.now().plusDays(2);

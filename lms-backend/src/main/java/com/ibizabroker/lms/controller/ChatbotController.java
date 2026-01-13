@@ -2,6 +2,7 @@ package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dto.ChatRequestDto;
 import com.ibizabroker.lms.service.ConversationService;
+import com.ibizabroker.lms.service.RagService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -41,6 +42,7 @@ public class ChatbotController {
     // ⭐ Đã thay đổi sang RestTemplate
     private final RestTemplate restTemplate;
     private final ConversationService conversationService;
+    private final RagService ragService;
     private final UsersRepository usersRepository;
     private final ObjectMapper objectMapper;
     private final ChatRateLimiter chatRateLimiter;
@@ -94,8 +96,13 @@ public class ChatbotController {
             conversationService.saveHistoryToCache(conversationId, history);
         }
 
-        // Build context-aware prompt
-        String augmentedPrompt = history + "\nUser: " + chatRequest.getPrompt();
+        // Retrieve relevant context from library database (RAG)
+        String libraryContext = ragService.retrieveContext(chatRequest.getPrompt());
+        logger.info("📚 RAG Context retrieved: {}", libraryContext);
+
+        // Build context-aware prompt with library knowledge
+        String systemPrompt = "Bạn là trợ lý thư viện trường THCS Phương Tú. Hãy trả lời câu hỏi dựa trên thông tin sau:\n\n" + libraryContext + "\n\n";
+        String augmentedPrompt = systemPrompt + history + "\nUser: " + chatRequest.getPrompt();
 
         // Call AI service (existing logic)
         var payload = Map.of(

@@ -22,7 +22,7 @@ public class BookLocation {
     @Column(name = "shelf_code", length = 20, nullable = false)
     private String shelfCode; // Mã kệ sách (VD: A1-01)
 
-    @Column(name = "row_number")
+    @Column(name = "`row_number`")
     private Integer rowNumber; // Hàng
 
     @Column(name = "position")

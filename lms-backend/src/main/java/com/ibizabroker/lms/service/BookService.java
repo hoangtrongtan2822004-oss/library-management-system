@@ -31,13 +31,13 @@ public class BookService {
     private final CategoryRepository categoryRepository;
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "book-details", key = "'all'")
+    // @Cacheable(value = "book-details", key = "'all'") // DISABLED: Causes ClassCastException with LinkedHashMap
     public List<Books> getAllBooks() {
         return booksRepository.findAll();
     }
 
     @Transactional(readOnly = true)
-    @Cacheable(value = "book-details", key = "#id")
+    // @Cacheable(value = "book-details", key = "#id") // DISABLED: Causes ClassCastException with LinkedHashMap
     public Books getBookById(Integer id) {
         return booksRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Book with id " + id + " does not exist."));

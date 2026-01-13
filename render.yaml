@@ -1,0 +1,90 @@
+# 🚂 Deploy Backend lên Render - MIỄN PHÍ!
+
+## ✅ Tại sao chọn Render?
+
+- ✨ **Miễn phí** (với giới hạn hợp lý)
+- 🗄️ **PostgreSQL/MySQL free tier**
+- ⚡ **Auto deploy** từ GitHub
+- 🔒 **HTTPS tự động**
+- 🐳 **Hỗ trợ Docker** natively
+- 💪 **No credit card required**
+
+---
+
+## 🚀 Bước 1: Chuẩn bị Backend
+
+### 1.1. Tạo Dockerfile (đã có sẵn)
+
+Kiểm tra `lms-backend/Dockerfile`:
+
+```dockerfile
+# Multi-stage build
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
+WORKDIR /app
+COPY pom.xml .
+RUN mvn dependency:go-offline -B
+COPY src ./src
+RUN mvn clean package -DskipTests -B
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN apk add --no-cache wget
+COPY --from=build /app/target/*.jar app.jar
+EXPOSE 8080
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]
+```
+
+### 1.2. Tạo file render.yaml (Blueprint)
+
+```yaml
+services:
+  # Spring Boot Backend
+  - type: web
+    name: lms-backend
+    env: docker
+    dockerfilePath: ./lms-backend/Dockerfile
+    dockerContext: ./lms-backend
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_URL
+        fromDatabase:
+          name: lms-db
+          property: connectionString
+      - key: DB_USERNAME
+        fromDatabase:
+          name: lms-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: lms-db
+          property: password
+      - key: APP_JWT_SECRET
+        generateValue: true
+        length: 32
+      - key: REDIS_HOST
+        fromService:
+          type: redis
+          name: lms-redis
+          property: host
+      - key: REDIS_PORT
+        fromService:
+          type: redis
+          name: lms-redis
+          property: port
+      - key: JAVA_OPTS
+        value: "-Xms256m -Xmx512m"
+    healthCheckPath: /actuator/health
+    autoDeploy: true
+
+databases:
+  # MySQL Database (Free tier: 1GB storage)
+  - name: lms-db
+    databaseName: lms_db
+    user: lms_user
+    plan: starter  # FREE tier
+
+  # Redis (Free tier: 25MB)
+  - name: lms-redis
+    plan: starter  # FREE tier
+    maxmemoryPolicy: allkeys-lru

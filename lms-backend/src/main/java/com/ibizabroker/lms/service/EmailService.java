@@ -7,9 +7,13 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import jakarta.mail.internet.MimeMessage;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Service
 public class EmailService {
+
+    private static final Logger logger = LoggerFactory.getLogger(EmailService.class);
 
     @Autowired
     private JavaMailSender mailSender;
@@ -23,9 +27,9 @@ public class EmailService {
             message.setSubject(subject);
             message.setText(text);
             mailSender.send(message);
-            System.out.println("Email sent successfully to " + to);
+            logger.info("✅ Email sent successfully to {}", to);
         } catch (Exception e) {
-            System.err.println("Error sending email to " + to + ": " + e.getMessage());
+            logger.error("❌ Error sending email to {}: {}", to, e.getMessage(), e);
         }
     }
 
@@ -40,9 +44,9 @@ public class EmailService {
             helper.setSubject(subject);
             helper.setText(htmlContent, true); // true = HTML
             mailSender.send(mimeMessage);
-            System.out.println("HTML Email sent successfully to " + to);
+            logger.info("✅ HTML Email sent successfully to {}", to);
         } catch (Exception e) {
-            System.err.println("Error sending HTML email to " + to + ": " + e.getMessage());
+            logger.error("❌ Error sending HTML email to {}: {}", to, e.getMessage(), e);
         }
     }
 }

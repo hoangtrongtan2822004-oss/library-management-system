@@ -56,6 +56,13 @@ export class BooksListComponent implements OnInit, OnDestroy {
   public loadBooks(goToPage: number = this.page) {
     this.page = goToPage;
     this.listLoading = true;
+
+    // Ensure pageSize is valid
+    if (isNaN(this.pageSize) || this.pageSize <= 0) {
+      console.warn('Invalid pageSize detected, resetting to 10');
+      this.pageSize = 10;
+    }
+
     this.booksService
       .getPublicBooks(
         false,
@@ -70,26 +77,56 @@ export class BooksListComponent implements OnInit, OnDestroy {
       )
       .subscribe({
         next: (data: Page<Book>) => {
-          this.books = data.content;
-          this.totalPages = data.totalPages;
-          this.totalElements = data.totalElements;
+          console.log('API Response:', data);
+          this.books = data.content || [];
+          this.totalPages = data.totalPages || 1;
+          this.totalElements = data.totalElements || 0;
+          console.log('Loaded books:', {
+            page: this.page,
+            totalPages: this.totalPages,
+            totalElements: this.totalElements,
+            booksCount: this.books.length,
+          });
         },
-        error: (err) => this.toastError(err),
+        error: (err) => {
+          console.error('API Error:', err);
+          this.toastError(err);
+        },
       });
   }
 
   setPage(p: number) {
-    this.loadBooks(p);
+    console.log('setPage called:', p);
+    if (p >= 1 && p <= this.totalPages) {
+      this.loadBooks(p);
+    }
   }
   prevPage() {
-    if (this.page > 1) this.loadBooks(this.page - 1);
+    console.log('prevPage called, current page:', this.page);
+    const newPage = this.page - 1;
+    if (newPage >= 1) {
+      this.loadBooks(newPage);
+    }
   }
   nextPage() {
-    if (this.page < this.totalPages) this.loadBooks(this.page + 1);
+    console.log(
+      'nextPage called, current page:',
+      this.page,
+      'totalPages:',
+      this.totalPages
+    );
+    const newPage = this.page + 1;
+    this.loadBooks(newPage);
   }
 
-  changePageSize(event: any) {
-    this.pageSize = +event.target.value;
+  changePageSize(newSize: number | string) {
+    const size = Number(newSize);
+    if (isNaN(size) || size <= 0) {
+      console.error('Invalid page size:', newSize);
+      this.pageSize = 10; // Fallback to default
+    } else {
+      this.pageSize = size;
+    }
     this.loadBooks(1);
   }
 

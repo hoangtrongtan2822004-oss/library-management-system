@@ -1,6 +1,7 @@
 package com.ibizabroker.lms.dao;
 
 import com.ibizabroker.lms.entity.Review;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -22,8 +23,10 @@ public interface ReviewRepository extends JpaRepository<Review, Integer> {
     boolean existsByBookIdAndUser_UserId(Integer bookId, Integer userId);
     
     // Lấy tất cả đánh giá, sắp xếp theo ngày tạo mới nhất
+    @EntityGraph(attributePaths = {"book", "user"})
     List<Review> findAllByOrderByCreatedAtDesc();
 
     // Lấy các đánh giá của một người dùng
+    @EntityGraph(attributePaths = {"book", "user"})
     List<Review> findByUser_UserIdOrderByCreatedAtDesc(Integer userId);
 }

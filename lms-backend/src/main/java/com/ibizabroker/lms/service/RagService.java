@@ -31,26 +31,70 @@ public class RagService {
      */
     public String retrieveContext(String userQuery) {
         try {
+            String queryLower = userQuery.toLowerCase();
+            
+            // Extract keywords from user query (remove common words)
+            String[] keywords = queryLower
+                    .replaceAll("[?!.,;]", "")
+                    .split("\\s+");
+            
             // Simple text search in database
             List<com.ibizabroker.lms.entity.Books> books = booksRepository.findAll().stream()
-                    .filter(book -> book.getName().toLowerCase().contains(userQuery.toLowerCase()) ||
-                            (book.getIsbn() != null && book.getIsbn().contains(userQuery)))
-                    .limit(5)
+                    .filter(book -> {
+                        String bookNameLower = book.getName().toLowerCase();
+                        String isbnLower = book.getIsbn() != null ? book.getIsbn().toLowerCase() : "";
+                        
+                        // Check if any keyword matches book name or ISBN
+                        for (String keyword : keywords) {
+                            // Skip common words
+                            if (keyword.length() <= 2 || 
+                                keyword.equals("sách") || keyword.equals("còn") || 
+                                keyword.equals("không") || keyword.equals("lớp") ||
+                                keyword.equals("của") || keyword.equals("cho") ||
+                                keyword.equals("tìm") || keyword.equals("có")) {
+                                continue;
+                            }
+                            
+                            if (bookNameLower.contains(keyword) || isbnLower.contains(keyword)) {
+                                return true;
+                            }
+                        }
+                        return false;
+                    })
+                    .limit(10)
                     .toList();
 
             if (books == null || books.isEmpty()) {
-                return "No relevant information found in the library database.";
+                return "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu thư viện.";
             }
 
-            StringBuilder context = new StringBuilder();
+            StringBuilder context = new StringBuilder("Thông tin sách trong thư viện:\n");
             books.forEach(book -> {
-                context.append("Title: ").append(book.getName()).append(" | ");
-                context.append("ISBN: ").append(book.getIsbn()).append("\n");
+                context.append("- Tên sách: ").append(book.getName());
+                
+                // Add authors if available
+                if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
+                    context.append(" | Tác giả: ");
+                    context.append(book.getAuthors().stream()
+                            .map(a -> a.getName())
+                            .reduce((a, b) -> a + ", " + b)
+                            .orElse("N/A"));
+                }
+                
+                // Add availability
+                context.append(" | Còn lại: ").append(book.getNumberOfCopiesAvailable()).append(" cuốn");
+                
+                // Add ISBN
+                if (book.getIsbn() != null && !book.getIsbn().isEmpty()) {
+                    context.append(" | ISBN: ").append(book.getIsbn());
+                }
+                
+                context.append("\n");
             });
 
             return context.toString();
         } catch (Exception e) {
-            return "Error retrieving context: " + e.getMessage();
+            return "Lỗi khi truy xuất dữ liệu: " + e.getMessage();
         }
     }
 

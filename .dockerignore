@@ -1,0 +1,36 @@
+# Backend
+lms-backend/target
+lms-backend/logs
+lms-backend/*.log
+lms-backend/.mvn
+lms-backend/mvnw*
+
+# Frontend
+lms-frontend/node_modules
+lms-frontend/dist
+lms-frontend/.angular
+lms-frontend/coverage
+lms-frontend/*.log
+
+# Git
+.git
+.gitignore
+.github
+
+# Documentation
+*.md
+!README.md
+screenshots
+
+# IDE
+.vscode
+.idea
+*.iml
+
+# Docker
+docker-compose*.yml
+Dockerfile*
+.dockerignore
+
+# Environment
+.env*

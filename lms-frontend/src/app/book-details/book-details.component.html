@@ -329,3 +329,103 @@
     </div>
   </div>
 </div>
+
+<!-- Borrow Modal -->
+<div
+  class="modal fade"
+  [class.show]="showBorrowModal"
+  [style.display]="showBorrowModal ? 'block' : 'none'"
+  tabindex="-1"
+  role="dialog"
+>
+  <div class="modal-dialog modal-dialog-centered" role="document">
+    <div class="modal-content bg-dark text-light">
+      <div class="modal-header border-secondary">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-book me-2"></i>Xác nhận mượn sách
+        </h5>
+        <button
+          type="button"
+          class="btn-close btn-close-white"
+          (click)="closeBorrowModal()"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <div *ngIf="book" class="mb-3">
+          <p class="text-muted mb-2">
+            <strong>Tên sách:</strong> {{ book.name }}
+          </p>
+          <p class="text-muted mb-3">
+            <strong>Số lượng còn:</strong>
+            <span class="text-success">{{ book.numberOfCopiesAvailable }}</span>
+          </p>
+        </div>
+
+        <form>
+          <div class="mb-3">
+            <label class="form-label">Họ và tên</label>
+            <input
+              type="text"
+              class="form-control bg-dark text-light border-secondary"
+              [(ngModel)]="borrowData.studentName"
+              name="studentName"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Lớp</label>
+            <input
+              type="text"
+              class="form-control bg-dark text-light border-secondary"
+              [(ngModel)]="borrowData.studentClass"
+              name="studentClass"
+              placeholder="Ví dụ: 8A1"
+              required
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Số ngày mượn</label>
+            <select
+              class="form-select bg-dark text-light border-secondary"
+              [(ngModel)]="borrowData.loanDays"
+              name="loanDays"
+            >
+              <option [value]="7">7 ngày</option>
+              <option [value]="14">14 ngày</option>
+              <option [value]="21">21 ngày</option>
+              <option [value]="30">30 ngày</option>
+            </select>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer border-secondary">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeBorrowModal()"
+          [disabled]="borrowLoading"
+        >
+          Hủy
+        </button>
+        <button
+          type="button"
+          class="btn btn-primary"
+          (click)="confirmBorrow()"
+          [disabled]="borrowLoading"
+        >
+          <span
+            *ngIf="borrowLoading"
+            class="spinner-border spinner-border-sm me-2"
+          ></span>
+          {{ borrowLoading ? "Đang xử lý..." : "Xác nhận mượn" }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div
+  class="modal-backdrop fade"
+  [class.show]="showBorrowModal"
+  *ngIf="showBorrowModal"
+  (click)="closeBorrowModal()"
+></div>

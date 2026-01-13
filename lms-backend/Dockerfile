@@ -1,6 +1,5 @@
 # Stage 1: Build với Maven & Java 21
-# Sử dụng image mới hơn để hỗ trợ Java 21 và cập nhật chứng chỉ SSL
-FROM maven:3.9.9-eclipse-temurin-21 AS build
+FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
 WORKDIR /app
 
 # Copy file cấu hình trước để tận dụng caching
@@ -9,11 +8,19 @@ COPY pom.xml .
 RUN mvn dependency:go-offline -B
 
 COPY src ./src
-RUN mvn clean package -DskipTests
+RUN mvn clean package -DskipTests -B
 
-# Stage 2: Chạy ứng dụng với Java 21
-FROM eclipse-temurin:21-jdk-jammy
+# Stage 2: Runtime với JRE (nhẹ hơn JDK)
+FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app
-COPY --from=build /app/target/lms-0.0.1-SNAPSHOT.jar app.jar
+
+# Install wget cho health checks
+RUN apk add --no-cache wget
+
+# Copy JAR từ build stage
+COPY --from=build /app/target/*.jar app.jar
+
 EXPOSE 8080
-ENTRYPOINT ["java", "-jar", "app.jar"]
+
+# Support JAVA_OPTS từ environment variable
+ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]

@@ -24,12 +24,13 @@
 
   <div class="d-flex align-items-center" style="gap: 8px">
     <small class="text-muted me-2">
-      {{ totalElements }} results • Page {{ page }} / {{ totalPages }}
+      {{ totalElements }} results • Page {{ page }} / {{ totalPages || "?" }}
     </small>
     <button
       class="btn btn-sm btn-outline-secondary"
       (click)="setPage(1)"
       [disabled]="page === 1"
+      title="Về trang đầu"
     >
       « Đầu
     </button>
@@ -37,20 +38,24 @@
       class="btn btn-sm btn-outline-secondary"
       (click)="prevPage()"
       [disabled]="page === 1"
+      title="Trang trước"
     >
       ‹ Trước
     </button>
     <button
       class="btn btn-sm btn-outline-secondary"
       (click)="nextPage()"
-      [disabled]="page === totalPages"
+      [disabled]="false"
+      title="Trang tiếp theo"
+      style="min-width: 80px"
     >
       Tiếp ›
     </button>
     <button
       class="btn btn-sm btn-outline-secondary"
-      (click)="setPage(totalPages)"
-      [disabled]="page === totalPages"
+      (click)="setPage(totalPages || 1)"
+      [disabled]="page === totalPages && totalPages > 0"
+      title="Về trang cuối"
     >
       Cuối »
     </button>
@@ -58,10 +63,10 @@
     <select
       class="form-select form-select-sm ms-2"
       style="width: auto"
-      [ngModel]="pageSize"
-      (change)="changePageSize($event)"
+      [(ngModel)]="pageSize"
+      (ngModelChange)="changePageSize($event)"
     >
-      <option *ngFor="let s of pageSizes" [ngValue]="s">{{ s }} / trang</option>
+      <option *ngFor="let s of pageSizes" [value]="s">{{ s }} / trang</option>
     </select>
   </div>
 </div>

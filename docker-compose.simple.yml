@@ -1,0 +1,142 @@
+# 🚀 One-Command Docker Compose - Chạy toàn bộ stack bằng 1 lệnh!
+# Usage: docker-compose -f docker-compose.simple.yml up --build
+
+version: "3.8"
+
+services:
+  # MySQL Database
+  mysql:
+    image: mysql:8.0
+    container_name: lms-mysql-simple
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: lms_db
+      MYSQL_USER: lms_user
+      MYSQL_PASSWORD: lms_password
+    ports:
+      - "3307:3306" # Tránh conflict với MySQL local (nếu có)
+    volumes:
+      - mysql_data_simple:/var/lib/mysql
+      - ./lms_db_backup.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - lms-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: lms-redis-simple
+    restart: unless-stopped
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data_simple:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    networks:
+      - lms-network
+
+  # Spring Boot Backend
+  backend:
+    build:
+      context: ./lms-backend
+      dockerfile: Dockerfile
+    container_name: lms-backend-simple
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      # Database connection
+      DB_URL: jdbc:mysql://mysql:3306/lms_db?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+      DB_USERNAME: lms_user
+      DB_PASSWORD: lms_password
+
+      # JWT Secret (CHANGE THIS IN PRODUCTION!)
+      APP_JWT_SECRET: your-super-secret-jwt-key-change-me-in-production-32-bytes-minimum
+
+      # Redis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      # Gemini AI (optional - for chatbot)
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
+
+      # Email (optional - for password reset)
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
+
+      # Spring profile
+      SPRING_PROFILES_ACTIVE: prod
+
+      # JVM Options
+      JAVA_OPTS: -Xms256m -Xmx512m
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    networks:
+      - lms-network
+
+  # Angular Frontend
+  frontend:
+    build:
+      context: ./lms-frontend
+      dockerfile: Dockerfile
+    container_name: lms-frontend-simple
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:80/",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - lms-network
+
+volumes:
+  mysql_data_simple:
+    driver: local
+  redis_data_simple:
+    driver: local
+
+networks:
+  lms-network:
+    driver: bridge

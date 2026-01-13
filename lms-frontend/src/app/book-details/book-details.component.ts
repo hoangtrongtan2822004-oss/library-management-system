@@ -11,6 +11,7 @@ import {
   ReviewComment,
 } from '../services/review.service';
 import { WishlistService } from '../services/wishlist.service'; // <--- MỚI
+import { CirculationService } from '../services/circulation.service';
 import { SocialSharingService } from '../services/social-sharing.service';
 import { ToastrService } from 'ngx-toastr';
 import { ApiService } from '../services/api.service';
@@ -37,6 +38,16 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
   reviewComments: { [reviewId: number]: ReviewComment[] } = {};
   newCommentText: { [reviewId: number]: string } = {};
 
+  // Borrow modal
+  showBorrowModal = false;
+  borrowData = {
+    studentName: '',
+    studentClass: '',
+    quantity: 1,
+    loanDays: 14,
+  };
+  borrowLoading = false;
+
   private destroy$ = new Subject<void>();
   errorMessage: any;
 
@@ -45,6 +56,7 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
     private booksService: BooksService,
     private userAuthService: UserAuthService,
     private wishlistService: WishlistService, // <--- Inject Service
+    private circulationService: CirculationService,
     private router: Router,
     private http: HttpClient,
     private reviewService: ReviewService,
@@ -241,7 +253,63 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
   }
 
   navigateToBorrow(): void {
-    this.router.navigate(['/borrow-book']);
+    if (!this.book) return;
+    const userName = this.userAuthService.getName();
+    if (userName) {
+      this.borrowData.studentName = userName;
+    }
+    this.borrowData.quantity = 1;
+    this.borrowData.loanDays = 14;
+    this.borrowData.studentClass = '';
+    this.showBorrowModal = true;
+  }
+
+  closeBorrowModal(): void {
+    this.showBorrowModal = false;
+  }
+
+  confirmBorrow(): void {
+    if (
+      !this.book ||
+      !this.borrowData.studentName ||
+      !this.borrowData.studentClass
+    ) {
+      this.toastr.warning('Vui lòng điền đầy đủ Họ tên và Lớp!');
+      return;
+    }
+
+    const userId = this.userAuthService.getUserId();
+    if (!userId) {
+      this.toastr.error('Vui lòng đăng nhập để mượn sách');
+      return;
+    }
+
+    this.borrowLoading = true;
+    const payload = {
+      bookId: this.book.id,
+      memberId: userId,
+      loanDays: this.borrowData.loanDays,
+    };
+
+    this.circulationService
+      .loan(payload)
+      .pipe(
+        finalize(() => (this.borrowLoading = false)),
+        takeUntil(this.destroy$)
+      )
+      .subscribe({
+        next: () => {
+          this.toastr.success(`Đã mượn thành công sách "${this.book?.name}".`);
+          this.closeBorrowModal();
+          if (this.book) {
+            this.book.numberOfCopiesAvailable--;
+          }
+        },
+        error: (err) => {
+          const errorMsg = err?.error?.message || 'Lỗi khi mượn sách.';
+          this.toastr.error(errorMsg);
+        },
+      });
   }
 
   // --- SOCIAL FEATURES ---

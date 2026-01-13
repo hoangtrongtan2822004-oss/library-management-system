@@ -36,6 +36,7 @@ public class ImportExportController {
         return importExportService.importBooks(file);
     }
 
+    @SuppressWarnings("null")
     @GetMapping("/export/users")
     public ResponseEntity<ByteArrayResource> exportUsers() {
         ByteArrayResource data = importExportService.exportUsersWorkbook();
@@ -48,6 +49,7 @@ public class ImportExportController {
                 .body(data);
     }
 
+    @SuppressWarnings("null")
     @GetMapping("/export/books")
     public ResponseEntity<ByteArrayResource> exportBooks() {
         ByteArrayResource data = importExportService.exportBooksWorkbook();
@@ -60,6 +62,7 @@ public class ImportExportController {
                 .body(data);
     }
 
+    @SuppressWarnings("null")
     @GetMapping("/import/template/users")
     public ResponseEntity<ByteArrayResource> usersTemplate() {
         ByteArrayResource data = importExportService.usersTemplate();
@@ -72,6 +75,7 @@ public class ImportExportController {
                 .body(data);
     }
 
+    @SuppressWarnings("null")
     @GetMapping("/import/template/books")
     public ResponseEntity<ByteArrayResource> booksTemplate() {
         ByteArrayResource data = importExportService.booksTemplate();
