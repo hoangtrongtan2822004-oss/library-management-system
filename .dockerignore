@@ -1,9 +1,7 @@
-# Backend
+# Backend - only exclude build artifacts
 lms-backend/target
 lms-backend/logs
 lms-backend/*.log
-lms-backend/.mvn
-lms-backend/mvnw*
 
 # Frontend
 lms-frontend/node_modules
