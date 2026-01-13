@@ -65,3 +65,7 @@
 2026-01-13T14:07:25.391+07:00  INFO 11124 --- [main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 1 endpoint beneath base path '/actuator'
 2026-01-13T14:07:28.629+07:00  INFO 11124 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/'
 2026-01-13T14:07:28.719+07:00  INFO 11124 --- [main] c.i.lms.LibraryManagementApplication     : Started LibraryManagementApplication in 14.897 seconds (process running for 15.461)
+2026-01-13T14:21:09.342+07:00  WARN 11124 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1m50s298ms798µs900ns).
+2026-01-13T14:36:48.575+07:00  WARN 11124 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=12m39s197ms123µs800ns).
+2026-01-13T15:18:54.804+07:00  WARN 11124 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=34m36s67ms131µs).
+2026-01-13T15:47:35.332+07:00  WARN 11124 --- [HikariPool-1:housekeeper] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=25m39s445ms289µs900ns).
