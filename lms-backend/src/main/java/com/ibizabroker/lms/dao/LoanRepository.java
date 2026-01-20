@@ -29,10 +29,10 @@ import java.util.Map;
  */
 public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanRepositoryCustom {
 
-    Page<Loan> findByMemberId(Integer memberId, Pageable pageable);
-    List<Loan> findByMemberId(Integer memberId);
-    List<Loan> findByMemberIdAndStatus(Integer memberId, LoanStatus status);
-    List<Loan> findByBookId(Integer bookId);
+    Page<Loan> findByMember_Id(Integer memberId, Pageable pageable);
+    List<Loan> findByMember_Id(Integer memberId);
+    List<Loan> findByMember_IdAndStatus(Integer memberId, LoanStatus status);
+    List<Loan> findByBook_Id(Integer bookId);
     long countByStatus(LoanStatus status);
     List<Loan> findTop5ByOrderByLoanDateDesc();
     List<Loan> findByStatus(LoanStatus status);
@@ -49,7 +49,7 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "    ELSE 0 " +
            "  END AS long" +
            ") ) " +
-           "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
            "ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findAllLoanDetails();
 
@@ -65,24 +65,24 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "    ELSE 0 " +
            "  END AS long" +
            ") ) " +
-           "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
-           "WHERE l.memberId = :memberId ORDER BY l.loanDate DESC")
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
+           "WHERE l.member.userId = :memberId ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findLoanDetailsByMemberId(@Param("memberId") Integer memberId);
 
-    @Query("SELECT l.bookId as bookId, COUNT(l.bookId) as loanCount FROM Loan l GROUP BY l.bookId ORDER BY loanCount DESC")
+    @Query("SELECT l.book.id as bookId, COUNT(l.book.id) as loanCount FROM Loan l GROUP BY l.book.id ORDER BY loanCount DESC")
     List<Map<String, Object>> findMostLoanedBooks(Pageable pageable);
 
-    @Query("SELECT l.memberId as memberId, COUNT(l.memberId) as loanCount FROM Loan l GROUP BY l.memberId ORDER BY loanCount DESC")
+    @Query("SELECT l.member.userId as memberId, COUNT(l.member.userId) as loanCount FROM Loan l GROUP BY l.member.userId ORDER BY loanCount DESC")
     List<Map<String, Object>> findTopBorrowers(Pageable pageable);
 
     @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
-           "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
            "WHERE l.fineStatus = 'UNPAID' ORDER BY l.returnDate DESC")
     List<FineDetailsDto> findUnpaidFineDetails();
 
     @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
-           "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
-           "WHERE l.fineStatus = 'UNPAID' AND l.memberId = :memberId ORDER BY l.returnDate DESC")
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
+           "WHERE l.fineStatus = 'UNPAID' AND l.member.userId = :memberId ORDER BY l.returnDate DESC")
     List<FineDetailsDto> findUnpaidFineDetailsByMemberId(@Param("memberId") Integer memberId);
     
     List<Loan> findByStatusAndDueDate(LoanStatus status, LocalDate dueDate);
@@ -130,7 +130,7 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "    ELSE 0 " +
            "  END AS long" +
            ") ) " +
-           "FROM Loan l JOIN Books b ON l.bookId = b.id JOIN Users u ON l.memberId = u.userId " +
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
            "WHERE l.loanDate BETWEEN :startDate AND :endDate " +
            "ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findLoanDetailsForReport(@Param("startDate") LocalDate startDate, @Param("endDate") LocalDate endDate);
