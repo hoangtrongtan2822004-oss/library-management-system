@@ -30,5 +30,5 @@ public enum FineStatus {
     /**
      * Thanh toán một phần (optional - cho future enhancement)
      */
-    PARTIALLY_PAID
+    PARTIALLY_PAID, NO_FINE
 }
