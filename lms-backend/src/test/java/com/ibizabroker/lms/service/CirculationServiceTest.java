@@ -41,6 +41,7 @@ class CirculationServiceTest {
         testBook.setNumberOfCopiesAvailable(5);
     }
 
+    @SuppressWarnings("null")
     @Test
     void testBorrowBook_Success() {
         when(booksRepository.findById(1)).thenReturn(Optional.of(testBook));

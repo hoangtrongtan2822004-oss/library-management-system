@@ -12,6 +12,10 @@ import java.util.Optional;
 public interface WishlistRepository extends JpaRepository<Wishlist, Long> {
     List<Wishlist> findByUser(Users user);
     
+    // Sorting methods
+    List<Wishlist> findByUserOrderByCreatedAtDesc(Users user); // Mới nhất trước
+    List<Wishlist> findByUserOrderByBook_NameAsc(Users user); // Sắp xếp theo tên sách A-Z (book.name)
+    
     boolean existsByUserAndBook(Users user, Books book);
     
     Optional<Wishlist> findByUserAndBook(Users user, Books book);

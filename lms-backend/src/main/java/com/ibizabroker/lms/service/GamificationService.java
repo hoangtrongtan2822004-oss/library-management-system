@@ -1,8 +1,7 @@
 package com.ibizabroker.lms.service;
 
 import com.ibizabroker.lms.dao.*;
-import com.ibizabroker.lms.dto.GamificationStatsDto;
-import com.ibizabroker.lms.dto.LeaderboardEntryDto;
+import com.ibizabroker.lms.dto.*;
 import com.ibizabroker.lms.entity.*;
 import com.ibizabroker.lms.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +28,13 @@ public class GamificationService {
     private final ReadingChallengeRepository challengeRepository;
     private final UserChallengeProgressRepository progressRepository;
     private final UsersRepository usersRepository;
+    
+    // Feature 9: New gamification features
+    private final RewardRepository rewardRepository;
+    private final UserRewardRepository userRewardRepository;
+    private final DailyQuestRepository dailyQuestRepository;
+    private final UserQuestProgressRepository questProgressRepository;
+    private final PointTransactionRepository transactionRepository;
 
     // ============ POINTS ============
     
@@ -261,5 +267,231 @@ public class GamificationService {
                 challenges.stream().filter(c -> !c.getIsCompleted()).count(),
                 challenges.stream().filter(UserChallengeProgress::getIsCompleted).count()
         );
+    }
+
+    // ============ REWARDS SYSTEM ============
+
+    @Transactional(readOnly = true)
+    public RewardItemsResponse getRewardItems(Integer userId) {
+        UserPoints userPoints = getUserPoints(userId);
+        List<Reward> rewards = rewardRepository.findByAvailableTrue();
+        
+        List<RewardItemsResponse.RewardItemDTO> rewardDTOs = rewards.stream()
+                .map(reward -> {
+                    boolean canAfford = userPoints.getTotalPoints() >= reward.getCost();
+                    long redemptionsCount = userRewardRepository.countByRewardId(reward.getId());
+                    boolean available = reward.getAvailable() && 
+                            (reward.getMaxRedemptions() == null || redemptionsCount < reward.getMaxRedemptions());
+                    
+                    return new RewardItemsResponse.RewardItemDTO(
+                            reward.getId(),
+                            reward.getName(),
+                            reward.getDescription(),
+                            reward.getIcon(),
+                            reward.getCost(),
+                            reward.getCategory(),
+                            available,
+                            canAfford
+                    );
+                })
+                .collect(Collectors.toList());
+        
+        return new RewardItemsResponse(rewardDTOs, userPoints.getTotalPoints());
+    }
+
+    @SuppressWarnings("null")
+    @Transactional
+    public void redeemReward(Integer userId, Long rewardId) {
+        UserPoints userPoints = getUserPoints(userId);
+        Reward reward = rewardRepository.findById(rewardId)
+                .orElseThrow(() -> new NotFoundException("Phần thưởng không tồn tại"));
+        
+        // Validate
+        if (!reward.getAvailable()) {
+            throw new IllegalStateException("Phần thưởng không khả dụng");
+        }
+        if (userPoints.getTotalPoints() < reward.getCost()) {
+            throw new IllegalStateException("Không đủ điểm để đổi phần thưởng này");
+        }
+        
+        // Check redemption limit
+        if (reward.getMaxRedemptions() != null) {
+            long count = userRewardRepository.countByRewardId(rewardId);
+            if (count >= reward.getMaxRedemptions()) {
+                throw new IllegalStateException("Phần thưởng đã hết lượt đổi");
+            }
+        }
+        
+        // Deduct points
+        userPoints.setTotalPoints(userPoints.getTotalPoints() - reward.getCost());
+        userPoints.setUpdatedAt(LocalDateTime.now());
+        pointsRepository.save(userPoints);
+        
+        // Create redemption record
+        UserReward userReward = new UserReward();
+        userReward.setUserId(userId);
+        userReward.setRewardId(rewardId);
+        userReward.setPointsSpent(reward.getCost());
+        userReward.setRedeemedAt(LocalDateTime.now());
+        
+        // Set expiry (30 days for extension rewards)
+        if ("extension".equals(reward.getCategory())) {
+            userReward.setExpiresAt(LocalDateTime.now().plusDays(30));
+        }
+        
+        userRewardRepository.save(userReward);
+        
+        // Log transaction
+        logPointTransaction(userId, -reward.getCost(), "reward", 
+                "Đổi phần thưởng: " + reward.getName(), rewardId, userPoints.getTotalPoints());
+    }
+
+    // ============ DAILY QUESTS ============
+
+    @Transactional(readOnly = true)
+    public DailyQuestsResponse getDailyQuests(Integer userId) {
+        List<DailyQuest> quests = dailyQuestRepository.findByActiveTrue();
+        LocalDate today = LocalDate.now();
+        
+        List<DailyQuestsResponse.DailyQuestDTO> questDTOs = quests.stream()
+                .map(quest -> {
+                    UserQuestProgress progress = questProgressRepository
+                            .findByUserIdAndQuestIdAndDate(userId, quest.getId(), today)
+                            .orElse(null);
+                    
+                    return new DailyQuestsResponse.DailyQuestDTO(
+                            quest.getId(),
+                            quest.getTitle(),
+                            quest.getDescription(),
+                            quest.getPoints(),
+                            progress != null && progress.getCompleted(),
+                            progress != null ? progress.getProgress() : 0,
+                            quest.getTarget()
+                    );
+                })
+                .collect(Collectors.toList());
+        
+        return new DailyQuestsResponse(questDTOs);
+    }
+
+    @Transactional
+    public void updateQuestProgress(Integer userId, String questType) {
+        DailyQuest quest = dailyQuestRepository.findByQuestType(questType);
+        if (quest == null || !quest.getActive()) {
+            return;
+        }
+        
+        LocalDate today = LocalDate.now();
+        UserQuestProgress progress = questProgressRepository
+                .findByUserIdAndQuestIdAndDate(userId, quest.getId(), today)
+                .orElseGet(() -> {
+                    UserQuestProgress newProgress = new UserQuestProgress();
+                    newProgress.setUserId(userId);
+                    newProgress.setQuestId(quest.getId());
+                    newProgress.setDate(today);
+                    newProgress.setProgress(0);
+                    newProgress.setCompleted(false);
+                    return newProgress;
+                });
+        
+        if (progress.getCompleted()) {
+            return; // Already completed today
+        }
+        
+        progress.setProgress(progress.getProgress() + 1);
+        
+        // Check if completed
+        if (progress.getProgress() >= quest.getTarget()) {
+            progress.setCompleted(true);
+            progress.setPointsEarned(quest.getPoints());
+            
+            // Award points
+            awardPoints(userId, quest.getPoints(), "Hoàn thành nhiệm vụ: " + quest.getTitle());
+            
+            // Log transaction
+            logPointTransaction(userId, quest.getPoints(), "quest", 
+                    "Nhiệm vụ: " + quest.getTitle(), quest.getId(), 
+                    getUserPoints(userId).getTotalPoints());
+        }
+        
+        questProgressRepository.save(progress);
+    }
+
+    // ============ POINT HISTORY ============
+
+    @Transactional(readOnly = true)
+    public PointHistoryResponse getPointHistory(Integer userId, int days) {
+        LocalDateTime startDate = LocalDateTime.now().minusDays(days);
+        List<PointTransaction> transactions = transactionRepository
+                .findByUserIdAndTimestampAfter(userId, startDate);
+        
+        // Group by date and aggregate
+        java.util.Map<LocalDate, java.util.List<PointTransaction>> grouped = transactions.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        t -> t.getTimestamp().toLocalDate()
+                ));
+        
+        List<PointHistoryResponse.PointHistoryDTO> history = grouped.entrySet().stream()
+                .map(entry -> {
+                    LocalDate date = entry.getKey();
+                    List<PointTransaction> dayTransactions = entry.getValue();
+                    
+                    int totalChange = dayTransactions.stream()
+                            .mapToInt(PointTransaction::getPoints)
+                            .sum();
+                    
+                    PointTransaction lastTransaction = dayTransactions.get(0);
+                    String reason = dayTransactions.size() == 1 
+                            ? lastTransaction.getReason()
+                            : dayTransactions.size() + " giao dịch";
+                    
+                    return new PointHistoryResponse.PointHistoryDTO(
+                            date,
+                            lastTransaction.getBalanceAfter(),
+                            totalChange,
+                            reason
+                    );
+                })
+                .sorted((a, b) -> b.getDate().compareTo(a.getDate()))
+                .collect(Collectors.toList());
+        
+        return new PointHistoryResponse(history);
+    }
+
+    @Transactional
+    public void logPointTransaction(Integer userId, Integer points, String type, 
+                                    String reason, Long referenceId, Integer balanceAfter) {
+        PointTransaction transaction = new PointTransaction();
+        transaction.setUserId(userId);
+        transaction.setPoints(points);
+        transaction.setTransactionType(type);
+        transaction.setReason(reason);
+        transaction.setReferenceId(referenceId);
+        transaction.setBalanceAfter(balanceAfter);
+        transaction.setTimestamp(LocalDateTime.now());
+        transactionRepository.save(transaction);
+    }
+
+    // ============ STREAK FREEZE ============
+
+    @Transactional
+    public void purchaseStreakFreeze(Integer userId) {
+        UserPoints userPoints = getUserPoints(userId);
+        final int FREEZE_COST = 200;
+        
+        if (userPoints.getTotalPoints() < FREEZE_COST) {
+            throw new IllegalStateException("Không đủ điểm để mua Streak Freeze (cần 200 điểm)");
+        }
+        
+        // Deduct points
+        userPoints.setTotalPoints(userPoints.getTotalPoints() - FREEZE_COST);
+        userPoints.setStreakFreezeCount(userPoints.getStreakFreezeCount() + 1);
+        userPoints.setUpdatedAt(LocalDateTime.now());
+        pointsRepository.save(userPoints);
+        
+        // Log transaction
+        logPointTransaction(userId, -FREEZE_COST, "special", 
+                "Mua Streak Freeze (❄️ +1 lần bảo vệ chuỗi)", null, 
+                userPoints.getTotalPoints());
     }
 }

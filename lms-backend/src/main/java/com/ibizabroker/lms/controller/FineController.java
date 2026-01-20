@@ -2,6 +2,7 @@ package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dao.LoanRepository;
 import com.ibizabroker.lms.dto.FineDetailsDto;
+import com.ibizabroker.lms.entity.FineStatus;
 import com.ibizabroker.lms.entity.Loan;
 import com.ibizabroker.lms.exceptions.NotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class FineController {
         @SuppressWarnings("null")
         Loan loan = loanRepository.findById(loanId)
                 .orElseThrow(() -> new NotFoundException("Loan not found"));
-        loan.setFineStatus("PAID");
+        loan.setFineStatus(FineStatus.PAID);  // ✅ Use enum
         loanRepository.save(loan);
         return ResponseEntity.ok().build();
     }

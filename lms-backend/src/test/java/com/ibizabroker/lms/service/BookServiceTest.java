@@ -70,14 +70,16 @@ class BookServiceTest {
         verify(booksRepository).findAll();
     }
 
+    @SuppressWarnings("null")
     @Test
     void testDeleteBook_Success() {
         when(booksRepository.findById(1)).thenReturn(Optional.of(book1));
-        doNothing().when(booksRepository).deleteById(1);
+        doNothing().when(booksRepository).delete(any(Books.class));
 
         bookService.deleteBook(1);
 
         verify(booksRepository).findById(1);
-        verify(booksRepository).deleteById(1);
+        // ✅ Sửa: Service gọi delete(entity) chứ không phải deleteById(id)
+        verify(booksRepository).delete(any(Books.class));
     }
 }

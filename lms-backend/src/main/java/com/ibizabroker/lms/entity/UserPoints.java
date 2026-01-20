@@ -35,6 +35,9 @@ public class UserPoints {
     @Column(name = "streak_days", nullable = false)
     private Integer streakDays = 0; // Số ngày liên tục hoạt động
 
+    @Column(name = "streak_freeze_count", nullable = false)
+    private Integer streakFreezeCount = 0; // Số lần freeze streak đã mua
+
     @Column(name = "last_activity_date")
     private LocalDateTime lastActivityDate;
 
@@ -68,6 +71,9 @@ public class UserPoints {
 
     public Integer getStreakDays() { return streakDays; }
     public void setStreakDays(Integer streakDays) { this.streakDays = streakDays; }
+
+    public Integer getStreakFreezeCount() { return streakFreezeCount; }
+    public void setStreakFreezeCount(Integer streakFreezeCount) { this.streakFreezeCount = streakFreezeCount; }
 
     public LocalDateTime getLastActivityDate() { return lastActivityDate; }
     public void setLastActivityDate(LocalDateTime lastActivityDate) { this.lastActivityDate = lastActivityDate; }

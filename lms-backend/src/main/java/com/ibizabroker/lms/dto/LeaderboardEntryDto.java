@@ -1,36 +1,37 @@
 package com.ibizabroker.lms.dto;
 
-public class LeaderboardEntryDto {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * 🏆 Leaderboard Entry Response DTO
+ * 
+ * Dùng cho endpoint GET /api/public/gamification/leaderboard
+ * 
+ * 📌 Leaderboard Fields:
+ * - userId: ID người dùng
+ * - userName: Tên người dùng
+ * - totalPoints: Tổng điểm tích lũy
+ * - level: Cấp độ hiện tại
+ * - badgesCount: Số huy hiệu đã đạt
+ * 
+ * 👉 Pattern: Read-Only Response DTO
+ * - Chỉ dùng cho response (output)
+ * - Sắp xếp theo totalPoints DESC
+ * - Tính toán từ User + Gamification tables
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class LeaderboardEntryDto {
     private Integer userId;
     private String userName;
     private Integer totalPoints;
     private Integer level;
     private Integer badgesCount;
-
-    public LeaderboardEntryDto() {}
-
-    public LeaderboardEntryDto(Integer userId, String userName, Integer totalPoints, Integer level, Integer badgesCount) {
-        this.userId = userId;
-        this.userName = userName;
-        this.totalPoints = totalPoints;
-        this.level = level;
-        this.badgesCount = badgesCount;
-    }
-
-    // Getters and Setters
-    public Integer getUserId() { return userId; }
-    public void setUserId(Integer userId) { this.userId = userId; }
-
-    public String getUserName() { return userName; }
-    public void setUserName(String userName) { this.userName = userName; }
-
-    public Integer getTotalPoints() { return totalPoints; }
-    public void setTotalPoints(Integer totalPoints) { this.totalPoints = totalPoints; }
-
-    public Integer getLevel() { return level; }
-    public void setLevel(Integer level) { this.level = level; }
-
-    public Integer getBadgesCount() { return badgesCount; }
-    public void setBadgesCount(Integer badgesCount) { this.badgesCount = badgesCount; }
 }

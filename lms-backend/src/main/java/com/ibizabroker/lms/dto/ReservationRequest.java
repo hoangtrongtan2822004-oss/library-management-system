@@ -1,18 +1,46 @@
 package com.ibizabroker.lms.dto;
+
+import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotNull;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+/**
+ * 📝 Book Reservation Request DTO
+ * 
+ * Dùng cho endpoint POST /api/user/reservations
+ * 
+ * 📌 Business Logic:
+ * - User đặt chỗ khi sách hết (availableQuantity = 0)
+ * - Khi có sách trả về → notify user theo thứ tự reservation
+ * - Reservation có thời hạn (7-14 ngày), quá hạn sẽ hủy tự động
+ * 
+ * 📌 Validation Rules:
+ * - bookId: Bắt buộc
+ * - memberId: Bắt buộc (hoặc lấy từ JWT token)
+ * - quantity: Optional, >= 1 nếu có (mặc định = 1)
+ * - studentName: Optional (ghi chú)
+ * - studentClass: Optional (ghi chú)
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReservationRequest {
-  private Integer bookId; private Integer memberId;
-  public Integer getBookId(){ return bookId; }  public void setBookId(Integer v){ this.bookId=v; }
-  public Integer getMemberId(){ return memberId; } public void setMemberId(Integer v){ this.memberId=v; }
-  private Integer quantity;      // Số lượng đặt chỗ
-  private String studentName;    // Tên học sinh (dùng để đối chiếu/ghi chú)
-  private String studentClass;   // Lớp học sinh
-
-  public Integer getQuantity() { return quantity; }
-  public void setQuantity(Integer quantity) { this.quantity = quantity; }
-
-  public String getStudentName() { return studentName; }
-  public void setStudentName(String studentName) { this.studentName = studentName; }
-
-  public String getStudentClass() { return studentClass; }
-  public void setStudentClass(String studentClass) { this.studentClass = studentClass; }
+    
+    @NotNull(message = "Book ID không được để trống")
+    private Integer bookId;
+    
+    @NotNull(message = "Member ID không được để trống")
+    private Integer memberId;
+    
+    @Min(value = 1, message = "Số lượng đặt chỗ phải >= 1")
+    private Integer quantity;
+    
+    private String studentName;
+    private String studentClass;
 }

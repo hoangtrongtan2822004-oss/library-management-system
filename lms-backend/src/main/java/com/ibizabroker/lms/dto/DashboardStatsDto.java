@@ -1,41 +1,40 @@
 package com.ibizabroker.lms.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+import java.math.BigDecimal;
+
+/**
+ * 📊 Dashboard Statistics Response DTO (Admin)
+ * 
+ * Dùng cho endpoint GET /api/admin/dashboard/stats
+ * 
+ * 📌 Metrics:
+ * - totalBooks: Tổng số đầu sách trong hệ thống
+ * - totalUsers: Tổng số người dùng
+ * - activeLoans: Số phiếu mượn đang hoạt động (chưa trả)
+ * - overdueLoans: Số phiếu mượn quá hạn
+ * - totalFines: Tổng tiền phạt (tất cả)
+ * - totalUnpaidFines: Tổng tiền phạt chưa thanh toán
+ * 
+ * 👉 Pattern: Read-Only Response DTO
+ * - Chỉ dùng cho response (output)
+ * - Tính toán từ nhiều bảng (Books, Users, Loans, Fines)
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class DashboardStatsDto {
-    private long totalBooks;
-    private long totalUsers;
-    private long activeLoans;
-    private long overdueLoans;
-
-    // Tổng tiền phạt (tất cả) và tổng tiền phạt chưa thanh toán
-    private java.math.BigDecimal totalFines;
-    private java.math.BigDecimal totalUnpaidFines;
-
-    // Constructors
-    public DashboardStatsDto() {}
-
-    public DashboardStatsDto(long totalBooks, long totalUsers, long activeLoans, long overdueLoans) {
-        this.totalBooks = totalBooks;
-        this.totalUsers = totalUsers;
-        this.activeLoans = activeLoans;
-        this.overdueLoans = overdueLoans;
-    }
-
-    // Getters and Setters
-    public long getTotalBooks() { return totalBooks; }
-    public void setTotalBooks(long totalBooks) { this.totalBooks = totalBooks; }
-
-    public long getTotalUsers() { return totalUsers; }
-    public void setTotalUsers(long totalUsers) { this.totalUsers = totalUsers; }
-
-    public long getActiveLoans() { return activeLoans; }
-    public void setActiveLoans(long activeLoans) { this.activeLoans = activeLoans; }
-
-    public long getOverdueLoans() { return overdueLoans; }
-    public void setOverdueLoans(long overdueLoans) { this.overdueLoans = overdueLoans; }
-
-    public java.math.BigDecimal getTotalFines() { return totalFines; }
-    public void setTotalFines(java.math.BigDecimal totalFines) { this.totalFines = totalFines; }
-
-    public java.math.BigDecimal getTotalUnpaidFines() { return totalUnpaidFines; }
-    public void setTotalUnpaidFines(java.math.BigDecimal totalUnpaidFines) { this.totalUnpaidFines = totalUnpaidFines; }
+    private Long totalBooks;
+    private Long totalUsers;
+    private Long activeLoans;
+    private Long overdueLoans;
+    private BigDecimal totalFines;
+    private BigDecimal totalUnpaidFines;
 }

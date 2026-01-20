@@ -236,6 +236,7 @@ public class ReviewController {
         return ResponseEntity.ok(Map.of("likesCount", likesCount, "liked", true));
     }
     
+    @SuppressWarnings("null")
     @DeleteMapping("/api/reviews/{reviewId}/like")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, Object>> unlikeReview(
@@ -311,32 +312,32 @@ public class ReviewController {
 
     private ReviewDto toDto(Review review, Integer currentUserId) {
         ReviewDto dto = new ReviewDto();
-        dto.id = review.getId();
-        dto.bookId = review.getBook().getId();
-        dto.bookName = review.getBook().getName();
-        dto.userId = review.getUser().getUserId();
-        dto.userName = review.getUser().getName();
-        dto.rating = review.getRating();
-        dto.comment = review.getComment();
-        dto.approved = review.isApproved();
-        dto.createdAt = review.getCreatedAt().toString();
+        dto.setId(review.getId());
+        dto.setBookId(review.getBook().getId());
+        dto.setBookName(review.getBook().getName());
+        dto.setUserId(review.getUser().getUserId());
+        dto.setUserName(review.getUser().getName());
+        dto.setRating(review.getRating());
+        dto.setComment(review.getComment());
+        dto.setApproved(review.isApproved());
+        dto.setCreatedAt(review.getCreatedAt().toString());
         
         // Parse images từ JSON
         if (review.getImages() != null) {
             try {
-                dto.images = objectMapper.readValue(review.getImages(), new TypeReference<List<String>>() {});
+                dto.setImages(objectMapper.readValue(review.getImages(), new TypeReference<List<String>>() {}));
             } catch (JsonProcessingException e) {
-                dto.images = new ArrayList<>();
+                dto.setImages(new ArrayList<>());
             }
         }
         
         // Đếm likes & comments
-        dto.likesCount = reviewLikeRepository.countByReviewId(review.getId());
-        dto.commentsCount = reviewCommentRepository.countByReview_Id(review.getId());
+        dto.setLikesCount(reviewLikeRepository.countByReviewId(review.getId()));
+        dto.setCommentsCount(reviewCommentRepository.countByReview_Id(review.getId()));
         
         // Kiểm tra user hiện tại đã like chưa
         if (currentUserId != null) {
-            dto.currentUserLiked = reviewLikeRepository.existsByReview_IdAndUser_UserId(review.getId(), currentUserId);
+            dto.setCurrentUserLiked(reviewLikeRepository.existsByReview_IdAndUser_UserId(review.getId(), currentUserId));
         }
         
         return dto;
@@ -344,12 +345,12 @@ public class ReviewController {
     
     private ReviewCommentDto commentToDto(ReviewComment comment) {
         ReviewCommentDto dto = new ReviewCommentDto();
-        dto.id = comment.getId();
-        dto.reviewId = comment.getReview().getId();
-        dto.userId = comment.getUser().getUserId();
-        dto.userName = comment.getUser().getName();
-        dto.content = comment.getContent();
-        dto.createdAt = comment.getCreatedAt().toString();
+        dto.setId(comment.getId());
+        dto.setReviewId(comment.getReview().getId());
+        dto.setUserId(comment.getUser().getUserId());
+        dto.setUserName(comment.getUser().getName());
+        dto.setContent(comment.getContent());
+        dto.setCreatedAt(comment.getCreatedAt().toString());
         return dto;
     }
 }

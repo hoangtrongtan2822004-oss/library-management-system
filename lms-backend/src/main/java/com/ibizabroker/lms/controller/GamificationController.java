@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -161,5 +163,87 @@ public class GamificationController {
             @RequestParam(defaultValue = "Admin bonus") String reason) {
         gamificationService.awardPoints(userId, points, reason);
         return ResponseEntity.ok(Map.of("message", "Đã trao " + points + " điểm cho user " + userId));
+    }
+
+    // ============ NEW GAMIFICATION FEATURES ============
+
+    /**
+     * Get all available rewards with user's current points
+     */
+    @GetMapping("/user/gamification/rewards")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<RewardItemsResponse> getRewards(@AuthenticationPrincipal UserDetails userDetails) {
+        Integer userId = Integer.parseInt(userDetails.getUsername());
+        return ResponseEntity.ok(gamificationService.getRewardItems(userId));
+    }
+
+    /**
+     * Redeem a reward
+     */
+    @PostMapping("/user/gamification/rewards/{rewardId}/redeem")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, Object>> redeemReward(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long rewardId) {
+        Integer userId = Integer.parseInt(userDetails.getUsername());
+        gamificationService.redeemReward(userId, rewardId);
+        
+        UserPoints userPoints = gamificationService.getUserPoints(userId);
+        return ResponseEntity.ok(Map.of(
+                "message", "Đã đổi phần thưởng thành công!",
+                "remainingPoints", userPoints.getTotalPoints()
+        ));
+    }
+
+    /**
+     * Get daily quests with progress
+     */
+    @GetMapping("/user/gamification/daily-quests")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<DailyQuestsResponse> getDailyQuests(@AuthenticationPrincipal UserDetails userDetails) {
+        Integer userId = Integer.parseInt(userDetails.getUsername());
+        return ResponseEntity.ok(gamificationService.getDailyQuests(userId));
+    }
+
+    /**
+     * Update quest progress (called when user performs action)
+     */
+    @PostMapping("/user/gamification/quests/{questType}/progress")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, String>> updateQuestProgress(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String questType) {
+        Integer userId = Integer.parseInt(userDetails.getUsername());
+        gamificationService.updateQuestProgress(userId, questType);
+        return ResponseEntity.ok(Map.of("message", "Quest progress updated"));
+    }
+
+    /**
+     * Get point transaction history
+     */
+    @GetMapping("/user/gamification/point-history")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<PointHistoryResponse> getPointHistory(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @RequestParam(defaultValue = "30") int days) {
+        Integer userId = Integer.parseInt(userDetails.getUsername());
+        return ResponseEntity.ok(gamificationService.getPointHistory(userId, days));
+    }
+
+    /**
+     * Purchase streak freeze
+     */
+    @PostMapping("/user/gamification/streak-freeze")
+    @PreAuthorize("hasRole('USER')")
+    public ResponseEntity<Map<String, Object>> purchaseStreakFreeze(@AuthenticationPrincipal UserDetails userDetails) {
+        Integer userId = Integer.parseInt(userDetails.getUsername());
+        gamificationService.purchaseStreakFreeze(userId);
+        
+        UserPoints userPoints = gamificationService.getUserPoints(userId);
+        return ResponseEntity.ok(Map.of(
+                "message", "Đã mua Streak Freeze thành công! ❄️",
+                "remainingPoints", userPoints.getTotalPoints(),
+                "streakFreezeCount", userPoints.getStreakFreezeCount()
+        ));
     }
 }

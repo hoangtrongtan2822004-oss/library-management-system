@@ -30,10 +30,48 @@ public class BookService {
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
 
+    /**
+     * ⚠️ DEPRECATED: Use getAllBooks(Pageable) instead
+     * 
+     * 🚨 Performance Issue:
+     * - Returns ALL books from database (no limit)
+     * - 10,000 books × 2KB = 20MB payload
+     * - Can crash frontend browser
+     * - High memory usage on backend
+     * 
+     * ✅ Migration Path:
+     * - Use: getAllBooks(PageRequest.of(0, 20)) for paginated results
+     * - Default page size: 20 items
+     * 
+     * @deprecated Since Phase 8, will be removed in future version. Use {@link #getAllBooks(Pageable)} instead.
+     */
+    @Deprecated(since = "Phase 8", forRemoval = true)
     @Transactional(readOnly = true)
     // @Cacheable(value = "book-details", key = "'all'") // DISABLED: Causes ClassCastException with LinkedHashMap
     public List<Books> getAllBooks() {
-        return booksRepository.findAll();
+        // ⚠️ Return only first 100 books to prevent payload bomb
+        return booksRepository.findAll(PageRequest.of(0, 100)).getContent();
+    }
+
+    /**
+     * ✅ Get all books with pagination (RECOMMENDED)
+     * 
+     * 🎯 Performance:
+     * - Paginated results: Fetch only requested page
+     * - Controllable payload size
+     * - Frontend-friendly (supports page navigation)
+     * 
+     * 📌 Example Usage:
+     * - First page (20 items): getAllBooks(PageRequest.of(0, 20))
+     * - Second page: getAllBooks(PageRequest.of(1, 20))
+     * - Custom sort: getAllBooks(PageRequest.of(0, 20, Sort.by("name")))
+     * 
+     * @param pageable Pagination parameters (page number, page size, sort)
+     * @return Page object containing books and pagination metadata
+     */
+    @Transactional(readOnly = true)
+    public Page<Books> getAllBooks(Pageable pageable) {
+        return booksRepository.findAll(pageable);
     }
 
     @Transactional(readOnly = true)

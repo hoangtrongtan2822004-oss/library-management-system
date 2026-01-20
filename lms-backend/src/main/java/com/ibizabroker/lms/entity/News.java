@@ -24,7 +24,25 @@ public class News {
     @Column(columnDefinition = "TEXT")
     private String content;
 
+    @Column(name = "cover_image_url")
+    private String coverImageUrl;
+
+    @Column(name = "is_pinned", nullable = false)
+    private boolean isPinned = false;
+
+    @Column(name = "published_at")
+    private Instant publishedAt;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private NewsStatus status = NewsStatus.PUBLISHED;
+
     @CreationTimestamp
     @Column(name = "created_at", updatable = false)
     private Instant createdAt;
+
+    public enum NewsStatus {
+        DRAFT,
+        PUBLISHED
+    }
 }

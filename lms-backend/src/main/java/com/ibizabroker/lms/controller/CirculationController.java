@@ -2,6 +2,8 @@ package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dao.LoanRepository;
 import com.ibizabroker.lms.dao.UsersRepository;
+import com.ibizabroker.lms.dto.BatchLoanRequest;
+import com.ibizabroker.lms.dto.BatchLoanResponse;
 import com.ibizabroker.lms.dto.FineDetailsDto;
 import com.ibizabroker.lms.dto.LoanDetailsDto;
 import com.ibizabroker.lms.dto.LoanRequest;
@@ -38,6 +40,17 @@ public class CirculationController {
     @PostMapping("/loans")
     public ResponseEntity<Loan> loan(@RequestBody LoanRequest req) {
         return ResponseEntity.ok(service.loanBook(req));
+    }
+
+    /**
+     * Batch create loans - Admin Scanner Loan Mode
+     * Creates multiple loans for a single user in one transaction
+     */
+    @PostMapping("/loans/batch")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<BatchLoanResponse> batchLoan(@RequestBody BatchLoanRequest req) {
+        BatchLoanResponse response = service.batchCreateLoans(req);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/loans/{id}/return")

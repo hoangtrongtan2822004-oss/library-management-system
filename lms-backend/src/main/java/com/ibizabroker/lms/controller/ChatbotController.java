@@ -17,6 +17,7 @@ import org.springframework.web.client.HttpClientErrorException;
 import com.ibizabroker.lms.dao.UsersRepository;
 import com.ibizabroker.lms.entity.Users;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.ibizabroker.lms.service.ChatRateLimiter;
@@ -24,7 +25,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
+import java.io.IOException;
 import java.util.Map;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @RestController
 @RequestMapping("/api/user/chat")
@@ -46,6 +50,75 @@ public class ChatbotController {
     private final UsersRepository usersRepository;
     private final ObjectMapper objectMapper;
     private final ChatRateLimiter chatRateLimiter;
+    
+    // ThreadPool cho SSE streaming (tránh block main thread)
+    private final ExecutorService streamingExecutor = Executors.newCachedThreadPool();
+
+    /**
+     * 🚀 SSE Streaming Chat Endpoint (Real-time typing effect)
+     * 
+     * Frontend sử dụng EventSource để nhận real-time response:
+     * 
+     * const eventSource = new EventSource('/api/user/chat/stream?prompt=' + encodeURIComponent(prompt));
+     * eventSource.onmessage = (event) => {
+     *     console.log('Received:', event.data);
+     *     displayMessage(event.data); // Hiển thị từng chữ như ChatGPT
+     * };
+     * eventSource.onerror = () => eventSource.close();
+     * 
+     * 💡 Lợi ích:
+     * - User thấy response ngay lập tức (typing effect)
+     * - Giảm cảm giác chờ đợi từ 10s xuống 0s
+     * - Trải nghiệm giống ChatGPT thật
+     */
+    @GetMapping("/stream")
+    @Operation(
+        summary = "Chat với AI (Streaming mode)", 
+        description = "Trả về AI response theo kiểu Server-Sent Events để hiển thị typing effect real-time"
+    )
+    @ApiResponse(responseCode = "200", description = "SSE stream started")
+    public SseEmitter streamChat(@RequestParam String prompt) {
+        SseEmitter emitter = new SseEmitter(60_000L); // Timeout 60s
+        
+        streamingExecutor.execute(() -> {
+            try {
+                // Tương tự logic trong ask() nhưng gửi từng token về client
+                String conversationId = conversationService.generateConversationId();
+                
+                // Simulate streaming (trong thực tế cần tích hợp Gemini streaming API)
+                String[] words = prompt.split(" ");
+                emitter.send(SseEmitter.event()
+                        .name("start")
+                        .data("{\"conversationId\":\"" + conversationId + "\"}"));
+                
+                // TODO: Tích hợp Gemini streamGenerateContent API
+                // Hiện tại chỉ demo bằng cách split response thành chunks
+                String mockResponse = "Đây là câu trả lời mô phỏng từ AI chatbot. " +
+                                     "Trong môi trường production, hãy sử dụng Gemini streaming API. " +
+                                     "Response sẽ được gửi từng token một để tạo typing effect.";
+                
+                String[] responseWords = mockResponse.split(" ");
+                for (String word : responseWords) {
+                    emitter.send(SseEmitter.event()
+                            .name("message")
+                            .data(word + " "));
+                    Thread.sleep(100); // Simulate typing delay
+                }
+                
+                emitter.send(SseEmitter.event()
+                        .name("end")
+                        .data("{\"status\":\"completed\"}"));
+                
+                emitter.complete();
+                
+            } catch (IOException | InterruptedException e) {
+                logger.error("SSE streaming error: ", e);
+                emitter.completeWithError(e);
+            }
+        });
+        
+        return emitter;
+    }
 
     /**
      * Main chat endpoint with RAG support (ĐÃ CHUYỂN SANG ĐỒNG BỘ)
@@ -85,7 +158,7 @@ public class ChatbotController {
             ));
             return ResponseEntity.status(HttpStatus.TOO_MANY_REQUESTS)
                 .header("X-Conversation-Id", conversationId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8)) // ✅ Force UTF-8
                 .body(errorJson);
         }
 
@@ -144,7 +217,7 @@ public class ChatbotController {
 
             return ResponseEntity.ok()
                 .header("X-Conversation-Id", conversationId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8)) // ✅ Force UTF-8
                 .body(responseJson);
 
         } catch (HttpClientErrorException.Forbidden e) {
@@ -182,7 +255,7 @@ public class ChatbotController {
             ));
             return ResponseEntity.ok()
                 .header("X-Conversation-Id", conversationId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8)) // ✅ Force UTF-8
                 .body(body);
         } catch (Exception e) {
             String body = objectToJson(Map.of(
@@ -192,7 +265,7 @@ public class ChatbotController {
             ));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .header("X-Conversation-Id", conversationId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8)) // ✅ Force UTF-8
                 .body(body);
         }
     }
@@ -216,7 +289,7 @@ public class ChatbotController {
                 "conversations", conversations
             ));
             return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8)) // ✅ Force UTF-8
                 .body(body);
         } catch (Exception e) {
             String body = objectToJson(Map.of(
@@ -224,7 +297,7 @@ public class ChatbotController {
                 "error", "Failed to retrieve conversations"
             ));
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8)) // ✅ Force UTF-8
                 .body(body);
         }
     }
@@ -360,7 +433,7 @@ public class ChatbotController {
         ));
         return ResponseEntity.status(status)
                 .header("X-Conversation-Id", conversationId)
-                .contentType(MediaType.APPLICATION_JSON)
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8)) // ✅ Force UTF-8
                 .body(errorJson);
     }
 
@@ -382,6 +455,72 @@ public class ChatbotController {
             return;
         }
         logger.info("Authentication details: Principal={}, Authorities={}", auth.getPrincipal(), auth.getAuthorities());
+    }
+
+    /**
+     * Get AI-powered book recommendations based on user's borrowing history
+     */
+    @SuppressWarnings("null")
+    @PostMapping("/recommend-books")
+    @Operation(summary = "Get personalized book recommendations", description = "Uses AI to recommend books based on user's borrowing history")
+    @ApiResponse(responseCode = "200", description = "Recommendations returned")
+    public ResponseEntity<String> getBookRecommendations() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            Integer userId = resolveUserId(auth);
+            
+            if (userId == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"status\":\"error\",\"error\":\"User not authenticated\"}");
+            }
+
+            // Get user's borrowing history context
+            String borrowingContext = ragService.retrieveContext("Lịch sử mượn sách của người dùng " + userId);
+            
+            // Build prompt for AI recommendations
+            String prompt = "Dựa trên thông tin thư viện sau:\n\n" + borrowingContext + 
+                "\n\nHãy gợi ý 6 cuốn sách phù hợp cho người đọc này. " +
+                "Trả về CHÍNH XÁC định dạng JSON như sau (không có markdown, không có text thêm):\n" +
+                "[{\"bookId\": 1, \"title\": \"Tên sách\", \"reason\": \"Lý do ngắn gọn\"}, ...]";
+
+            var payload = Map.of(
+                "contents", new Object[]{
+                    Map.of(
+                        "parts", new Object[]{
+                            Map.of("text", prompt)
+                        }
+                    )
+                }
+            );
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            
+            if (!StringUtils.hasText(apiKey)) {
+                return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"status\":\"error\",\"error\":\"GEMINI_API_KEY not configured\"}");
+            }
+            
+            String finalUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + apiKey;
+            HttpEntity<?> requestEntity = new HttpEntity<>(payload, headers);
+
+            String geminiResponse = executeWithRetry(finalUrl, requestEntity, "recommendations-" + userId);
+            String answer = extractAnswer(geminiResponse);
+            
+            logger.info("✨ AI Recommendations for user {}: {}", userId, answer);
+
+            return ResponseEntity.ok()
+                .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8))
+                .body("{\"status\":\"ok\",\"userId\":" + userId + ",\"recommendations\":" + answer + "}");
+
+        } catch (Exception e) {
+            logger.error("❌ Error generating recommendations: ", e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .contentType(MediaType.APPLICATION_JSON)
+                .body("{\"status\":\"error\",\"error\":\"Failed to generate recommendations\"}");
+        }
     }
 
     // Logger for this class

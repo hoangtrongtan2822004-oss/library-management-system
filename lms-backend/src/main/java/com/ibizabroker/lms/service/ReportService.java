@@ -190,7 +190,7 @@ public class ReportService {
                 totalLoans,
                 returnedLoans,
                 overdueLoans,
-                totalFines != null ? totalFines.doubleValue() : 0.0
+                totalFines != null ? totalFines : BigDecimal.ZERO  // ✅ Use BigDecimal instead of double
         );
     }
 

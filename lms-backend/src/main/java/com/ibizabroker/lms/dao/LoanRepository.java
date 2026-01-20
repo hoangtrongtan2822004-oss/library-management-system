@@ -15,7 +15,19 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
-public interface LoanRepository extends JpaRepository<Loan, Integer> {
+/**
+ * 📚 Loan Repository
+ * 
+ * ✅ CRUD methods (inherited từ JpaRepository)
+ * ✅ Simple query methods (Spring Data auto-generate)
+ * ✅ Custom reporting methods (từ LoanRepositoryCustom)
+ * 
+ * 📌 Custom Repository Pattern:
+ * - LoanRepository: CRUD + simple queries
+ * - LoanRepositoryCustom: Complex reports, analytics
+ * - LoanRepositoryImpl: Implementation với EntityManager
+ */
+public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanRepositoryCustom {
 
     Page<Loan> findByMemberId(Integer memberId, Pageable pageable);
     List<Loan> findByMemberId(Integer memberId);

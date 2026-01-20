@@ -1,38 +1,56 @@
 package com.ibizabroker.lms.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotEmpty;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+/**
+ * 📚 E-Book DTO (Hybrid - Request & Response)
+ * 
+ * Dùng cho:
+ * - POST /api/admin/ebooks (Request)
+ * - GET /api/public/ebooks (Response)
+ * 
+ * 📌 Validation Rules (Request):
+ * - title: Bắt buộc
+ * - author: Optional
+ * - maxDownloadsPerUser: Optional, >= 1 nếu có
+ * 
+ * 📌 Business Logic:
+ * - isPublic: true = Ai cũng download được, false = Chỉ member
+ * - bookId: Liên kết với sách vật lý (optional)
+ * - maxDownloadsPerUser: Giới hạn download mỗi user
+ * 
+ * 🎯 TODO: CQRS Pattern
+ * - [ ] Tách EbookCreateRequest vs EbookResponse
+ * - [ ] Thêm fields: fileSize, format (PDF/EPUB), downloadCount
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class EbookDto {
 
     @NotEmpty(message = "Tiêu đề không được để trống")
     private String title;
-
+    
     private String author;
     private String description;
     private String coverUrl;
-    private Boolean isPublic;
+    
+    @Builder.Default
+    private Boolean isPublic = true;
+    
+    @Min(value = 1, message = "Số lần download phải >= 1")
     private Integer maxDownloadsPerUser;
-    private Integer bookId; // Liên kết sách vật lý (optional)
-
-    // Getters and Setters
-    public String getTitle() { return title; }
-    public void setTitle(String title) { this.title = title; }
-
-    public String getAuthor() { return author; }
-    public void setAuthor(String author) { this.author = author; }
-
-    public String getDescription() { return description; }
-    public void setDescription(String description) { this.description = description; }
-
-    public String getCoverUrl() { return coverUrl; }
-    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
-
-    public Boolean getIsPublic() { return isPublic; }
-    public void setIsPublic(Boolean isPublic) { this.isPublic = isPublic; }
-
-    public Integer getMaxDownloadsPerUser() { return maxDownloadsPerUser; }
-    public void setMaxDownloadsPerUser(Integer maxDownloadsPerUser) { this.maxDownloadsPerUser = maxDownloadsPerUser; }
-
-    public Integer getBookId() { return bookId; }
-    public void setBookId(Integer bookId) { this.bookId = bookId; }
+    
+    /**
+     * Liên kết sách vật lý (optional)
+     */
+    private Integer bookId;
 }

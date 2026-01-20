@@ -24,5 +24,15 @@ public class Wishlist {
     @JoinColumn(name = "book_id", nullable = false)
     private Books book;
 
+    @Column(columnDefinition = "TEXT")
+    private String notes; // Ghi chú cá nhân của người dùng về cuốn sách này
+
     private LocalDateTime createdAt = LocalDateTime.now();
+
+    private LocalDateTime updatedAt;
+
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

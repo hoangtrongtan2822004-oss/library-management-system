@@ -1,10 +1,36 @@
 package com.ibizabroker.lms.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.ibizabroker.lms.entity.LoanStatus;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+/**
+ * 📤 Return Loan Response DTO
+ * 
+ * Dùng cho endpoint POST /api/user/loans/return hoặc POST /api/admin/loans/{id}/return
+ * 
+ * 📌 Response Info:
+ * - loanId, bookId, memberId: IDs
+ * - loanDate, dueDate, returnDate: Dates
+ * - status: LoanStatus (RETURNED)
+ * - fineAmount: Số tiền phạt (nếu quá hạn)
+ * - overdueDays: Số ngày quá hạn
+ * 
+ * 👉 Pattern: Response-Only DTO
+ * - Chỉ dùng cho response (output)
+ * - Tính toán từ Loan entity + Fine logic
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class ReturnLoanResponseDto {
     private Integer loanId;
     private Integer bookId;
@@ -15,26 +41,6 @@ public class ReturnLoanResponseDto {
     private LoanStatus status;
     private BigDecimal fineAmount;
     private Long overdueDays;
-
-    public ReturnLoanResponseDto(Integer loanId,
-                                 Integer bookId,
-                                 Integer memberId,
-                                 LocalDate loanDate,
-                                 LocalDate dueDate,
-                                 LocalDate returnDate,
-                                 LoanStatus status,
-                                 BigDecimal fineAmount,
-                                 Long overdueDays) {
-        this.loanId = loanId;
-        this.bookId = bookId;
-        this.memberId = memberId;
-        this.loanDate = loanDate;
-        this.dueDate = dueDate;
-        this.returnDate = returnDate;
-        this.status = status;
-        this.fineAmount = fineAmount;
-        this.overdueDays = overdueDays;
-    }
 
     public Integer getLoanId() { return loanId; }
     public Integer getBookId() { return bookId; }

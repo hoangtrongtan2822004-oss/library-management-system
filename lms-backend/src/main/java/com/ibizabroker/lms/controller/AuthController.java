@@ -9,6 +9,8 @@ import com.ibizabroker.lms.entity.Role;
 import com.ibizabroker.lms.entity.Users;
 import com.ibizabroker.lms.util.JwtUtil;
 import com.ibizabroker.lms.service.PasswordResetService;
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus; // ⭐️ ĐÃ THÊM
 import org.springframework.http.MediaType;
@@ -84,7 +86,7 @@ public class AuthController {
 
     // ===== AUTHENTICATE =====
     public static record LoginRequest(String username, String password) {}
-    public static record LoginResponse(String token, Integer userId, String name, List<String> roles) {}
+    public static record LoginResponse(String token, String refreshToken, Integer userId, String name, List<String> roles) {}
 
     @SuppressWarnings("null")
     @PostMapping(
@@ -128,8 +130,66 @@ public class AuthController {
 
         UserDetails principal = (UserDetails) auth.getPrincipal();
         String token = jwtUtil.generateToken(principal, claims);
+        String refreshToken = jwtUtil.generateRefreshToken(principal, claims);
 
-        return ResponseEntity.ok(new LoginResponse(token, u.getUserId(), u.getName(), roles));
+        return ResponseEntity.ok(new LoginResponse(token, refreshToken, u.getUserId(), u.getName(), roles));
+    }
+
+    // ===== REFRESH TOKEN =====
+    public static record RefreshTokenRequest(String refreshToken) {}
+
+    @PostMapping("/refresh-token")
+    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest req) {
+        if (!StringUtils.hasText(req.refreshToken())) {
+            return ResponseEntity.badRequest().body(Map.of("message", "Refresh token không hợp lệ"));
+        }
+
+        try {
+            String username = jwtUtil.getUsernameFromToken(req.refreshToken());
+            
+            // Verify it's a refresh token (not access token)
+            Claims claims = jwtUtil.parseAllClaims(req.refreshToken());
+            String tokenType = (String) claims.get("tokenType");
+            if (!"REFRESH".equals(tokenType)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                    .body(Map.of("message", "Token không phải là refresh token"));
+            }
+
+            // Load user and generate new access token
+            Users u = usersRepo.findByUsernameWithRolesIgnoreCase(username)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            List<String> roles = u.getRoles().stream()
+                    .map(role -> role.getRoleName())
+                    .toList();
+
+            Map<String, Object> newClaims = new HashMap<>();
+            newClaims.put("userId", u.getUserId());
+            newClaims.put("roles", roles);
+
+            UserDetails userDetails = org.springframework.security.core.userdetails.User.builder()
+                    .username(u.getUsername())
+                    .password(u.getPassword())
+                    .authorities(roles.stream()
+                            .map(r -> new org.springframework.security.core.authority.SimpleGrantedAuthority(r))
+                            .toList())
+                    .build();
+
+            String newAccessToken = jwtUtil.generateToken(userDetails, newClaims);
+
+            return ResponseEntity.ok(Map.of(
+                "token", newAccessToken,
+                "userId", u.getUserId(),
+                "name", u.getName(),
+                "roles", roles
+            ));
+        } catch (ExpiredJwtException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Refresh token đã hết hạn, vui lòng đăng nhập lại"));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(Map.of("message", "Refresh token không hợp lệ"));
+        }
     }
 
     // ===== FORGOT PASSWORD =====
@@ -144,5 +204,25 @@ public class AuthController {
     public ResponseEntity<?> resetPassword(@Valid @RequestBody ResetPasswordRequest request) {
         passwordResetService.resetPassword(request.getToken(), request.getNewPassword());
         return ResponseEntity.ok(Map.of("message", "Đặt lại mật khẩu thành công."));
+    }
+
+    // ===== LOGOUT =====
+    @PostMapping("/logout")
+    public ResponseEntity<?> logout(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        // In a production environment, you would:
+        // 1. Extract the JWT token from the Authorization header
+        // 2. Add it to a blacklist in Redis with expiration matching the token's expiration
+        // 3. JwtRequestFilter would check this blacklist before validating tokens
+        
+        // For now, we'll just acknowledge the logout request
+        // The actual session clearing happens on the frontend
+        
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            // TODO: Add token to blacklist in Redis
+            // redisTemplate.opsForValue().set("blacklist:" + token, "true", jwtUtil.getExpirationTime(), TimeUnit.MILLISECONDS);
+        }
+        
+        return ResponseEntity.ok(Map.of("message", "Đăng xuất thành công"));
     }
 }

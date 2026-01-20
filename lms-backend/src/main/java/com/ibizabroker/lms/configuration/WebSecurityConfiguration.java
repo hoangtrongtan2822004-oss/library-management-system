@@ -91,6 +91,9 @@ public class WebSecurityConfiguration {
                 .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/h2-console/**", "/error", "/favicon.ico").permitAll()
                 
+                // 🔓 Mở khóa tạm thời để test - Cho phép xem dữ liệu công khai không cần đăng nhập
+                .requestMatchers(HttpMethod.GET, "/api/books/**", "/api/categories/**", "/api/authors/**").permitAll()
+                
                 // ✅ Cấu hình rõ ràng cho Chatbot để tránh 403
                 // Nếu bạn muốn test, có thể đổi hasRole("USER") thành authenticated() tạm thời
                 .requestMatchers("/api/user/chat/**").authenticated() 
@@ -103,7 +106,13 @@ public class WebSecurityConfiguration {
             .authenticationProvider(authenticationProvider())
             .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
 
-        http.headers(h -> h.frameOptions(f -> f.disable())); 
+        // 🔒 Security Headers: Chỉ cho phép H2 Console trong iframe (cùng origin), chặn Clickjacking
+        http.headers(headers -> headers
+            .frameOptions(frame -> frame.sameOrigin()) // Thay vì disable() - chỉ cho phép iframe từ cùng domain
+            .contentSecurityPolicy(csp -> csp
+                .policyDirectives("default-src 'self'; script-src 'self' 'unsafe-inline'; object-src 'none'; base-uri 'self'; frame-ancestors 'self';")
+            )
+        );
         return http.build();
     }
 }

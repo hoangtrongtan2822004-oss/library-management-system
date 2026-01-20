@@ -1,8 +1,37 @@
 package com.ibizabroker.lms.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.ibizabroker.lms.validation.ValidISBN;
 import jakarta.validation.constraints.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import java.util.Set;
 
+/**
+ * 📚 Book Create Request DTO
+ * 
+ * Dùng cho endpoint POST /api/admin/books
+ * 
+ * 📌 Validation Rules:
+ * - name: Bắt buộc, min 1 ký tự
+ * - numberOfCopiesAvailable: Bắt buộc, >= 1
+ * - publishedYear: Optional, nếu có thì >= 1000
+ * - isbn: Optional, nếu có thì phải là 10/13 chữ số VÀ checksum đúng ✅
+ * - authorIds: Bắt buộc, ít nhất 1 tác giả
+ * - categoryIds: Bắt buộc, ít nhất 1 thể loại
+ * 
+ * 🎯 TODO: Nâng cấp thêm
+ * - [ ] @ValidPublishedYear (không được quá năm hiện tại)
+ * - [ ] @ExistsInDatabase cho authorIds và categoryIds
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class BookCreateDto {
 
     @NotEmpty(message = "Tên sách không được để trống")
@@ -16,7 +45,7 @@ public class BookCreateDto {
     @Min(value = 1000, message = "Năm xuất bản phải >= 1000")
     private Integer publishedYear;
     
-    @Pattern(regexp = "^(?:[0-9]{10}|[0-9]{13})?$", message = "ISBN phải là 10 hoặc 13 chữ số")
+    @ValidISBN
     private String isbn;
     
     private String coverUrl;
@@ -28,20 +57,4 @@ public class BookCreateDto {
     @NotNull(message = "Thể loại không được để trống")
     @Size(min = 1, message = "Phải có ít nhất 1 ID thể loại")
     private Set<Integer> categoryIds;
-
-    // Getters and Setters
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public Integer getNumberOfCopiesAvailable() { return numberOfCopiesAvailable; }
-    public void setNumberOfCopiesAvailable(Integer n) { this.numberOfCopiesAvailable = n; }
-    public Integer getPublishedYear() { return publishedYear; }
-    public void setPublishedYear(Integer publishedYear) { this.publishedYear = publishedYear; }
-    public String getIsbn() { return isbn; }
-    public void setIsbn(String isbn) { this.isbn = isbn; }
-    public String getCoverUrl() { return coverUrl; }
-    public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
-    public Set<Integer> getAuthorIds() { return authorIds; }
-    public void setAuthorIds(Set<Integer> authorIds) { this.authorIds = authorIds; }
-    public Set<Integer> getCategoryIds() { return categoryIds; }
-    public void setCategoryIds(Set<Integer> categoryIds) { this.categoryIds = categoryIds; }
 }

@@ -1,31 +1,36 @@
 package com.ibizabroker.lms.dto;
 
-public class ReportDataDto {
+import com.fasterxml.jackson.annotation.JsonInclude;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
+import java.math.BigDecimal;
+
+/**
+ * 📊 Report Data Response DTO (Admin)
+ * 
+ * Dùng cho endpoint GET /api/admin/reports/data
+ * 
+ * 📌 Report Metrics:
+ * - totalLoans: Tổng số phiếu mượn
+ * - returnedLoans: Số phiếu đã trả
+ * - overdueLoans: Số phiếu quá hạn
+ * - totalFines: Tổng tiền phạt
+ * 
+ * 👉 Pattern: Read-Only Response DTO
+ * - Chỉ dùng cho response (output)
+ * - Tính toán từ bảng Loan và Fine
+ */
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_NULL)
+public class ReportDataDto {
     private Long totalLoans;
     private Long returnedLoans;
     private Long overdueLoans;
-    private Double totalFines;
-
-    public ReportDataDto() {}
-
-    public ReportDataDto(Long totalLoans, Long returnedLoans, Long overdueLoans, Double totalFines) {
-        this.totalLoans = totalLoans;
-        this.returnedLoans = returnedLoans;
-        this.overdueLoans = overdueLoans;
-        this.totalFines = totalFines;
-    }
-
-    // Getters and Setters
-    public Long getTotalLoans() { return totalLoans; }
-    public void setTotalLoans(Long totalLoans) { this.totalLoans = totalLoans; }
-
-    public Long getReturnedLoans() { return returnedLoans; }
-    public void setReturnedLoans(Long returnedLoans) { this.returnedLoans = returnedLoans; }
-
-    public Long getOverdueLoans() { return overdueLoans; }
-    public void setOverdueLoans(Long overdueLoans) { this.overdueLoans = overdueLoans; }
-
-    public Double getTotalFines() { return totalFines; }
-    public void setTotalFines(Double totalFines) { this.totalFines = totalFines; }
+    private BigDecimal totalFines;
 }
