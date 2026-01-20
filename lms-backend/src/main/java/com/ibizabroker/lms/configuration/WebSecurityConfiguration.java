@@ -69,10 +69,31 @@ public class WebSecurityConfiguration {
             .map(String::trim)
             .filter(s -> !s.isEmpty())
             .toList();
+        
+        // Set both Origins and OriginPatterns for maximum compatibility
+        c.setAllowedOrigins(origins);
         c.setAllowedOriginPatterns(origins);
-        c.setAllowedMethods(List.of("GET","POST","PUT","PATCH","DELETE","OPTIONS"));
-        c.setAllowedHeaders(List.of("*"));
+        
+        // Allow all common HTTP methods including OPTIONS for preflight
+        c.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"));
+        
+        // Allow all headers including Authorization
+        c.setAllowedHeaders(Arrays.asList(
+            "Origin", "Access-Control-Allow-Origin", "Content-Type",
+            "Accept", "Authorization", "X-Requested-With",
+            "Access-Control-Request-Method", "Access-Control-Request-Headers"
+        ));
+        
+        // Expose headers so frontend can read them
+        c.setExposedHeaders(Arrays.asList(
+            "Origin", "Content-Type", "Accept", "Authorization",
+            "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"
+        ));
+        
+        // Allow credentials (cookies, authorization headers)
         c.setAllowCredentials(true);
+        
+        // Apply CORS config to all paths
         UrlBasedCorsConfigurationSource s = new UrlBasedCorsConfigurationSource();
         s.registerCorsConfiguration("/**", c);
         return s;
