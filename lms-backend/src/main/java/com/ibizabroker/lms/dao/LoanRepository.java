@@ -29,18 +29,18 @@ import java.util.Map;
  */
 public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanRepositoryCustom {
 
-    Page<Loan> findByMember_Id(Integer memberId, Pageable pageable);
-    List<Loan> findByMember_Id(Integer memberId);
-    List<Loan> findByMember_IdAndStatus(Integer memberId, LoanStatus status);
+    Page<Loan> findByMember_UserId(Integer memberId, Pageable pageable);
+    List<Loan> findByMember_UserId(Integer memberId);
+    List<Loan> findByMember_UserIdAndStatus(Integer memberId, LoanStatus status);
     List<Loan> findByBook_Id(Integer bookId);
     
     // Alias methods for easier usage
     default List<Loan> findByMemberId(Integer memberId) {
-        return findByMember_Id(memberId);
+        return findByMember_UserId(memberId);
     }
     
     default List<Loan> findByMemberIdAndStatus(Integer memberId, LoanStatus status) {
-        return findByMember_IdAndStatus(memberId, status);
+        return findByMember_UserIdAndStatus(memberId, status);
     }
     
     default List<Loan> findByBookId(Integer bookId) {
