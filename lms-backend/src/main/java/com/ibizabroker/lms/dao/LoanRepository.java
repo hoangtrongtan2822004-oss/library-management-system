@@ -56,9 +56,9 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "CAST(" +
            "  CASE " +
            "    WHEN l.returnDate IS NOT NULL AND l.returnDate > l.dueDate " +
-           "      THEN FUNCTION('DATEDIFF', l.returnDate, l.dueDate) " +
+           "      THEN (l.returnDate - l.dueDate) " +
            "    WHEN l.status = com.ibizabroker.lms.entity.LoanStatus.OVERDUE " +
-           "      THEN FUNCTION('DATEDIFF', CURRENT_DATE, l.dueDate) " +
+           "      THEN (CURRENT_DATE - l.dueDate) " +
            "    ELSE 0 " +
            "  END AS long" +
            ") ) " +
@@ -72,9 +72,9 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "CAST(" +
            "  CASE " +
            "    WHEN l.returnDate IS NOT NULL AND l.returnDate > l.dueDate " +
-           "      THEN FUNCTION('DATEDIFF', l.returnDate, l.dueDate) " +
+           "      THEN (l.returnDate - l.dueDate) " +
            "    WHEN l.status = com.ibizabroker.lms.entity.LoanStatus.OVERDUE " +
-           "      THEN FUNCTION('DATEDIFF', CURRENT_DATE, l.dueDate) " +
+           "      THEN (CURRENT_DATE - l.dueDate) " +
            "    ELSE 0 " +
            "  END AS long" +
            ") ) " +
@@ -137,9 +137,9 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "CAST(" +
            "  CASE " +
            "    WHEN l.returnDate IS NOT NULL AND l.returnDate > l.dueDate " +
-           "      THEN FUNCTION('DATEDIFF', l.returnDate, l.dueDate) " +
+           "      THEN (l.returnDate - l.dueDate) " +
            "    WHEN l.status = com.ibizabroker.lms.entity.LoanStatus.OVERDUE " +
-           "      THEN FUNCTION('DATEDIFF', CURRENT_DATE, l.dueDate) " +
+           "      THEN (CURRENT_DATE - l.dueDate) " +
            "    ELSE 0 " +
            "  END AS long" +
            ") ) " +
