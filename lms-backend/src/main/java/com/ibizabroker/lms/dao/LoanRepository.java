@@ -33,6 +33,19 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
     List<Loan> findByMember_Id(Integer memberId);
     List<Loan> findByMember_IdAndStatus(Integer memberId, LoanStatus status);
     List<Loan> findByBook_Id(Integer bookId);
+    
+    // Alias methods for easier usage
+    default List<Loan> findByMemberId(Integer memberId) {
+        return findByMember_Id(memberId);
+    }
+    
+    default List<Loan> findByMemberIdAndStatus(Integer memberId, LoanStatus status) {
+        return findByMember_IdAndStatus(memberId, status);
+    }
+    
+    default List<Loan> findByBookId(Integer bookId) {
+        return findByBook_Id(bookId);
+    }
     long countByStatus(LoanStatus status);
     List<Loan> findTop5ByOrderByLoanDateDesc();
     List<Loan> findByStatus(LoanStatus status);

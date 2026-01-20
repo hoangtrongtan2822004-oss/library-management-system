@@ -90,6 +90,7 @@ public class CirculationService {
             Loan loan = new Loan();
             loan.setBook(book);  // ✅ Use setBook() with entity object
             // ✅ Fetch and set member entity
+            @SuppressWarnings("null")
             Users member = usersRepo.findById(req.getMemberId())
                 .orElseThrow(() -> new IllegalStateException("Người dùng không tồn tại."));
             loan.setMember(member);

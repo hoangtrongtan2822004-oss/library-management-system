@@ -115,6 +115,9 @@ public class AdminNewsController {
 
             // Generate unique filename
             String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null || originalFilename.isEmpty()) {
+                throw new IllegalArgumentException("Đường dẫn file không hợp lệ");
+            }
             String extension = originalFilename.substring(originalFilename.lastIndexOf("."));
             String filename = UUID.randomUUID().toString() + extension;
             

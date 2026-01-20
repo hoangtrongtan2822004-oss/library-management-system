@@ -72,6 +72,7 @@ public class WebSocketNotificationService {
      * @param username Username của user nhận notification
      * @param notification Notification data
      */
+    @SuppressWarnings("null")
     public void sendToUser(String username, NotificationDto notification) {
         try {
             messagingTemplate.convertAndSendToUser(
@@ -90,6 +91,7 @@ public class WebSocketNotificationService {
      * 
      * @param notification Notification data
      */
+    @SuppressWarnings("null")
     public void broadcastToAll(NotificationDto notification) {
         try {
             messagingTemplate.convertAndSend(
@@ -108,6 +110,7 @@ public class WebSocketNotificationService {
      * @param role Role của nhóm users (ADMIN, USER)
      * @param notification Notification data
      */
+    @SuppressWarnings("null")
     public void sendToRole(String role, NotificationDto notification) {
         try {
             messagingTemplate.convertAndSend(

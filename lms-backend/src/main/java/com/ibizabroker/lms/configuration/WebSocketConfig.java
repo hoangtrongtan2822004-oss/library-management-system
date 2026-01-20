@@ -83,6 +83,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * - /user: User-specific destinations (Spring Security aware)
      */
     @Override
+    @SuppressWarnings("null")
     public void configureMessageBroker(MessageBrokerRegistry config) {
         // Enable simple in-memory broker with destinations for pub-sub and queue
         config.enableSimpleBroker("/topic", "/queue");
@@ -100,6 +101,7 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
      * - withSockJS(): Fallback cho browsers không support WebSocket native
      */
     @Override
+    @SuppressWarnings("null")
     public void registerStompEndpoints(StompEndpointRegistry registry) {
         registry.addEndpoint("/ws")
                 .setAllowedOriginPatterns("http://localhost:4200", "http://localhost:3000") // Angular dev server

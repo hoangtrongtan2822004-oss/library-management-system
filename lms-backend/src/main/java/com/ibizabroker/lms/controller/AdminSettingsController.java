@@ -1,11 +1,8 @@
 package com.ibizabroker.lms.controller;
 
-import com.ibizabroker.lms.dao.UsersRepository;
 import com.ibizabroker.lms.dto.GroupedSettingsResponse;
 import com.ibizabroker.lms.entity.SettingCategory;
 import com.ibizabroker.lms.entity.SystemSetting;
-import com.ibizabroker.lms.entity.Users;
-import com.ibizabroker.lms.exceptions.NotFoundException;
 import com.ibizabroker.lms.service.SystemSettingService;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +23,6 @@ import java.util.Map;
 public class AdminSettingsController {
 
     private final SystemSettingService settingsService;
-    private final UsersRepository usersRepository;
 
     @GetMapping
     public ResponseEntity<List<SystemSetting>> list() {

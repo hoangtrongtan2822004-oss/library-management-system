@@ -96,6 +96,7 @@ public class RagService {
                     .filter(id -> id != null)
                     .toList();
 
+            @SuppressWarnings("null")
             List<com.ibizabroker.lms.entity.Books> books = booksRepository.findAllById(intBookIds);
 
             if (books == null || books.isEmpty()) {

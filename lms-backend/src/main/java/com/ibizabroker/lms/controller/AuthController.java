@@ -218,8 +218,7 @@ public class AuthController {
         // The actual session clearing happens on the frontend
         
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            // TODO: Add token to blacklist in Redis
+            // TODO: Add token to blacklist in Redis (extract token with authHeader.substring(7))
             // redisTemplate.opsForValue().set("blacklist:" + token, "true", jwtUtil.getExpirationTime(), TimeUnit.MILLISECONDS);
         }
         

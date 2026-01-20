@@ -9,9 +9,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -61,13 +64,14 @@ class BookServiceTest {
 
     @Test
     void testGetAllBooks() {
-        List<Books> books = Arrays.asList(book1);
-        when(booksRepository.findAll()).thenReturn(books);
+        @SuppressWarnings("null")
+        Page<Books> booksPage = new PageImpl<>(Arrays.asList(book1));
+        when(booksRepository.findAll(any(Pageable.class))).thenReturn(booksPage);
 
-        List<Books> result = bookService.getAllBooks();
+        Page<Books> result = bookService.getAllBooks(PageRequest.of(0, 20));
 
-        assertEquals(1, result.size());
-        verify(booksRepository).findAll();
+        assertEquals(1, result.getTotalElements());
+        verify(booksRepository).findAll(any(Pageable.class));
     }
 
     @SuppressWarnings("null")

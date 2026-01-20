@@ -86,7 +86,6 @@ public class ChatbotController {
                 String conversationId = conversationService.generateConversationId();
                 
                 // Simulate streaming (trong thực tế cần tích hợp Gemini streaming API)
-                String[] words = prompt.split(" ");
                 emitter.send(SseEmitter.event()
                         .name("start")
                         .data("{\"conversationId\":\"" + conversationId + "\"}"));

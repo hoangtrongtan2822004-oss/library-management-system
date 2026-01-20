@@ -1,24 +1,129 @@
 {
   "properties": [
     {
+      "name": "app.jwt.secret",
+      "type": "java.lang.String",
+      "description": "JWT signing secret key (Base64-encoded, minimum 256 bits)"
+    },
+    {
+      "name": "app.jwt.expiration-ms",
+      "type": "java.lang.Long",
+      "description": "JWT token expiration time in milliseconds"
+    },
+    {
       "name": "app.jwt-secret",
       "type": "java.lang.String",
-      "description": "JWT signing secret used to sign and validate tokens."
+      "description": "JWT signing secret used to sign and validate tokens (deprecated, use app.jwt.secret)"
     },
     {
       "name": "app.jwt-expiration",
       "type": "java.lang.Long",
-      "description": "JWT expiration time in milliseconds."
+      "description": "JWT expiration time in milliseconds (deprecated, use app.jwt.expiration-ms)"
     },
     {
       "name": "gemini.api.key",
       "type": "java.lang.String",
-      "description": "Google Gemini API key; leave empty when using service account."
+      "description": "Google Gemini API key for AI chatbot functionality"
+    },
+    {
+      "name": "gemini.api.url",
+      "type": "java.lang.String",
+      "description": "Google Gemini API endpoint URL"
     },
     {
       "name": "gemini.service.account.path",
       "type": "java.lang.String",
-      "description": "Filesystem path to Google service account JSON key for Gemini."
+      "description": "Filesystem path to Google service account JSON key for Gemini"
+    },
+    {
+      "name": "app.cors.allowed-origins",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed CORS origins"
+    },
+    {
+      "name": "app.cors.allowed-methods",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed HTTP methods for CORS"
+    },
+    {
+      "name": "app.cors.allowed-headers",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed headers for CORS"
+    },
+    {
+      "name": "app.cors.allow-credentials",
+      "type": "java.lang.Boolean",
+      "description": "Whether to allow credentials in CORS requests"
+    },
+    {
+      "name": "app.cors.max-age",
+      "type": "java.lang.Integer",
+      "description": "CORS preflight cache duration in seconds"
+    },
+    {
+      "name": "app.rate-limit.enabled",
+      "type": "java.lang.Boolean",
+      "description": "Enable/disable rate limiting"
+    },
+    {
+      "name": "app.rate-limit.requests-per-minute",
+      "type": "java.lang.Integer",
+      "description": "Maximum requests per minute per IP"
+    },
+    {
+      "name": "app.async.core-pool-size",
+      "type": "java.lang.Integer",
+      "description": "Core thread pool size for async operations"
+    },
+    {
+      "name": "app.async.max-pool-size",
+      "type": "java.lang.Integer",
+      "description": "Maximum thread pool size for async operations"
+    },
+    {
+      "name": "app.async.queue-capacity",
+      "type": "java.lang.Integer",
+      "description": "Queue capacity for async task executor"
+    },
+    {
+      "name": "app.cache.default-ttl",
+      "type": "java.lang.Integer",
+      "description": "Default cache TTL in minutes"
+    },
+    {
+      "name": "app.cache.book-details-ttl",
+      "type": "java.lang.Integer",
+      "description": "Book details cache TTL in minutes"
+    },
+    {
+      "name": "app.cache.featured-books-ttl",
+      "type": "java.lang.Integer",
+      "description": "Featured books cache TTL in minutes"
+    },
+    {
+      "name": "app.cache.suggestions-ttl",
+      "type": "java.lang.Integer",
+      "description": "Suggestions cache TTL in minutes"
+    },
+    {
+      "name": "app.cache.system-settings-ttl",
+      "type": "java.lang.Integer",
+      "description": "System settings cache TTL in minutes"
+    },
+    {
+      "name": "app.api.dev-url",
+      "type": "java.lang.String",
+      "description": "Development API base URL for Swagger/OpenAPI"
+    },
+    {
+      "name": "app.api.prod-url",
+      "type": "java.lang.String",
+      "description": "Production API base URL for Swagger/OpenAPI"
+    },
+    {
+      "name": "allowed.origins",
+      "type": "java.lang.String",
+      "description": "Comma-separated list of allowed CORS origins (legacy property)"
     }
   ]
 }

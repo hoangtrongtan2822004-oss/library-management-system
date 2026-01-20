@@ -2,7 +2,7 @@ package com.ibizabroker.lms.dao;
 
 import com.ibizabroker.lms.dto.LoanStatistics;
 
-import java.math.BigDecimal;
+
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
