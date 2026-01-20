@@ -5,8 +5,9 @@ import com.ibizabroker.lms.entity.ChatMessage;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.data.redis.core.StringRedisTemplate;
-import java.util.concurrent.TimeUnit;
+// Đã xóa import Redis để fix lỗi build
+// import org.springframework.data.redis.core.StringRedisTemplate;
+// import java.util.concurrent.TimeUnit;
 
 import java.util.List;
 import java.util.UUID;
@@ -17,9 +18,10 @@ import java.util.UUID;
 public class ConversationService {
     
     private final ChatMessageRepository chatMessageRepository;
-    private final StringRedisTemplate redisTemplate;
+    // Đã xóa redisTemplate vì không dùng Redis nữa
+    // private final StringRedisTemplate redisTemplate;
 
-    private static final long CACHE_EXPIRATION_MINUTES = 60;
+    // private static final long CACHE_EXPIRATION_MINUTES = 60;
 
     /**
      * Generate a new conversation ID
@@ -38,29 +40,27 @@ public class ConversationService {
 
     /**
      * Save conversation history to Redis cache
+     * (Đã vô hiệu hóa - No Op)
      */
-    @SuppressWarnings("null")
     public void saveHistoryToCache(String conversationId, String history) {
-        redisTemplate.opsForValue().set(
-            "conversation:" + conversationId,
-            history,
-            CACHE_EXPIRATION_MINUTES,
-            TimeUnit.MINUTES
-        );
+        // Không làm gì cả vì không dùng Redis
     }
 
     /**
      * Get conversation history from Redis cache
+     * (Đã vô hiệu hóa - Return null)
      */
     public String getHistoryFromCache(String conversationId) {
-        return redisTemplate.opsForValue().get("conversation:" + conversationId);
+        // Trả về null để hệ thống tự load từ Database
+        return null;
     }
 
     /**
      * Clear conversation history from Redis cache
+     * (Đã vô hiệu hóa - No Op)
      */
     public void clearHistoryFromCache(String conversationId) {
-        redisTemplate.delete("conversation:" + conversationId);
+        // Không làm gì cả
     }
 
     /**
@@ -135,7 +135,7 @@ public class ConversationService {
         String conversationContext = buildConversationContext(conversationId);
         
         return conversationContext + "\n" +
-               "Current user question: " + userQuery + "\n\n" +
-               "Please provide a helpful response based on the conversation context and the user's current question.";
+                "Current user question: " + userQuery + "\n\n" +
+                "Please provide a helpful response based on the conversation context and the user's current question.";
     }
 }
