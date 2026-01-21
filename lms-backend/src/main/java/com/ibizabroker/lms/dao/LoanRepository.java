@@ -82,10 +82,16 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "WHERE l.member.userId = :memberId ORDER BY l.loanDate DESC")
     List<LoanDetailsDto> findLoanDetailsByMemberId(@Param("memberId") Integer memberId);
 
-    @Query("SELECT l.book.id as bookId, COUNT(l.book.id) as loanCount FROM Loan l GROUP BY l.book.id ORDER BY loanCount DESC")
+    @Query("SELECT b.name as bookName, COUNT(l) as loanCount " +
+           "FROM Loan l JOIN l.book b " +
+           "GROUP BY b.id, b.name " +
+           "ORDER BY loanCount DESC")
     List<Map<String, Object>> findMostLoanedBooks(Pageable pageable);
 
-    @Query("SELECT l.member.userId as memberId, COUNT(l.member.userId) as loanCount FROM Loan l GROUP BY l.member.userId ORDER BY loanCount DESC")
+    @Query("SELECT u.name as userName, COUNT(l) as loanCount " +
+           "FROM Loan l JOIN l.member u " +
+           "GROUP BY u.userId, u.name " +
+           "ORDER BY loanCount DESC")
     List<Map<String, Object>> findTopBorrowers(Pageable pageable);
 
     @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
