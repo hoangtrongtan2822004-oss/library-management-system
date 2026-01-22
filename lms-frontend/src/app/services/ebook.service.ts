@@ -38,7 +38,7 @@ export interface EbookPage {
   providedIn: 'root',
 })
 export class EbookService {
-  private apiUrl = `${environment.apiBaseUrl}/api`;
+  private apiUrl = `${environment.apiBaseUrl}`;
 
   constructor(private http: HttpClient) {}
 
@@ -57,7 +57,7 @@ export class EbookService {
     search?: string,
     fileType?: string,
     page: number = 0,
-    size: number = 10
+    size: number = 10,
   ): Observable<EbookPage> {
     let params = new HttpParams()
       .set('page', page.toString())
@@ -86,7 +86,7 @@ export class EbookService {
   // User endpoints
   canDownload(id: number): Observable<{ canDownload: boolean }> {
     return this.http.get<{ canDownload: boolean }>(
-      `${this.apiUrl}/user/ebooks/${id}/can-download`
+      `${this.apiUrl}/user/ebooks/${id}/can-download`,
     );
   }
 
@@ -98,7 +98,7 @@ export class EbookService {
 
   getMyDownloads(): Observable<EbookDownload[]> {
     return this.http.get<EbookDownload[]>(
-      `${this.apiUrl}/user/ebooks/my-downloads`
+      `${this.apiUrl}/user/ebooks/my-downloads`,
     );
   }
 
@@ -120,7 +120,7 @@ export class EbookService {
     formData.append('isPublic', String(metadata.isPublic ?? true));
     formData.append(
       'maxDownloadsPerUser',
-      String(metadata.maxDownloadsPerUser ?? 3)
+      String(metadata.maxDownloadsPerUser ?? 3),
     );
 
     return this.http.post<Ebook>(`${this.apiUrl}/admin/ebooks`, formData);
@@ -132,7 +132,7 @@ export class EbookService {
 
   deleteEbook(id: number): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
-      `${this.apiUrl}/admin/ebooks/${id}`
+      `${this.apiUrl}/admin/ebooks/${id}`,
     );
   }
 }

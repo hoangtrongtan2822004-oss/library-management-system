@@ -2,14 +2,19 @@ package com.ibizabroker.lms.entity;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.BatchSize;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import jakarta.persistence.PrePersist;
 
 /**
  * 📚 Books Entity
@@ -29,9 +34,10 @@ import java.util.Set;
  */
 @Getter
 @Setter
-@JsonInclude(JsonInclude.Include.NON_NULL)
 @Entity
 @Table(name = "books")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class Books extends BaseEntity {
 
     @Id
@@ -71,6 +77,12 @@ public class Books extends BaseEntity {
 
     @Column(name = "cover_url", length = 512)
     private String coverUrl;
+
+    /**
+     * Ngày sách được thêm vào thư viện (tự động gán khi persist nếu null)
+     */
+    @Column(name = "added_date")
+    private LocalDate addedDate;
 
     /**
      * 🔒 Version field for Optimistic Locking
@@ -115,4 +127,13 @@ public class Books extends BaseEntity {
         if (numberOfCopiesAvailable == null) numberOfCopiesAvailable = 0;
         numberOfCopiesAvailable++;
     }
+
+    @PrePersist
+    protected void onPrePersist() {
+        if (this.addedDate == null) this.addedDate = LocalDate.now();
+    }
+    
+    @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OrderBy("createdAt DESC")
+    private List<Review> reviews = new ArrayList<>();
 }

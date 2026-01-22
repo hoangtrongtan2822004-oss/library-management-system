@@ -9,6 +9,10 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.Set;
+import com.ibizabroker.lms.validation.ValidPublishedYear;
+import com.ibizabroker.lms.validation.ExistsInDatabase;
+import com.ibizabroker.lms.dao.AuthorRepository;
+import com.ibizabroker.lms.dao.CategoryRepository;
 
 /**
  * 📚 Book Create Request DTO
@@ -23,9 +27,9 @@ import java.util.Set;
  * - authorIds: Bắt buộc, ít nhất 1 tác giả
  * - categoryIds: Bắt buộc, ít nhất 1 thể loại
  * 
- * 🎯 TODO: Nâng cấp thêm
- * - [ ] @ValidPublishedYear (không được quá năm hiện tại)
- * - [ ] @ExistsInDatabase cho authorIds và categoryIds
+ * 🎯 Validators applied
+ * - `@ValidPublishedYear` enforces published year not greater than current year
+ * - `@ExistsInDatabase` applied to `authorIds` and `categoryIds`
  */
 @Data
 @Builder
@@ -43,6 +47,7 @@ public class BookCreateDto {
     private Integer numberOfCopiesAvailable;
 
     @Min(value = 1000, message = "Năm xuất bản phải >= 1000")
+    @ValidPublishedYear
     private Integer publishedYear;
     
     @ValidISBN
@@ -52,9 +57,11 @@ public class BookCreateDto {
 
     @NotNull(message = "Tác giả không được để trống")
     @Size(min = 1, message = "Phải có ít nhất 1 ID tác giả")
+    @ExistsInDatabase(repository = AuthorRepository.class)
     private Set<Integer> authorIds;
 
     @NotNull(message = "Thể loại không được để trống")
     @Size(min = 1, message = "Phải có ít nhất 1 ID thể loại")
+    @ExistsInDatabase(repository = CategoryRepository.class)
     private Set<Integer> categoryIds;
 }

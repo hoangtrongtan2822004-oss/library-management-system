@@ -125,15 +125,6 @@ private Date now() {
    * 
    * ⚠️ IMPORTANT: Refresh tokens can ONLY be used at /api/auth/refresh
    * Using refresh token for API calls = security violation
-   * 
-   * 🔮 TODO (Enterprise Feature): Token Blacklisting
-   * Add Redis-based token revocation for logout:
-   * ```java
-   * // Check if token is blacklisted (logged out)
-   * String jti = claims.get("jti", String.class); // JWT ID
-   * if (redisTemplate.hasKey("blacklist:" + jti)) {
-   *     return false; // Token revoked
-   * }
    * ```
    * Implementation requires:
    * - Add "jti" claim in generateToken()

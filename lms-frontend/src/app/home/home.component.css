@@ -286,7 +286,7 @@
 .book-title {
   font-size: 1.05rem;
   font-weight: 600;
-  color: #f0f6fc;
+  color: #e6edf3; /* Sáng hơn một chút cho dark theme */
   margin: 0 0 0.5rem 0;
   line-height: 1.4;
   display: -webkit-box;
@@ -435,10 +435,10 @@ body.dark-theme .footer-col h3,
    =========================== */
 body.light-theme .section-title,
 body.light-theme .footer-col h3,
-body.light-theme .book-title,
 body.light-theme .hero-text h1 {
   color: #1e293b !important;
 }
+/* book-title được xử lý riêng ở các section khác với font-weight: 700 */
 body.light-theme .section-wrap {
   background: #fff !important;
 }
@@ -474,8 +474,9 @@ body.light-theme .book-card {
   border-color: #e2e8f0 !important;
 }
 body.light-theme .book-title {
-  color: #1e293b !important;
+  color: #0f172a !important; /* Đậm hơn cho light theme để dễ đọc */
   text-shadow: none !important;
+  font-weight: 700 !important; /* Bold hơn một chút */
 }
 body.light-theme .book-author {
   color: #64748b !important;
@@ -545,8 +546,9 @@ body.light-theme .section-header {
   color: #1e293b !important;
 }
 body.light-theme .book-title {
-  color: #1e293b !important;
+  color: #0f172a !important; /* Đậm hơn cho light theme */
   text-shadow: none !important;
+  font-weight: 700 !important;
 }
 body.light-theme a.chip,
 :host-context(body.light-theme) a.chip {
@@ -737,9 +739,9 @@ body.light-theme .suggestion-info small {
 }
 
 .news-section {
-  background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
-  border-top: 1px solid #30363d;
-  border-bottom: 1px solid #30363d;
+  background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
+  border-top: 1px solid #d0d7de;
+  border-bottom: 1px solid #d0d7de;
 }
 
 .news-section .section-title {
@@ -747,10 +749,11 @@ body.light-theme .suggestion-info small {
   align-items: center;
   justify-content: center;
   gap: 12px;
+  color: #24292f;
 }
 
 .news-section .section-title i {
-  color: #58a6ff;
+  color: #0969da;
   font-size: 1.8rem;
 }
 
@@ -763,8 +766,8 @@ body.light-theme .suggestion-info small {
 .news-card {
   display: flex;
   gap: 16px;
-  background: #161b22;
-  border: 1px solid #30363d;
+  background: #ffffff;
+  border: 1px solid #d0d7de;
   border-radius: 12px;
   padding: 20px;
   transition: all 0.3s;
@@ -773,20 +776,20 @@ body.light-theme .suggestion-info small {
 
 .news-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(88, 166, 255, 0.15);
-  border-color: #58a6ff;
+  box-shadow: 0 8px 24px rgba(9, 105, 218, 0.15);
+  border-color: #0969da;
 }
 
 .news-icon {
   flex-shrink: 0;
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #58a6ff 0%, #3b82f6 100%);
+  background: linear-gradient(135deg, #0969da 0%, #0550ae 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+  box-shadow: 0 4px 12px rgba(9, 105, 218, 0.3);
 }
 
 .news-icon i {
@@ -799,7 +802,7 @@ body.light-theme .suggestion-info small {
 }
 
 .news-title {
-  color: #f0f6fc;
+  color: #24292f;
   font-size: 1.1rem;
   font-weight: 700;
   margin-bottom: 8px;
@@ -810,7 +813,7 @@ body.light-theme .suggestion-info small {
 }
 
 .news-excerpt {
-  color: #8b949e;
+  color: #57606a;
   font-size: 0.9rem;
   line-height: 1.5;
   margin-bottom: 12px;
@@ -823,7 +826,7 @@ body.light-theme .suggestion-info small {
 }
 
 .news-date {
-  color: #6e7681;
+  color: #656d76;
   font-size: 0.85rem;
   display: flex;
   align-items: center;
@@ -831,7 +834,7 @@ body.light-theme .suggestion-info small {
 }
 
 .news-card-skeleton {
-  background: linear-gradient(90deg, #161b22 0%, #1c2128 50%, #161b22 100%);
+  background: linear-gradient(90deg, #f6f8fa 0%, #eaeef2 50%, #f6f8fa 100%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
   border-radius: 12px;
@@ -1023,8 +1026,8 @@ body.light-theme .suggestion-info small {
 }
 
 .recommended-books-section {
-  background: linear-gradient(135deg, #1a1f2e 0%, #0d1117 100%);
-  border-top: 1px solid #30363d;
+  background: linear-gradient(135deg, #f6f8fa 0%, #ffffff 100%);
+  border-top: 1px solid #d0d7de;
 }
 
 .recommended-books-section .section-title {
@@ -1032,16 +1035,17 @@ body.light-theme .suggestion-info small {
   align-items: center;
   justify-content: center;
   gap: 12px;
+  color: #24292f;
 }
 
 .recommended-books-section .section-title i {
-  color: #a78bfa;
+  color: #8250df;
   font-size: 1.8rem;
 }
 
 .section-subtitle {
   text-align: center;
-  color: #8b949e;
+  color: #57606a;
   font-size: 1rem;
   margin-top: -1rem;
   margin-bottom: 2rem;

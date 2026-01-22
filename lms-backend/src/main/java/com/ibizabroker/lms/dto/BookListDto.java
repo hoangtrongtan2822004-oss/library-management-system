@@ -7,27 +7,25 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
- * 📦 Slim DTO cho Public Book List APIs
+ * 📦 DTO cho Public Book List APIs
  * 
- * Chỉ chứa thông tin cần thiết để hiển thị danh sách sách.
- * Giảm ~70% kích thước response so với trả về full Entity.
+ * ⚠️ QUAN TRỌNG: Tên các trường PHẢI KHỚP với Frontend Book Model
+ * - Frontend tìm: id, name, coverUrl, authors (Set), categories (Set)
+ * - Backend trả: Phải giống hệt để tránh undefined
  * 
  * 🎯 Lợi ích:
- * - Giảm băng thông: Entity có 20+ fields, DTO này chỉ có 10 fields cần thiết
+ * - Giảm băng thông: Chỉ trả các trường cần thiết
  * - Bảo mật: Không expose các trường nội bộ (createdBy, updatedAt...)
- * - Performance: Frontend parse JSON nhanh hơn
- * - Cache-friendly: Kích thước nhỏ → cache Redis hiệu quả hơn
+ * - Type-safe: authors/categories là Set<DTO> thay vì String
  * 
  * 📌 Khi nào dùng:
  * - GET /api/public/books (list view)
  * - GET /api/public/books/newest
  * - GET /api/public/books/search
- * 
- * 📌 Khi nào KHÔNG dùng:
- * - GET /api/public/books/{id} (detail view) → Dùng full DTO hoặc Entity
- * - Admin APIs → Cần đầy đủ thông tin
  */
 @Data
 @Builder
@@ -37,52 +35,47 @@ import java.time.LocalDate;
 public class BookListDto {
     
     /**
-     * ID sách (dùng để navigate sang detail page)
+     * ID sách (Frontend tìm: book.id)
      */
-    private Integer bookId;
+    private Integer id;
     
     /**
-     * Tên sách
+     * Tên sách (Frontend tìm: book.name)
      */
-    private String bookName;
+    private String name;
     
     /**
-     * Tác giả
+     * Danh sách tác giả (Frontend tìm: book.authors)
      */
-    private String author;
+    private Set<AuthorDto> authors;
     
     /**
-     * Thể loại/danh mục
+     * Danh sách thể loại (Frontend tìm: book.categories)
      */
-    private String categoryName;
+    private Set<CategoryDto> categories;
     
     /**
-     * Link ảnh bìa (S3/CDN URL hoặc base64)
+     * Link ảnh bìa (Frontend tìm: book.coverUrl)
      */
-    private String coverImageUrl;
+    private String coverUrl;
     
     /**
-     * Số lượng còn lại (available copies)
+     * Số lượng còn lại (Frontend tìm: book.numberOfCopiesAvailable)
      */
-    private Integer availableQuantity;
+    private Integer numberOfCopiesAvailable;
     
     /**
-     * Tổng số bản (total copies)
+     * Năm xuất bản (Frontend tìm: book.publishedYear)
      */
-    private Integer totalQuantity;
+    private Integer publishedYear;
     
     /**
-     * Trạng thái: "Còn sách" / "Hết sách"
+     * ISBN (Frontend tìm: book.isbn)
      */
-    private String availabilityStatus;
+    private String isbn;
     
     /**
-     * Năm xuất bản
-     */
-    private Integer publicationYear;
-    
-    /**
-     * Ngày thêm vào thư viện (dùng để sắp xếp "Sách mới")
+     * Ngày thêm vào thư viện
      */
     private LocalDate addedDate;
     
@@ -97,35 +90,72 @@ public class BookListDto {
     private Integer reviewCount;
     
     /**
+     * 🏗️ Inner DTO cho Author (Frontend tìm: authors[].name)
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class AuthorDto {
+        private String name;
+    }
+    
+    /**
+     * 🏗️ Inner DTO cho Category (Frontend tìm: categories[].name)
+     */
+    @Data
+    @Builder
+    @NoArgsConstructor
+    @AllArgsConstructor
+    public static class CategoryDto {
+        private String name;
+    }
+    
+    /**
      * Chuyển đổi từ Entity sang DTO
+     * ⚠️ Tên trường khớp với Frontend Book Model
      */
     public static BookListDto fromEntity(com.ibizabroker.lms.entity.Books book) {
         if (book == null) return null;
         
-        // Get available quantity directly from entity
-        int available = book.getNumberOfCopiesAvailable() != null ? book.getNumberOfCopiesAvailable() : 0;
-        
-        // Get first author/category from Set
-        String authorName = book.getAuthors() != null && !book.getAuthors().isEmpty() 
-            ? book.getAuthors().iterator().next().getName() 
-            : "Unknown";
-        String categoryName = book.getCategories() != null && !book.getCategories().isEmpty()
-            ? book.getCategories().iterator().next().getName()
-            : "Uncategorized";
-        
         return BookListDto.builder()
-                .bookId(book.getId())
-                .bookName(book.getName())
-                .author(authorName)
-                .categoryName(categoryName)
-                .coverImageUrl(book.getCoverUrl())
-                .availableQuantity(available)
-                .totalQuantity(available) // Entity doesn't track total quantity separately
-                .availabilityStatus(available > 0 ? "Còn sách" : "Hết sách")
-                .publicationYear(book.getPublishedYear())
-                .addedDate(null) // TODO: Add addedDate column to Books entity
-                .averageRating(null) // TODO: Calculate from reviews table
-                .reviewCount(0) // TODO: Calculate from reviews table
+                .id(book.getId()) // Frontend: book.id
+                .name(book.getName()) // Frontend: book.name
+                .coverUrl(book.getCoverUrl()) // Frontend: book.coverUrl
+                .numberOfCopiesAvailable(book.getNumberOfCopiesAvailable()) // Frontend: book.numberOfCopiesAvailable
+                .publishedYear(book.getPublishedYear()) // Frontend: book.publishedYear
+                .isbn(book.getIsbn()) // Frontend: book.isbn
+                
+                // Map Authors sang DTO con (Frontend: book.authors)
+                .authors(book.getAuthors() != null ? 
+                    book.getAuthors().stream()
+                        .map(a -> AuthorDto.builder().name(a.getName()).build())
+                        .collect(Collectors.toSet()) : null)
+                        
+                // Map Categories sang DTO con (Frontend: book.categories)
+                .categories(book.getCategories() != null ? 
+                    book.getCategories().stream()
+                        .map(c -> CategoryDto.builder().name(c.getName()).build())
+                        .collect(Collectors.toSet()) : null)
+                
+                // Optional fields
+                .addedDate(book.getAddedDate())
+                .averageRating(computeAverageRating(book))
+                .reviewCount(computeReviewCount(book))
                 .build();
+    }
+
+    private static Double computeAverageRating(com.ibizabroker.lms.entity.Books book) {
+        if (book.getReviews() == null) return null;
+        java.util.OptionalDouble avg = book.getReviews().stream()
+            .filter(r -> r.isApproved())
+            .mapToInt(r -> r.getRating())
+            .average();
+        return avg.isPresent() ? Double.valueOf(avg.getAsDouble()) : null;
+    }
+
+    private static Integer computeReviewCount(com.ibizabroker.lms.entity.Books book) {
+        if (book.getReviews() == null) return 0;
+        return (int) book.getReviews().stream().filter(r -> r.isApproved()).count();
     }
 }

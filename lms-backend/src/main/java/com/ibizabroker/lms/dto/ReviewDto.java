@@ -29,10 +29,9 @@ import java.util.List;
  * - User info: userId, userName
  * - Social info: likesCount, commentsCount, currentUserLiked
  * 
- * 🎯 TODO: Nâng cấp thêm
- * - [ ] Tách thành ReviewRequest và ReviewResponse (CQRS Pattern)
- * - [ ] @ValidImageUrls check URLs hợp lệ
- * - [ ] @SanitizeHtml ngăn chặn XSS trong comment
+ * 🎯 Notes / Future improvements:
+ * - Consider splitting into `ReviewRequest` and `ReviewResponse` (CQRS)
+ * - Optionally add `@ValidImageUrls` and HTML sanitization for comments
  */
 @Data
 @Builder

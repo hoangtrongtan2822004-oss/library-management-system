@@ -38,12 +38,7 @@
           class="dropdown-menu dropdown-menu-dark"
           aria-labelledby="adminDropdown"
         >
-          <li>
-            <a class="dropdown-item" routerLink="/admin/dashboard">
-              <i class="fa-solid fa-chart-pie"></i> Bảng Điều Khiển
-            </a>
-          </li>
-          <li><hr class="dropdown-divider" /></li>
+          <!-- Dashboard link removed by request -->
           <li>
             <a class="dropdown-item" routerLink="/users">
               <i class="fa-solid fa-users-cog"></i> Người Dùng
@@ -102,6 +97,11 @@
           <li>
             <a class="dropdown-item" routerLink="/admin/renewals">
               <i class="fa-solid fa-rotate-right"></i> Gia Hạn
+            </a>
+          </li>
+          <li>
+            <a class="dropdown-item" routerLink="/admin/gamification">
+              <i class="fa-solid fa-trophy text-warning"></i> Gamification
             </a>
           </li>
           <li><hr class="dropdown-divider" /></li>
@@ -340,6 +340,7 @@
                 <i class="fa-solid fa-chart-pie"></i> Bảng Điều Khiển
               </a>
             </li>
+            <!-- Admin dashboard link removed for admins -->
             <li *ngIf="isUser()">
               <a class="dropdown-item" routerLink="/my-account">
                 <i class="fa-solid fa-user-circle"></i> Tài Khoản
@@ -457,11 +458,7 @@
     <!-- Admin Menu -->
     <ng-container *ngIf="isAdmin()">
       <li class="mobile-menu-section-title">QUẢN TRỊ VIÊN</li>
-      <li class="mobile-menu-item">
-        <a routerLink="/admin/dashboard" (click)="closeMobileMenu()">
-          <i class="fa-solid fa-chart-pie"></i> Bảng Điều Khiển
-        </a>
-      </li>
+      <!-- Mobile dashboard link removed -->
       <li class="mobile-menu-item">
         <a routerLink="/users" (click)="closeMobileMenu()">
           <i class="fa-solid fa-users-cog"></i> Người Dùng
@@ -470,6 +467,11 @@
       <li class="mobile-menu-item">
         <a routerLink="/books" (click)="closeMobileMenu()">
           <i class="fa-solid fa-book-medical"></i> Sách
+        </a>
+      </li>
+      <li class="mobile-menu-item">
+        <a routerLink="/admin/gamification" (click)="closeMobileMenu()">
+          <i class="fa-solid fa-trophy text-warning"></i> Gamification
         </a>
       </li>
       <li class="mobile-menu-item">

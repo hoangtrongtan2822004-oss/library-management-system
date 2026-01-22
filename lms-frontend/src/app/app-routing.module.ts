@@ -157,6 +157,15 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: { roles: ['ROLE_ADMIN'] },
   },
+  {
+    path: 'admin/gamification',
+    loadChildren: () =>
+      import('./admin/gamification/gamification.routes').then(
+        (m) => m.gamificationRoutes,
+      ),
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
 
   // USER pages
   {

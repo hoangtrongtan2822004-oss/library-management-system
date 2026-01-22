@@ -26,6 +26,8 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 
 import java.io.IOException;
+import java.util.Objects;
+import java.net.HttpURLConnection;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -90,27 +92,97 @@ public class ChatbotController {
                         .name("start")
                         .data("{\"conversationId\":\"" + conversationId + "\"}"));
                 
-                // TODO: Tích hợp Gemini streamGenerateContent API
-                // Hiện tại chỉ demo bằng cách split response thành chunks
-                String mockResponse = "Đây là câu trả lời mô phỏng từ AI chatbot. " +
-                                     "Trong môi trường production, hãy sử dụng Gemini streaming API. " +
-                                     "Response sẽ được gửi từng token một để tạo typing effect.";
-                
-                String[] responseWords = mockResponse.split(" ");
-                for (String word : responseWords) {
-                    emitter.send(SseEmitter.event()
-                            .name("message")
-                            .data(word + " "));
-                    Thread.sleep(100); // Simulate typing delay
+                // Attempt to call Gemini streaming endpoint and forward tokens to client
+                if (!StringUtils.hasText(apiKey)) {
+                    emitter.send(SseEmitter.event().name("error").data("GEMINI API key not configured"));
+                    emitter.complete();
+                    return;
+                }
+
+                String streamUrl = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-stream:streamingGenerateContent?key=" + apiKey;
+
+                // Build a simple payload similar to generateContent but suitable for streaming
+                Map<String, Object> streamPayload = Map.of(
+                        "contents", new Object[]{
+                                Map.of(
+                                        "parts", new Object[]{
+                                                Map.of("text", prompt)
+                                        }
+                                )
+                        }
+                );
+
+                HttpURLConnection conn = null;
+                try {
+                    java.net.URI uri = java.net.URI.create(streamUrl);
+                    conn = (HttpURLConnection) uri.toURL().openConnection();
+                    conn.setRequestMethod("POST");
+                    conn.setDoOutput(true);
+                    conn.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
+                    conn.setRequestProperty("Accept", "text/event-stream, application/json");
+                    conn.setConnectTimeout(15_000);
+                    conn.setReadTimeout(0); // streaming: wait indefinitely within emitter timeout
+
+                    String json = objectMapper.writeValueAsString(streamPayload);
+                    try (java.io.OutputStream os = conn.getOutputStream()) {
+                        os.write(json.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                        os.flush();
+                    }
+
+                    int status = conn.getResponseCode();
+                    java.io.InputStream is = (status >= 200 && status < 300) ? conn.getInputStream() : conn.getErrorStream();
+                    try (java.io.BufferedReader reader = new java.io.BufferedReader(new java.io.InputStreamReader(is, java.nio.charset.StandardCharsets.UTF_8))) {
+                        String line;
+                        while ((line = reader.readLine()) != null) {
+                            if (Thread.currentThread().isInterrupted()) break;
+                            if (line.isBlank()) continue;
+
+                            // Many streaming endpoints send SSE-style lines; try to trim "data: " prefix
+                            String payloadLine = line;
+                            if (payloadLine.startsWith("data: ")) payloadLine = payloadLine.substring(6);
+
+                            String tokenText = null;
+                            try {
+                                JsonNode node = objectMapper.readTree(payloadLine);
+                                // Try several common paths to extract text
+                                if (node.has("candidates")) {
+                                    JsonNode candidates = node.path("candidates");
+                                    if (candidates.isArray() && candidates.size() > 0) {
+                                        JsonNode parts = candidates.get(0).path("content").path("parts");
+                                        if (parts.isArray() && parts.size() > 0) {
+                                            tokenText = parts.get(0).path("text").asText(null);
+                                        }
+                                    }
+                                } else if (node.has("delta")) {
+                                    tokenText = node.path("delta").path("content").path("text").asText(null);
+                                } else if (node.has("text")) {
+                                    tokenText = node.path("text").asText(null);
+                                }
+                            } catch (Exception ex) {
+                                // not JSON, use raw payloadLine
+                            }
+
+                            String toSend = (tokenText != null && !tokenText.isBlank()) ? tokenText : payloadLine;
+                            emitter.send(SseEmitter.event().name("message").data(Objects.requireNonNullElse(toSend, "")));
+                        }
+                    }
+
+                    emitter.send(SseEmitter.event().name("end").data("{\"status\":\"completed\"}"));
+                    emitter.complete();
+
+                } catch (Exception ex) {
+                    logger.error("Error streaming from Gemini: {}", ex.getMessage(), ex);
+                    try {
+                        emitter.send(SseEmitter.event().name("error").data("Streaming error: " + ex.getMessage()));
+                    } catch (IOException ioe) {
+                        // ignore
+                    }
+                    emitter.completeWithError(ex);
+                } finally {
+                    if (conn != null) conn.disconnect();
                 }
                 
-                emitter.send(SseEmitter.event()
-                        .name("end")
-                        .data("{\"status\":\"completed\"}"));
-                
-                emitter.complete();
-                
-            } catch (IOException | InterruptedException e) {
+            } catch (IOException e) {
                 logger.error("SSE streaming error: ", e);
                 emitter.completeWithError(e);
             }

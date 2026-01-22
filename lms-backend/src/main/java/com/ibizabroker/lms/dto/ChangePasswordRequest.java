@@ -1,6 +1,8 @@
 package com.ibizabroker.lms.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.ibizabroker.lms.validation.DifferentPasswords;
+import com.ibizabroker.lms.validation.PasswordStrength;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -23,10 +25,11 @@ import lombok.NoArgsConstructor;
  * - oldPassword: Bắt buộc (không blank)
  * - newPassword: Bắt buộc, >= 6 ký tự
  * 
- * 🎯 TODO: Nâng cấp thêm
- * - [ ] @DifferentPasswords check newPassword khác oldPassword
- * - [ ] @PasswordStrength (yêu cầu chữ hoa, số, ký tự đặc biệt)
+ * 🎯 Validators applied
+ * - `@DifferentPasswords` ensures newPassword khác oldPassword
+ * - `@PasswordStrength` enforces strength rules on `newPassword`
  */
+@DifferentPasswords
 @Data
 @Builder
 @NoArgsConstructor
@@ -39,5 +42,6 @@ public class ChangePasswordRequest {
 
     @NotBlank(message = "Mật khẩu mới không được để trống")
     @Size(min = 6, message = "Mật khẩu mới phải có ít nhất 6 ký tự")
+    @PasswordStrength
     private String newPassword;
 }

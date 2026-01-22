@@ -107,12 +107,13 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
     List<Loan> findByStatusAndDueDate(LoanStatus status, LocalDate dueDate);
     
     // === Query cho Chart.js: Thống kê mượn theo tháng ===
-    @Query(value = "SELECT MONTH(l.loan_date) AS month, COUNT(l.id) AS count " +
-                   "FROM loans l " +
-                   "WHERE l.loan_date BETWEEN :start AND :end " +
-                   "GROUP BY MONTH(l.loan_date) " +
-                   "ORDER BY month ASC", nativeQuery = true)
-    List<Map<String, Object>> findLoanCountsByMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
+       // Return year-month string (YYYY-MM) for compatibility across report consumers
+       @Query(value = "SELECT DATE_FORMAT(l.loan_date, '%Y-%m') AS month, COUNT(l.id) AS count " +
+                               "FROM loans l " +
+                               "WHERE l.loan_date BETWEEN :start AND :end " +
+                               "GROUP BY DATE_FORMAT(l.loan_date, '%Y-%m') " +
+                               "ORDER BY month ASC", nativeQuery = true)
+       List<Map<String, Object>> findLoanCountsByMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     // === Query cho Chart.js: Top sách mượn nhiều ===
     @Query(value = "SELECT b.name AS bookName, COUNT(l.id) AS loanCount " +
@@ -122,6 +123,13 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
                    "ORDER BY loanCount DESC " +
                    "LIMIT 5", nativeQuery = true)
     List<Map<String, Object>> findMostLoanedBooksInPeriod(@Param("start") LocalDate start, @Param("end") LocalDate end);
+
+       @Query(value = "SELECT DATE_FORMAT(COALESCE(l.return_date, l.loan_date), '%Y-%m') AS month, COALESCE(SUM(l.fine_amount), 0) AS totalFines " +
+                               "FROM loans l " +
+                               "WHERE (l.return_date IS NOT NULL AND l.return_date BETWEEN :start AND :end) OR (l.return_date IS NULL AND l.loan_date BETWEEN :start AND :end) " +
+                               "GROUP BY DATE_FORMAT(COALESCE(l.return_date, l.loan_date), '%Y-%m') " +
+                               "ORDER BY month ASC", nativeQuery = true)
+       List<Map<String, Object>> findFinesByMonth(@Param("start") LocalDate start, @Param("end") LocalDate end);
 
     // === Query cho Chart.js: Trạng thái đơn mượn ===
     @Query("SELECT l.status, COUNT(l) FROM Loan l GROUP BY l.status")

@@ -1,7 +1,7 @@
 package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dao.UsersRepository;
-import com.ibizabroker.lms.dto.EbookDto;
+// Using typed request/response DTOs: EbookCreateRequest, EbookResponse
 import com.ibizabroker.lms.entity.Ebook;
 import com.ibizabroker.lms.entity.EbookDownload;
 import com.ibizabroker.lms.entity.Users;
@@ -142,7 +142,7 @@ public class EbookController {
 
     @PostMapping(value = "/admin/ebooks", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Ebook> uploadEbook(
+    public ResponseEntity<com.ibizabroker.lms.dto.EbookResponse> uploadEbook(
             @RequestParam("file") MultipartFile file,
             @RequestParam("title") String title,
             @RequestParam(value = "author", required = false) String author,
@@ -154,23 +154,53 @@ public class EbookController {
         
         Integer uploaderId = getCurrentUserId(userDetails);
         
-        EbookDto dto = new EbookDto();
-        dto.setTitle(title);
-        dto.setAuthor(author);
-        dto.setDescription(description);
-        dto.setCoverUrl(coverUrl);
-        dto.setIsPublic(isPublic);
-        dto.setMaxDownloadsPerUser(maxDownloadsPerUser);
-        
-        return ResponseEntity.ok(ebookService.uploadEbook(file, dto, uploaderId));
+        com.ibizabroker.lms.dto.EbookCreateRequest dto = com.ibizabroker.lms.dto.EbookCreateRequest.builder()
+            .title(title)
+            .author(author)
+            .description(description)
+            .coverUrl(coverUrl)
+            .isPublic(isPublic)
+            .maxDownloadsPerUser(maxDownloadsPerUser)
+            .build();
+
+        Ebook created = ebookService.uploadEbook(file, dto, uploaderId);
+        com.ibizabroker.lms.dto.EbookResponse resp = com.ibizabroker.lms.dto.EbookResponse.builder()
+            .id(created.getId())
+            .bookId(created.getBook() != null ? created.getBook().getId() : null)
+            .title(created.getTitle())
+            .author(created.getAuthor())
+            .description(created.getDescription())
+            .coverUrl(created.getCoverUrl())
+            .isPublic(created.getIsPublic())
+            .maxDownloadsPerUser(created.getMaxDownloadsPerUser())
+            .format(created.getFileType())
+            .fileSize(created.getFileSize())
+            .downloadCount(created.getDownloadCount())
+            .build();
+
+        return ResponseEntity.ok().body(resp);
     }
 
     @PutMapping("/admin/ebooks/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<Ebook> updateEbook(
+    public ResponseEntity<com.ibizabroker.lms.dto.EbookResponse> updateEbook(
             @PathVariable Long id,
-            @Valid @RequestBody EbookDto dto) {
-        return ResponseEntity.ok(ebookService.updateEbook(id, dto));
+            @Valid @RequestBody com.ibizabroker.lms.dto.EbookCreateRequest dto) {
+        Ebook updated = ebookService.updateEbook(id, dto);
+        com.ibizabroker.lms.dto.EbookResponse resp = com.ibizabroker.lms.dto.EbookResponse.builder()
+                .id(updated.getId())
+                .bookId(updated.getBook() != null ? updated.getBook().getId() : null)
+                .title(updated.getTitle())
+                .author(updated.getAuthor())
+                .description(updated.getDescription())
+                .coverUrl(updated.getCoverUrl())
+                .isPublic(updated.getIsPublic())
+                .maxDownloadsPerUser(updated.getMaxDownloadsPerUser())
+                .format(updated.getFileType())
+                .fileSize(updated.getFileSize())
+                .downloadCount(updated.getDownloadCount())
+                .build();
+        return ResponseEntity.ok(resp);
     }
 
     @DeleteMapping("/admin/ebooks/{id}")

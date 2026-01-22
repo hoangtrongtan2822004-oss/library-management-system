@@ -1,5 +1,6 @@
 package com.ibizabroker.lms.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -28,8 +29,9 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @ToString(exclude = {"book", "member"})
+@Table(name = "loan")
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @Entity
-@Table(name = "loans")
 public class Loan extends BaseEntity {
 
     @Id

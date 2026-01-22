@@ -25,15 +25,16 @@ import lombok.NoArgsConstructor;
  * - bookId: Liên kết với sách vật lý (optional)
  * - maxDownloadsPerUser: Giới hạn download mỗi user
  * 
- * 🎯 TODO: CQRS Pattern
- * - [ ] Tách EbookCreateRequest vs EbookResponse
- * - [ ] Thêm fields: fileSize, format (PDF/EPUB), downloadCount
+ * 🎯 Status: Split implemented
+ * - Use `EbookCreateRequest` for incoming create/update payloads
+ * - Use `EbookResponse` for returned ebook data (includes fileSize/format/downloadCount)
  */
 @Data
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
+@Deprecated
 public class EbookDto {
 
     @NotEmpty(message = "Tiêu đề không được để trống")

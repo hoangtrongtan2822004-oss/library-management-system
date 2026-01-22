@@ -15,7 +15,7 @@ class JwtUtilTest {
     @Test
     void testGenerateAndValidateToken() {
         // Set up
-        jwtUtil.setSecret("my-very-secret-key-that-is-at-least-32-bytes-long");
+        jwtUtil.setSecret("MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=");
         jwtUtil.setExpirationMs(3600000); // 1 hour
 
         UserDetails user = User.withUsername("testuser").password("password").roles("USER").build();
@@ -33,7 +33,7 @@ class JwtUtilTest {
     @Test
     void testExpiredToken() throws InterruptedException {
         // Set up
-        jwtUtil.setSecret("my-very-secret-key-that-is-at-least-32-bytes-long");
+        jwtUtil.setSecret("MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=");
         jwtUtil.setExpirationMs(1); // 1 millisecond
 
         UserDetails user = User.withUsername("testuser").password("password").roles("USER").build();

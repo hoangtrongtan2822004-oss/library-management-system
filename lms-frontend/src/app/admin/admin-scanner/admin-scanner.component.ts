@@ -134,6 +134,44 @@ export class AdminScannerComponent implements OnInit {
     }
   }
 
+  // Request camera permission programmatically (button)
+  public async requestCameraPermission(): Promise<void> {
+    try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        this.toastr.error('Trình duyệt không hỗ trợ truy cập camera.');
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      // If succeeded, we have permission
+      this.hasPermission = true;
+      this.hasDevices = true;
+
+      // Refresh device list
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const videoInputs = devices.filter((d) => d.kind === 'videoinput');
+      this.onCamerasFound(videoInputs as MediaDeviceInfo[]);
+
+      // Stop temporary stream tracks to let the ZXing component manage camera
+      stream.getTracks().forEach((t) => t.stop());
+
+      this.toastr.success('Đã cấp quyền Camera. Có thể bắt đầu quét.');
+    } catch (err: any) {
+      this.hasPermission = false;
+      const message = err?.message || 'Không thể truy cập camera';
+      this.toastr.error(message, 'Quyền Camera thất bại');
+    }
+  }
+
+  // Deny / reset permission state (button)
+  public denyCameraPermission(): void {
+    this.hasPermission = false;
+    this.isScanning = false;
+    this.toastr.info(
+      'Đã từ chối quyền Camera. Bạn có thể dùng nhập mã thủ công.',
+    );
+  }
+
   onCodeResult(resultString: string): void {
     if (!this.isScanning || !resultString) return;
 

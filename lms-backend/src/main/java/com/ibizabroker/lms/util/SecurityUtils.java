@@ -3,6 +3,8 @@ package com.ibizabroker.lms.util;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import com.ibizabroker.lms.dao.UsersRepository;
+import com.ibizabroker.lms.entity.Users;
 
 import java.util.Optional;
 
@@ -53,12 +55,9 @@ public class SecurityUtils {
             .map(Authentication::getPrincipal)
             .filter(principal -> principal instanceof UserDetails)
             .map(principal -> {
-                // TODO: Replace with your actual UserDetails implementation
-                // Example: if (principal instanceof CustomUserDetails userDetails) {
-                //     return userDetails.getUserId();
-                // }
-                
-                // Fallback: Try to extract from username if it's numeric
+                // If your UserDetails implementation exposes a userId, cast and return it.
+                // In this project we use Spring Security's `User` (org.springframework.security.core.userdetails.User)
+                // which does not carry the DB id. Prefer resolving via repository when available.
                 UserDetails userDetails = (UserDetails) principal;
                 String username = userDetails.getUsername();
                 if (username != null && username.matches("\\d+")) {
@@ -66,6 +65,19 @@ public class SecurityUtils {
                 }
                 return null;
             });
+    }
+
+    /**
+     * Convenience method to resolve current user id using the `UsersRepository`.
+     * Use this when you need the numeric DB id and have access to the repository.
+     *
+     * @param usersRepo users repository bean
+     * @return Optional userId
+     */
+    public static Optional<Integer> getCurrentUserId(UsersRepository usersRepo) {
+        return getCurrentUsername()
+                .flatMap(usersRepo::findByUsername)
+                .map(Users::getUserId);
     }
 
     /**

@@ -2,8 +2,10 @@ package com.ibizabroker.lms.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import com.ibizabroker.lms.validation.ValidPhoneNumber;
+import com.ibizabroker.lms.validation.UniqueUsername;
+import com.ibizabroker.lms.validation.PasswordStrength;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,10 +28,8 @@ import lombok.NoArgsConstructor;
  * - studentClass: Optional
  * - phoneNumber: Optional, nếu có thì phải đúng format (10-11 số, bắt đầu 0)
  * 
- * 🎯 TODO: Nâng cấp thêm
- * - [ ] @ValidPhoneNumber custom annotation (Việt Nam format)
- * - [ ] @UniqueUsername check trùng trong DB
- * - [ ] @PasswordStrength (yêu cầu chữ hoa, số, ký tự đặc biệt)
+ * 🎯 Validators applied
+ * - `@ValidPhoneNumber`, `@UniqueUsername`, `@PasswordStrength` are applied to fields
  */
 @Data
 @Builder
@@ -43,16 +43,18 @@ public class RegisterRequest {
 
     @NotBlank(message = "Username cannot be empty")
     @Size(min = 4, max = 50, message = "Username must be between 4 and 50 characters")
+    @UniqueUsername
     private String username;
 
     @NotBlank(message = "Password cannot be empty")
     @Size(min = 6, message = "Password must be at least 6 characters long")
+    @PasswordStrength
     private String password;
 
     private String email;  // ✅ Phase 8: Add email field for user registration
 
     private String studentClass;
     
-    @Pattern(regexp = "^0[0-9]{9,10}$", message = "Phone number must be 10-11 digits starting with 0")
+    @ValidPhoneNumber
     private String phoneNumber;
 }

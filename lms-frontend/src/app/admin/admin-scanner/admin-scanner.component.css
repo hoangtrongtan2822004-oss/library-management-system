@@ -28,9 +28,18 @@
 }
 
 @keyframes scan {
-  0% { transform: translateY(-150px); opacity: 0.5; }
-  50% { transform: translateY(150px); opacity: 1; }
-  100% { transform: translateY(-150px); opacity: 0.5; }
+  0% {
+    transform: translateY(-150px);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(150px);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-150px);
+    opacity: 0.5;
+  }
 }
 
 .scan-result-panel {
@@ -45,4 +54,21 @@
   display: flex;
   flex-direction: column;
   justify-content: center;
+}
+
+.camera-permission-panel {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.45), rgba(0, 0, 0, 0.35));
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.camera-permission-panel button.btn i {
+  margin-right: 6px;
+}
+
+/* Make permission controls centered on small devices */
+@media (max-width: 767.98px) {
+  .camera-permission-panel {
+    padding: 1rem;
+  }
 }

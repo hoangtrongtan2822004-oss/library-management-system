@@ -2,7 +2,6 @@ package com.ibizabroker.lms.service;
 
 import com.ibizabroker.lms.dao.EbookDownloadRepository;
 import com.ibizabroker.lms.dao.EbookRepository;
-import com.ibizabroker.lms.dto.EbookDto;
 import com.ibizabroker.lms.entity.Ebook;
 import com.ibizabroker.lms.entity.EbookDownload;
 import com.ibizabroker.lms.exceptions.NotFoundException;
@@ -71,7 +70,7 @@ public class EbookService {
         return ebookRepository.findNewest(PageRequest.of(0, limit));
     }
 
-    public Ebook uploadEbook(MultipartFile file, EbookDto dto, Integer uploaderId) throws IOException {
+    public Ebook uploadEbook(MultipartFile file, com.ibizabroker.lms.dto.EbookCreateRequest dto, Integer uploaderId) throws IOException {
         // Create upload directory if not exists
         Path uploadDir = Paths.get(uploadPath);
         if (!Files.exists(uploadDir)) {
@@ -106,7 +105,7 @@ public class EbookService {
     }
 
     @SuppressWarnings("null")
-    public Ebook updateEbook(Long id, EbookDto dto) {
+    public Ebook updateEbook(Long id, com.ibizabroker.lms.dto.EbookCreateRequest dto) {
         Ebook ebook = getEbookById(id);
         if (dto.getTitle() != null) ebook.setTitle(dto.getTitle());
         if (dto.getAuthor() != null) ebook.setAuthor(dto.getAuthor());

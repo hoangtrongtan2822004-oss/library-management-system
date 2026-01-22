@@ -1,8 +1,6 @@
 package com.ibizabroker.lms.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -11,20 +9,14 @@ import lombok.NoArgsConstructor;
 /**
  * 💬 Review Comment DTO (Hybrid - Request & Response)
  * 
- * Dùng cho:
- * - POST /api/user/reviews/{reviewId}/comments (Request)
- * - GET /api/public/reviews/{reviewId}/comments (Response)
- * 
- * 📌 Validation Rules (Request):
- * - content: Bắt buộc, 1-500 ký tự
- * 
+ * Response DTO for review comments
+ *
+ * Dùng cho: GET /api/public/reviews/{reviewId}/comments (Response)
+ *
  * 📌 Response Fields:
  * - id, reviewId, userId, userName, content, createdAt
- * 
- * 🎯 TODO: CQRS Pattern
- * - [ ] Tách ReviewCommentRequest (input) vs ReviewCommentResponse (output)
- * - [ ] ReviewCommentRequest: chỉ có content field
- * - [ ] ReviewCommentResponse: có đầy đủ id, userName, createdAt
+ *
+ * Note: request validation has been moved to `ReviewCommentRequest`.
  */
 @Data
 @Builder
@@ -54,10 +46,8 @@ public class ReviewCommentDto {
     private String userName;
     
     /**
-     * Comment content (request + response)
+     * Comment content (response)
      */
-    @NotBlank(message = "Nội dung comment không được để trống")
-    @Size(min = 1, max = 500, message = "Comment phải từ 1-500 ký tự")
     private String content;
     
     /**

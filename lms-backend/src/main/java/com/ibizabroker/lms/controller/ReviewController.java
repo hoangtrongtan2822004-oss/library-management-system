@@ -7,6 +7,7 @@ import com.ibizabroker.lms.dao.ReviewLikeRepository;
 import com.ibizabroker.lms.dao.ReviewCommentRepository;
 import com.ibizabroker.lms.dto.ReviewDto;
 import com.ibizabroker.lms.dto.ReviewCommentDto;
+import com.ibizabroker.lms.dto.ReviewCommentRequest;
 import com.ibizabroker.lms.entity.Books;
 import com.ibizabroker.lms.entity.Review;
 import com.ibizabroker.lms.entity.Users;
@@ -268,9 +269,9 @@ public class ReviewController {
     
     @PostMapping("/api/reviews/{reviewId}/comments")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<ReviewCommentDto> addComment(
+        public ResponseEntity<ReviewCommentDto> addComment(
             @PathVariable Integer reviewId,
-            @Valid @RequestBody ReviewCommentDto commentDto,
+            @Valid @RequestBody ReviewCommentRequest commentDto,
             @AuthenticationPrincipal UserDetails userDetails) {
         Users currentUser = usersRepository.findByUsername(userDetails.getUsername())
                 .orElseThrow(() -> new NotFoundException("Người dùng không hợp lệ"));

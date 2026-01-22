@@ -5,6 +5,25 @@ import { Book, Author, Category } from '../models/book';
 import { ApiService, IS_PUBLIC_API } from './api.service';
 import { map, switchMap } from 'rxjs/operators';
 
+/**
+ * 📦 ApiResponse wrapper từ Backend
+ *
+ * Backend trả về dữ liệu trong format:
+ * {
+ *   "status": "success",
+ *   "message": "Operation completed",
+ *   "data": <actual data here>
+ * }
+ *
+ * Frontend cần "bóc" lớp vỏ này để lấy data thật
+ */
+export interface ApiResponse<T> {
+  status: string;
+  message: string;
+  data: T;
+  timestamp?: string;
+}
+
 export interface ImportSummary {
   successCount: number;
   failedCount: number;
@@ -35,6 +54,11 @@ export class BooksService {
 
   // --- PUBLIC METHODS ---
 
+  /**
+   * Get paginated list of books (Public API)
+   *
+   * ⚠️ Backend trả về ApiResponse<Page<Book>>, cần unwrap để lấy Page<Book>
+   */
   public getPublicBooks(
     availableOnly: boolean,
     search?: string | null,
@@ -50,32 +74,58 @@ export class BooksService {
     if (search) params = params.set('search', search);
     if (genre) params = params.set('genre', genre);
 
-    // Sử dụng context để báo cho Interceptor biết đây là public API
-    return this.http.get<Page<Book>>(
-      this.apiService.buildUrl('/public/books'),
-      {
+    // 👇 SỬA: Thêm pipe(map(...)) để unwrap ApiResponse
+    return this.http
+      .get<ApiResponse<Page<Book>>>(this.apiService.buildUrl('/public/books'), {
         params,
         context: new HttpContext().set(IS_PUBLIC_API, true),
-      },
-    );
+      })
+      .pipe(
+        map((response) => {
+          console.log('📚 Raw API Response:', response);
+          console.log('📖 Books data:', response.data);
+          return response.data; // Chỉ trả về Page<Book> cho Component
+        }),
+      );
   }
 
+  /**
+   * Get book by ID (Public API)
+   *
+   * ⚠️ Backend trả về ApiResponse<Book>, cần unwrap để lấy Book
+   */
   public getBookById(id: number): Observable<Book> {
-    return this.http.get<Book>(
-      this.apiService.buildUrl(`/public/books/${id}`),
-      {
+    return this.http
+      .get<ApiResponse<Book>>(this.apiService.buildUrl(`/public/books/${id}`), {
         context: new HttpContext().set(IS_PUBLIC_API, true),
-      },
-    );
+      })
+      .pipe(
+        map((response) => {
+          console.log('📖 Book detail response:', response);
+          return response.data;
+        }),
+      );
   }
 
+  /**
+   * Get newest books (Public API)
+   *
+   * ⚠️ Backend trả về ApiResponse<Book[]>, cần unwrap để lấy Book[]
+   */
   public getNewestBooks(): Observable<Book[]> {
-    return this.http.get<Book[]>(
-      this.apiService.buildUrl('/public/books/newest'),
-      {
-        context: new HttpContext().set(IS_PUBLIC_API, true),
-      },
-    );
+    return this.http
+      .get<ApiResponse<Book[]>>(
+        this.apiService.buildUrl('/public/books/newest'),
+        {
+          context: new HttpContext().set(IS_PUBLIC_API, true),
+        },
+      )
+      .pipe(
+        map((response) => {
+          console.log('🆕 Newest books response:', response);
+          return response.data;
+        }),
+      );
   }
 
   // --- ADMIN METHODS ---

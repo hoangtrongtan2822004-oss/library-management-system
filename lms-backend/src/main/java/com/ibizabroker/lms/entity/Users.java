@@ -1,6 +1,7 @@
 package com.ibizabroker.lms.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import java.util.HashSet;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.Set;
     name = "users",
     uniqueConstraints = @UniqueConstraint(name = "uk_users_username", columnNames = "username")
 )
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class Users {
 
     @Id

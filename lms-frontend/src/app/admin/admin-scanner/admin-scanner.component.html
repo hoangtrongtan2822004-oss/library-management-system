@@ -90,9 +90,33 @@
       class="card-body p-0 position-relative bg-black text-center"
       style="min-height: 400px; overflow: hidden"
     >
-      <div *ngIf="!hasPermission" class="p-5 text-warning">
-        <h3><i class="fa-solid fa-triangle-exclamation"></i></h3>
-        <p>Vui lòng cấp quyền truy cập Camera cho trình duyệt.</p>
+      <div
+        *ngIf="!hasPermission"
+        class="p-4 text-warning camera-permission-panel"
+      >
+        <div class="d-flex flex-column align-items-center gap-3">
+          <h3 class="mb-0">
+            <i class="fa-solid fa-triangle-exclamation fa-2x"></i>
+          </h3>
+          <p class="mb-1 text-center fw-semibold">
+            Ứng dụng cần quyền truy cập Camera để quét mã vạch/QR.
+          </p>
+          <p class="small text-muted text-center">
+            Nếu bạn không muốn cấp quyền, có thể nhập mã thủ công bên dưới.
+          </p>
+
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" (click)="requestCameraPermission()">
+              <i class="fa-solid fa-camera"></i> Cho phép Camera
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              (click)="denyCameraPermission()"
+            >
+              <i class="fa-solid fa-ban"></i> Từ chối
+            </button>
+          </div>
+        </div>
       </div>
 
       <zxing-scanner
