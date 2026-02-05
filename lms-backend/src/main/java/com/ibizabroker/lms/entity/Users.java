@@ -30,6 +30,10 @@ public class Users {
     @Column(length = 100)
     private String name;
 
+    // Full name for display (used for OAuth2 users)
+    @Column(name = "full_name", length = 100)
+    private String fullName;
+
     // === THÊM TRƯỜNG EMAIL VÀO ĐÂY ===
     @Column(length = 100)
     private String email;
@@ -37,8 +41,15 @@ public class Users {
     @Column(name = "google_id", unique = true)
     private String googleId;
 
+    @Column(name = "facebook_id", unique = true)
+    private String facebookId;
+
     @Column(name = "avatar", length = 500)
     private String avatar;
+    
+    // Profile picture URL (for OAuth2 users)
+    @Column(name = "profile_picture", length = 500)
+    private String profilePicture;
 
     @Column(name = "student_class")
     private String studentClass;
@@ -74,6 +85,9 @@ public class Users {
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
+    
+    public String getFullName() { return fullName; }
+    public void setFullName(String fullName) { this.fullName = fullName; }
 
     public Set<Role> getRoles() { return roles; }
     public void setRoles(Set<Role> roles) { this.roles = roles; }
@@ -85,8 +99,14 @@ public class Users {
     public String getGoogleId() { return googleId; }
     public void setGoogleId(String googleId) { this.googleId = googleId; }
 
+    public String getFacebookId() { return facebookId; }
+    public void setFacebookId(String facebookId) { this.facebookId = facebookId; }
+
     public String getAvatar() { return avatar; }
     public void setAvatar(String avatar) { this.avatar = avatar; }
+    
+    public String getProfilePicture() { return profilePicture; }
+    public void setProfilePicture(String profilePicture) { this.profilePicture = profilePicture; }
 
     public void addRole(Role role) { this.roles.add(role); }
 

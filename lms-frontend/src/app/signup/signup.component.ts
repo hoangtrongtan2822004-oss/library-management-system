@@ -12,6 +12,8 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, of, timer } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
+import { OAuth2Service } from '../services/oauth2.service';
+import { UserAuthService } from '../services/user-auth.service';
 
 @Component({
   selector: 'app-signup',
@@ -44,6 +46,8 @@ export class SignupComponent implements OnInit {
     private usersService: UsersService,
     private router: Router,
     private toastr: ToastrService,
+    private oauth2Service: OAuth2Service,
+    private userAuthService: UserAuthService,
   ) {
     // Initialize Reactive Form
     this.signupForm = this.fb.group(
@@ -313,4 +317,37 @@ export class SignupComponent implements OnInit {
   public toggleShowConfirmPassword(): void {
     this.showConfirmPassword = !this.showConfirmPassword;
   }
+
+  /**
+   * Sign up with Google OAuth2
+   * Uses the same OAuth2 flow - backend will automatically create new user if email doesn't exist
+   */
+  public signUpWithGoogle(): void {
+    if (this.isLoading) return;
+
+    this.isLoading = true;
+    this.oauth2Service.getGoogleConfig().subscribe({
+      next: (config) => {
+        this.oauth2Service.initiateGoogleLogin(
+          config.clientId,
+          config.redirectUri,
+        );
+        // User will be redirected to Google, then back to /auth/google/callback
+      },
+      error: (err) => {
+        console.error('Failed to get Google config:', err);
+        this.toastr.error(
+          'Không thể kết nối với Google. Vui lòng thử lại.',
+          'Lỗi',
+        );
+        this.isLoading = false;
+      },
+    });
+  }
+
+  /**
+   * Sign up with Facebook OAuth2
+   * Uses the same OAuth2 flow - backend will automatically create new user if email doesn't exist
+   */
+  // Social login removed
 }

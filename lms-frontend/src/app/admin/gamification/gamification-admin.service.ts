@@ -61,16 +61,41 @@ export class GamificationAdminService {
   }
 
   createBadge(badge: Badge): Observable<Badge> {
+    // Map frontend Badge shape to backend Badge entity shape
+    const payload: any = {
+      nameVi: badge.name,
+      nameEn: badge.name,
+      descriptionVi: badge.description,
+      descriptionEn: badge.description,
+      pointsReward: badge.points,
+      requirementValue: badge.requirement,
+      category: badge.tier,
+      iconUrl: badge.iconUrl,
+      isActive: true,
+    };
+
     return this.http.post<Badge>(
       this.apiService.buildUrl('/admin/gamification/badges'),
-      badge,
+      payload,
     );
   }
 
   updateBadge(id: number, badge: Badge): Observable<Badge> {
+    const payload: any = {
+      nameVi: badge.name,
+      nameEn: badge.name,
+      descriptionVi: badge.description,
+      descriptionEn: badge.description,
+      pointsReward: badge.points,
+      requirementValue: badge.requirement,
+      category: badge.tier,
+      iconUrl: badge.iconUrl,
+      isActive: true,
+    };
+
     return this.http.put<Badge>(
       this.apiService.buildUrl(`/admin/gamification/badges/${id}`),
-      badge,
+      payload,
     );
   }
 
@@ -104,16 +129,41 @@ export class GamificationAdminService {
   }
 
   createChallenge(challenge: Challenge): Observable<Challenge> {
+    const payload: any = {
+      nameEn: challenge.name,
+      nameVi: challenge.name,
+      descriptionEn: challenge.description,
+      descriptionVi: challenge.description,
+      startDate: challenge.startDate,
+      endDate: challenge.endDate,
+      targetBooks: challenge.targetCount,
+      pointsReward: challenge.rewardPoints,
+      isActive: challenge.active ?? true,
+      createdAt: new Date().toISOString(),
+    };
+
     return this.http.post<Challenge>(
       this.apiService.buildUrl('/admin/gamification/challenges'),
-      challenge,
+      payload,
     );
   }
 
   updateChallenge(id: number, challenge: Challenge): Observable<Challenge> {
+    const payload: any = {
+      nameEn: challenge.name,
+      nameVi: challenge.name,
+      descriptionEn: challenge.description,
+      descriptionVi: challenge.description,
+      startDate: challenge.startDate,
+      endDate: challenge.endDate,
+      targetBooks: challenge.targetCount,
+      pointsReward: challenge.rewardPoints,
+      isActive: challenge.active ?? true,
+    };
+
     return this.http.put<Challenge>(
       this.apiService.buildUrl(`/admin/gamification/challenges/${id}`),
-      challenge,
+      payload,
     );
   }
 
@@ -139,16 +189,38 @@ export class GamificationAdminService {
   }
 
   createReward(reward: RewardItem): Observable<RewardItem> {
+    const payload: any = {
+      name: reward.name,
+      description: reward.description,
+      icon: reward.imageUrl,
+      cost: reward.pointsCost,
+      category: (reward as any).category ?? 'cosmetic',
+      available: reward.active ?? true,
+      maxRedemptions: reward.stock ?? null,
+      createdAt: new Date().toISOString(),
+    };
+
     return this.http.post<RewardItem>(
       this.apiService.buildUrl('/admin/gamification/rewards'),
-      reward,
+      payload,
     );
   }
 
   updateReward(id: number, reward: RewardItem): Observable<RewardItem> {
+    const payload: any = {
+      name: reward.name,
+      description: reward.description,
+      icon: reward.imageUrl,
+      cost: reward.pointsCost,
+      category: (reward as any).category ?? 'cosmetic',
+      available: reward.active ?? true,
+      maxRedemptions: reward.stock ?? null,
+      updatedAt: new Date().toISOString(),
+    };
+
     return this.http.put<RewardItem>(
       this.apiService.buildUrl(`/admin/gamification/rewards/${id}`),
-      reward,
+      payload,
     );
   }
 

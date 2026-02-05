@@ -474,7 +474,7 @@ body.light-theme .book-card {
   border-color: #e2e8f0 !important;
 }
 body.light-theme .book-title {
-  color: #0f172a !important; /* Đậm hơn cho light theme để dễ đọc */
+  color: #000000 !important; /* Đổi sang đen tuyệt đối để dễ đọc trên nền trắng */
   text-shadow: none !important;
   font-weight: 700 !important; /* Bold hơn một chút */
 }

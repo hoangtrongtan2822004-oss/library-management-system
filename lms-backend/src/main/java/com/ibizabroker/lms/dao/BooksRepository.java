@@ -63,10 +63,14 @@ public interface BooksRepository extends JpaRepository<Books, Integer>, JpaSpeci
     @EntityGraph(attributePaths = {"authors", "categories"})
     Page<Books> findAll(Pageable pageable);
 
-    @Override
-    @EntityGraph(attributePaths = {"authors", "categories"})
-    @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id = :id")
-    Optional<Books> findById(@Param("id") Integer bookId);
+       @Override
+       @EntityGraph(attributePaths = {"authors", "categories"})
+       @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id = :id")
+       Optional<Books> findById(@Param("id") Integer bookId);
+
+       @EntityGraph(attributePaths = {"authors", "categories"})
+       @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id IN :ids")
+       List<Books> findAllByIdIn(@Param("ids") List<Integer> ids);
 
     @EntityGraph(attributePaths = {"authors", "categories"})
     @Query("SELECT b FROM Books b ORDER BY b.id DESC")

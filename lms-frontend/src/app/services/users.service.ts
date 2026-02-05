@@ -33,7 +33,10 @@ export class UsersService {
     return this.http.post<AuthResponse>(
       this.apiService.buildUrl('/auth/authenticate'),
       credentials,
-      { context: new HttpContext().set(IS_PUBLIC_API, true) },
+      {
+        context: new HttpContext().set(IS_PUBLIC_API, true),
+        withCredentials: true,
+      },
     );
   }
 
@@ -81,6 +84,11 @@ export class UsersService {
   }
 
   // ---------- ACCOUNT ----------
+
+  getCurrentUser(): Observable<User> {
+    return this.http.get<User>(this.apiService.buildUrl('/account/me'));
+  }
+
   public changePassword(payload: {
     oldPassword: string;
     newPassword: string;

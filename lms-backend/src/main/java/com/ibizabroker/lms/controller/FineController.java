@@ -11,6 +11,10 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Collections;
+import java.math.BigDecimal;
+import java.time.LocalDate;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,6 +30,20 @@ public class FineController {
         return ResponseEntity.ok(loanRepository.findUnpaidFineDetails());
     }
 
+    @GetMapping("/paid")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<FineDetailsDto>> getPaidFines(
+            @RequestParam(required = false) String startDate,
+            @RequestParam(required = false) String endDate) {
+        if (startDate != null && endDate != null) {
+            java.time.LocalDate s = java.time.LocalDate.parse(startDate);
+            java.time.LocalDate e = java.time.LocalDate.parse(endDate);
+            return ResponseEntity.ok(loanRepository.findPaidFineDetailsBetween(s, e));
+        }
+
+        return ResponseEntity.ok(loanRepository.findPaidFineDetails());
+    }
+
     @PostMapping("/{loanId}/pay")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<Void> markFineAsPaid(@PathVariable Integer loanId) {
@@ -35,6 +53,22 @@ public class FineController {
         loan.setFineStatus(FineStatus.PAID);  // ✅ Use enum
         loanRepository.save(loan);
         return ResponseEntity.ok().build();
+    }
+    
+    @GetMapping("/daily-summary")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<Map<String, Object>> getDailySummary(@RequestParam String date) {
+        LocalDate d = LocalDate.parse(date);
+        BigDecimal total = loanRepository.sumPaidFinesByDate(d);
+        long count = loanRepository.countPaidFinesByDate(d);
+
+        Map<String, Object> resp = Map.of(
+                "totalAmount", total,
+                "totalCount", count,
+                "byMethod", Collections.emptyList()
+        );
+
+        return ResponseEntity.ok(resp);
     }
     
     // Phương thức getMyFines đã được xóa và sẽ chuyển sang CirculationController

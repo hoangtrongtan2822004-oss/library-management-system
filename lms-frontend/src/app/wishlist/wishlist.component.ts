@@ -1,15 +1,20 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { WishlistService, WishlistItem } from '../services/wishlist.service';
 import { CirculationService } from '../services/circulation.service';
 import { ToastrService } from 'ngx-toastr';
+import {
+  NgbModal,
+  NgbModalModule,
+  NgbModalRef,
+} from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
   selector: 'app-wishlist',
   standalone: true,
-  imports: [CommonModule, RouterModule, FormsModule],
+  imports: [CommonModule, RouterModule, FormsModule, NgbModalModule],
   templateUrl: './wishlist.component.html',
   styleUrls: ['./wishlist.component.css'],
 })
@@ -19,11 +24,16 @@ export class WishlistComponent implements OnInit {
   currentSort = 'recent';
   editingNotes: { [key: number]: boolean } = {};
   tempNotes: { [key: number]: string } = {};
+  selectedToRemove: { bookId: number; bookName?: string } | null = null;
+  private modalRefInstance: NgbModalRef | null = null;
+
+  @ViewChild('confirmModal') confirmModal!: TemplateRef<any>;
 
   constructor(
     private wishlistService: WishlistService,
     private circulationService: CirculationService,
-    private toastr: ToastrService
+    private toastr: ToastrService,
+    private modalService: NgbModal,
   ) {}
 
   ngOnInit(): void {
@@ -48,21 +58,52 @@ export class WishlistComponent implements OnInit {
     });
   }
 
-  remove(bookId: number): void {
-    if (!confirm('Bạn có chắc muốn bỏ sách này khỏi danh sách yêu thích?'))
-      return;
+  // Open confirmation modal (set selectedToRemove)
+  remove(bookId: number, bookName?: string): void {
+    this.selectedToRemove = { bookId, bookName };
+    // allow template to render then open ng-bootstrap modal
+    setTimeout(() => this.openModal(), 0);
+  }
 
+  // Confirm deletion from modal
+  confirmRemove(): void {
+    if (!this.selectedToRemove) return;
+    const bookId = this.selectedToRemove.bookId;
     this.wishlistService.removeFromWishlist(bookId).subscribe({
       next: () => {
         this.toastr.success('Đã xóa khỏi danh sách yêu thích');
         this.wishlistItems = this.wishlistItems.filter(
-          (item) => item.bookId !== bookId
+          (item) => item.bookId !== bookId,
         );
+        this.hideModal();
+        this.selectedToRemove = null;
       },
       error: () => {
         this.toastr.error('Lỗi khi xóa sách');
+        this.hideModal();
+        this.selectedToRemove = null;
       },
     });
+  }
+
+  // Cancel modal
+  cancelRemove(): void {
+    this.hideModal();
+    this.selectedToRemove = null;
+  }
+
+  private openModal() {
+    if (!this.confirmModal) return;
+    this.modalRefInstance = this.modalService.open(this.confirmModal, {
+      centered: true,
+    });
+  }
+
+  private hideModal() {
+    if (this.modalRefInstance) {
+      this.modalRefInstance.close();
+      this.modalRefInstance = null;
+    }
   }
 
   startEditNotes(item: WishlistItem): void {
@@ -118,7 +159,7 @@ export class WishlistComponent implements OnInit {
       error: (err) => {
         if (err.status === 400) {
           this.toastr.error(
-            'Bạn đã mượn quá số sách cho phép hoặc sách không khả dụng'
+            'Bạn đã mượn quá số sách cho phép hoặc sách không khả dụng',
           );
         } else {
           this.toastr.error('Lỗi khi gửi yêu cầu mượn sách');

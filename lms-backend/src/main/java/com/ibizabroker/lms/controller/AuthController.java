@@ -12,8 +12,11 @@ import com.ibizabroker.lms.service.PasswordResetService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import jakarta.validation.Valid;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus; // ⭐️ ĐÃ THÊM
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.BadCredentialsException; // ⭐️ ĐÃ THÊM
@@ -24,6 +27,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.CookieValue;
 
 import java.net.URI;
 import java.util.HashMap;
@@ -32,7 +36,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/auth") // Đảm bảo đã có /api
-@CrossOrigin(origins = "http://localhost:4200")
 public class AuthController {
 
     private final UsersRepository usersRepo;
@@ -41,6 +44,18 @@ public class AuthController {
     private final AuthenticationManager authManager;
     private final JwtUtil jwtUtil;
     private final PasswordResetService passwordResetService;
+
+    @Value("${app.jwt-refresh-expiration:604800000}")
+    private long refreshExpirationMs;
+
+    @Value("${app.refresh-cookie-secure:false}")
+    private boolean refreshCookieSecure;
+
+    @Value("${app.refresh-cookie-same-site:Lax}")
+    private String refreshCookieSameSite;
+
+    @Value("${app.refresh-cookie-domain:}")
+    private String refreshCookieDomain;
 
     public AuthController(UsersRepository usersRepo,
                           RoleRepository roleRepo,
@@ -54,6 +69,20 @@ public class AuthController {
         this.authManager = authManager;
         this.jwtUtil = jwtUtil;
         this.passwordResetService = passwordResetService;
+    }
+
+    private ResponseCookie buildRefreshCookie(String refreshToken) {
+        ResponseCookie.ResponseCookieBuilder builder = ResponseCookie.from("refreshToken", refreshToken)
+            .httpOnly(true)
+            .secure(refreshCookieSecure)
+            .sameSite(refreshCookieSameSite)
+            .path("/api/auth/refresh-token")
+            .maxAge(refreshExpirationMs / 1000); // seconds
+
+        if (StringUtils.hasText(refreshCookieDomain)) {
+            builder.domain(refreshCookieDomain.trim());
+        }
+        return builder.build();
     }
 
     // ===== REGISTER =====
@@ -86,7 +115,7 @@ public class AuthController {
 
     // ===== AUTHENTICATE =====
     public static record LoginRequest(String username, String password) {}
-    public static record LoginResponse(String token, String refreshToken, Integer userId, String name, List<String> roles) {}
+    public static record LoginResponse(String token, Integer userId, String name, List<String> roles, boolean refreshTokenInCookie) {}
 
     @SuppressWarnings("null")
     @PostMapping(
@@ -132,35 +161,38 @@ public class AuthController {
         String token = jwtUtil.generateToken(principal, claims);
         String refreshToken = jwtUtil.generateRefreshToken(principal, claims);
 
-        return ResponseEntity.ok(new LoginResponse(token, refreshToken, u.getUserId(), u.getName(), roles));
+        ResponseCookie cookie = buildRefreshCookie(refreshToken);
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cookie.toString())
+            .body(new LoginResponse(token, u.getUserId(), u.getName(), roles, true));
     }
 
     // ===== REFRESH TOKEN =====
-    public static record RefreshTokenRequest(String refreshToken) {}
-
     @PostMapping("/refresh-token")
-    public ResponseEntity<?> refreshToken(@RequestBody RefreshTokenRequest req) {
-        if (!StringUtils.hasText(req.refreshToken())) {
-            return ResponseEntity.badRequest().body(Map.of("message", "Refresh token không hợp lệ"));
+    public ResponseEntity<?> refreshToken(@CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        if (!StringUtils.hasText(refreshToken)) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(Map.of("message", "Refresh token không hợp lệ hoặc thiếu cookie"));
         }
 
         try {
-            String username = jwtUtil.getUsernameFromToken(req.refreshToken());
-            
+            String username = jwtUtil.getUsernameFromToken(refreshToken);
+
             // Verify it's a refresh token (not access token)
-            Claims claims = jwtUtil.parseAllClaims(req.refreshToken());
+            Claims claims = jwtUtil.parseAllClaims(refreshToken);
             String tokenType = (String) claims.get("tokenType");
             if (!"REFRESH".equals(tokenType)) {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                     .body(Map.of("message", "Token không phải là refresh token"));
             }
 
-            // Load user and generate new access token
+            // Load user and generate new tokens (rotate refresh token)
             Users u = usersRepo.findByUsernameWithRolesIgnoreCase(username)
                     .orElseThrow(() -> new RuntimeException("User not found"));
 
             List<String> roles = u.getRoles().stream()
-                    .map(role -> role.getRoleName())
+                    .map(Role::getRoleName)
                     .toList();
 
             Map<String, Object> newClaims = new HashMap<>();
@@ -176,13 +208,17 @@ public class AuthController {
                     .build();
 
             String newAccessToken = jwtUtil.generateToken(userDetails, newClaims);
+            String newRefreshToken = jwtUtil.generateRefreshToken(userDetails, newClaims);
+            ResponseCookie cookie = buildRefreshCookie(newRefreshToken);
 
-            return ResponseEntity.ok(Map.of(
-                "token", newAccessToken,
-                "userId", u.getUserId(),
-                "name", u.getName(),
-                "roles", roles
-            ));
+            return ResponseEntity.ok()
+                .header(HttpHeaders.SET_COOKIE, cookie.toString())
+                .body(Map.of(
+                    "token", newAccessToken,
+                    "userId", u.getUserId(),
+                    "name", u.getName(),
+                    "roles", roles
+                ));
         } catch (ExpiredJwtException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("message", "Refresh token đã hết hạn, vui lòng đăng nhập lại"));
@@ -218,10 +254,22 @@ public class AuthController {
         // The actual session clearing happens on the frontend
         
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            // TODO: Add token to blacklist in Redis (extract token with authHeader.substring(7))
-            // redisTemplate.opsForValue().set("blacklist:" + token, "true", jwtUtil.getExpirationTime(), TimeUnit.MILLISECONDS);
+            
         }
-        
-        return ResponseEntity.ok(Map.of("message", "Đăng xuất thành công"));
+
+        ResponseCookie.ResponseCookieBuilder clearBuilder = ResponseCookie.from("refreshToken", "")
+            .httpOnly(true)
+            .secure(refreshCookieSecure)
+            .sameSite(refreshCookieSameSite)
+            .path("/api/auth/refresh-token")
+            .maxAge(0);
+        if (StringUtils.hasText(refreshCookieDomain)) {
+            clearBuilder.domain(refreshCookieDomain.trim());
+        }
+        ResponseCookie cleared = clearBuilder.build();
+
+        return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, cleared.toString())
+            .body(Map.of("message", "Đăng xuất thành công"));
     }
 }

@@ -9,7 +9,6 @@ export class UserAuthService {
   }
   private ROLES_KEY = 'roles';
   private TOKEN_KEY = 'jwtToken';
-  private REFRESH_TOKEN_KEY = 'refreshToken';
   private USER_ID_KEY = 'userId';
   private NAME_KEY = 'name';
 
@@ -25,10 +24,6 @@ export class UserAuthService {
 
   public setToken(jwtToken: string) {
     localStorage.setItem(this.TOKEN_KEY, jwtToken);
-  }
-
-  public setRefreshToken(refreshToken: string) {
-    localStorage.setItem(this.REFRESH_TOKEN_KEY, refreshToken);
   }
 
   public setUserId(userId: number) {
@@ -55,10 +50,6 @@ export class UserAuthService {
     return localStorage.getItem(this.TOKEN_KEY);
   }
 
-  public getRefreshToken(): string | null {
-    return localStorage.getItem(this.REFRESH_TOKEN_KEY);
-  }
-
   public getUserId(): number | null {
     const s = localStorage.getItem(this.USER_ID_KEY);
     return s != null ? Number(s) : null;
@@ -72,7 +63,6 @@ export class UserAuthService {
   public clear() {
     localStorage.removeItem(this.ROLES_KEY);
     localStorage.removeItem(this.TOKEN_KEY);
-    localStorage.removeItem(this.REFRESH_TOKEN_KEY);
     localStorage.removeItem(this.USER_ID_KEY);
     localStorage.removeItem(this.NAME_KEY);
   }
@@ -83,13 +73,19 @@ export class UserAuthService {
 
   // --- KIỂM TRA QUYỀN ---
   public isAdmin(): boolean {
-    const roles = this.getRoles();
-    return roles.includes('Admin') || roles.includes('ROLE_ADMIN');
+    const roles = this.getRoles().map((r) => String(r || '').toUpperCase());
+    if (roles.length === 0) return false;
+    return roles.some(
+      (r) => r === 'ROLE_ADMIN' || r === 'ADMIN' || r.endsWith('_ADMIN'),
+    );
   }
 
   public isUser(): boolean {
-    const roles = this.getRoles();
-    return roles.includes('User') || roles.includes('ROLE_USER');
+    const roles = this.getRoles().map((r) => String(r || '').toUpperCase());
+    if (roles.length === 0) return false;
+    return roles.some(
+      (r) => r === 'ROLE_USER' || r === 'USER' || r.endsWith('_USER'),
+    );
   }
 
   public roleMatch(allowedRoles: string[]): boolean {

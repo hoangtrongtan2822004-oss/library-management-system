@@ -1,6 +1,7 @@
 package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dto.AdvancedSearchRequest;
+import com.ibizabroker.lms.dto.BookListDto;
 import com.ibizabroker.lms.entity.Books;
 import com.ibizabroker.lms.service.AdvancedSearchService;
 import lombok.RequiredArgsConstructor;
@@ -23,7 +24,7 @@ public class AdvancedSearchController {
     private final AdvancedSearchService searchService;
 
     @PostMapping("/advanced")
-    public ResponseEntity<Page<Books>> advancedSearch(
+    public ResponseEntity<Page<BookListDto>> advancedSearch(
             @RequestBody AdvancedSearchRequest request,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
@@ -44,15 +45,19 @@ public class AdvancedSearchController {
                 request.getAvailableOnly(),
                 request.getSortBy(),
                 pageable);
-        
-        return ResponseEntity.ok(results);
+
+        Page<BookListDto> dtoPage = results.map(BookListDto::fromEntity);
+        return ResponseEntity.ok(dtoPage);
     }
 
     @GetMapping("/similar/{bookId}")
-    public ResponseEntity<List<Books>> getSimilarBooks(
+    public ResponseEntity<List<BookListDto>> getSimilarBooks(
             @PathVariable Integer bookId,
             @RequestParam(defaultValue = "5") int limit) {
-        return ResponseEntity.ok(searchService.getSimilarBooks(bookId, limit));
+        List<Books> books = searchService.getSimilarBooks(bookId, limit);
+        return ResponseEntity.ok(
+            books.stream().map(BookListDto::fromEntity).toList()
+        );
     }
 
     @GetMapping("/suggestions")

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { UserAuthService } from '../services/user-auth.service';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
@@ -18,6 +18,10 @@ import {
   Badge,
   UserBadge,
 } from '../services/gamification.service';
+import {
+  MemberCard,
+  MemberCardService,
+} from '../services/member-card.service';
 
 @Component({
   selector: 'app-my-account',
@@ -25,7 +29,7 @@ import {
   styleUrls: ['./my-account.component.css'],
   standalone: false,
 })
-export class MyAccountComponent implements OnInit {
+export class MyAccountComponent implements OnInit, OnDestroy {
   userProfile: User = { userId: 0, username: '', name: '', roles: [] } as User;
   activeLoans: LoanDetails[] = [];
   historyLoans: LoanDetails[] = [];
@@ -114,6 +118,11 @@ export class MyAccountComponent implements OnInit {
   confirmPassword = '';
   changingPwd = false;
 
+  // Member card
+  memberCard: MemberCard | null = null;
+  memberCardError = '';
+  barcodeUrl: string | null = null;
+
   constructor(
     private userAuthService: UserAuthService,
     private circulationService: CirculationService,
@@ -121,6 +130,7 @@ export class MyAccountComponent implements OnInit {
     private toastr: ToastrService,
     private reviewService: ReviewService,
     private gamificationService: GamificationService,
+    private memberCardService: MemberCardService,
   ) {}
 
   ngOnInit(): void {
@@ -158,6 +168,12 @@ export class MyAccountComponent implements OnInit {
         .getMyRenewals()
         .pipe(catchError(() => of([]))),
       reviews: this.reviewService.getMyReviews().pipe(catchError(() => of([]))),
+      memberCard: this.memberCardService
+        .getMyCard()
+        .pipe(catchError(() => of(null))),
+      memberCardBarcode: this.memberCardService
+        .getMyCardBarcode()
+        .pipe(catchError(() => of(null))),
       // Gamification data
       gamificationStats: this.gamificationService
         .getMyStats()
@@ -193,6 +209,10 @@ export class MyAccountComponent implements OnInit {
         this.allBadges = Array.isArray(result.allBadges)
           ? result.allBadges
           : [];
+
+        this.memberCard = result.memberCard;
+        this.memberCardError = result.memberCard ? '' : 'Không lấy được thẻ thành viên';
+        this.setBarcodeUrl(result.memberCardBarcode instanceof Blob ? result.memberCardBarcode : null);
 
         // Tính toán thống kê
         this.totalBorrowed = loans.length;
@@ -539,5 +559,43 @@ export class MyAccountComponent implements OnInit {
       amount: fine.fineAmount,
       status: 'PAID', // Assuming all fines in history are paid
     }));
+  }
+
+  // === Member Card Helpers ===
+  private setBarcodeUrl(blob: Blob | null) {
+    if (this.barcodeUrl) {
+      URL.revokeObjectURL(this.barcodeUrl);
+      this.barcodeUrl = null;
+    }
+    if (blob) {
+      this.barcodeUrl = URL.createObjectURL(blob);
+    }
+  }
+
+  get memberCardStatusLabel(): string {
+    const status = this.memberCard?.status;
+    if (status === 'ACTIVE') return 'Hoạt động';
+    if (status === 'EXPIRED') return 'Hết hạn';
+    if (status === 'REVOKED') return 'Đã thu hồi';
+    return 'Không xác định';
+  }
+
+  statusBadgeClass(status?: string): string {
+    switch (status) {
+      case 'ACTIVE':
+        return 'bg-success';
+      case 'EXPIRED':
+        return 'bg-warning text-dark';
+      case 'REVOKED':
+        return 'bg-danger';
+      default:
+        return 'bg-secondary';
+    }
+  }
+
+  ngOnDestroy(): void {
+    if (this.barcodeUrl) {
+      URL.revokeObjectURL(this.barcodeUrl);
+    }
   }
 }

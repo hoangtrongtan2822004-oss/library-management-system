@@ -108,7 +108,9 @@
           </div>
           <div class="news-content">
             <h3 class="news-title">{{ item.title }}</h3>
-            <p class="news-excerpt">{{ item.content.substring(0, 120) }}...</p>
+            <p class="news-excerpt">
+              {{ item.content || "" | slice: 0 : 120 }}...
+            </p>
             <div class="news-meta">
               <span class="news-date">
                 <i class="far fa-calendar"></i>
@@ -330,7 +332,7 @@
         <ul class="opening-hours">
           <li><strong>Thứ 2 - Thứ 6:</strong></li>
           <li>Sáng: 7:30 - 11:30</li>
-          <li>Chiều: 13:30 - 17:00</li>
+          <li>Chiều: 13:30 - 17:30</li>
           <li class="mt-2 text-warning">
             <i class="fa-solid fa-circle-exclamation me-1"></i> Nghỉ Thứ 7, Chủ
             Nhật và các ngày lễ.
@@ -341,7 +343,7 @@
 
     <div class="footer-bottom">
       <p>
-        &copy; 2025 Thư Viện Trường THCS Phương Tú. Phát triển bởi Đội ngũ CNTT.
+        &copy; 2026 Thư Viện Trường THCS Phương Tú. Phát triển bởi Đội ngũ CNTT.
       </p>
     </div>
   </div>

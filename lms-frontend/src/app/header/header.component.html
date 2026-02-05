@@ -340,6 +340,16 @@
                 <i class="fa-solid fa-chart-pie"></i> Bảng Điều Khiển
               </a>
             </li>
+            <li *ngIf="isAdmin()">
+              <a class="dropdown-item" routerLink="/admin/audit-logs">
+                <i class="fa-solid fa-clipboard-list"></i> Audit Logs
+              </a>
+            </li>
+            <li>
+              <a class="dropdown-item" routerLink="/admin/member-cards">
+                <i class="fa-solid fa-id-card"></i> Thẻ Thành Viên
+              </a>
+            </li>
             <!-- Admin dashboard link removed for admins -->
             <li *ngIf="isUser()">
               <a class="dropdown-item" routerLink="/my-account">
@@ -368,10 +378,20 @@
 
       <!-- Guest Actions -->
       <ng-container *ngIf="!isLoggedIn()">
-        <button class="btn btn-outline-light btn-sm" routerLink="/register">
+        <button
+          type="button"
+          class="btn btn-outline-light btn-sm"
+          routerLink="/register"
+          (click)="goToRegister()"
+        >
           Đăng Ký
         </button>
-        <button class="btn btn-primary btn-sm" routerLink="/login">
+        <button
+          type="button"
+          class="btn btn-primary btn-sm"
+          routerLink="/login"
+          (click)="goToLogin()"
+        >
           <i class="fa-solid fa-sign-in-alt"></i> Đăng Nhập
         </button>
       </ng-container>
@@ -419,16 +439,18 @@
     <ng-container *ngIf="!isLoggedIn()">
       <div class="guest-actions">
         <button
+          type="button"
           class="btn btn-primary btn-block w-100 mb-2"
           routerLink="/login"
-          (click)="closeMobileMenu()"
+          (click)="goToLogin()"
         >
           <i class="fa-solid fa-sign-in-alt"></i> Đăng Nhập
         </button>
         <button
+          type="button"
           class="btn btn-outline-primary btn-block w-100"
           routerLink="/register"
-          (click)="closeMobileMenu()"
+          (click)="goToRegister()"
         >
           Đăng Ký
         </button>
@@ -472,6 +494,16 @@
       <li class="mobile-menu-item">
         <a routerLink="/admin/gamification" (click)="closeMobileMenu()">
           <i class="fa-solid fa-trophy text-warning"></i> Gamification
+        </a>
+      </li>
+      <li class="mobile-menu-item">
+        <a routerLink="/admin/member-cards" (click)="closeMobileMenu()">
+          <i class="fa-solid fa-id-card"></i> Thẻ Thành Viên
+        </a>
+      </li>
+      <li class="mobile-menu-item">
+        <a routerLink="/admin/audit-logs" (click)="closeMobileMenu()">
+          <i class="fa-solid fa-clipboard-list"></i> Audit Logs
         </a>
       </li>
       <li class="mobile-menu-item">

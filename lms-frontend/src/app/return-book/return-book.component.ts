@@ -70,6 +70,10 @@ export class ReturnBookComponent implements OnInit {
 
   // Multi-select return
   selectedLoans = new Set<number>();
+  // Multi-return modal
+  showMultiReturnModal = false;
+  pendingReturnIds: number[] = [];
+  processingMultiple = false;
 
   // Search by user
   searchMode: 'loan' | 'user' = 'loan';
@@ -219,6 +223,11 @@ export class ReturnBookComponent implements OnInit {
     }
   }
 
+  getConditionLabel(value: string): string {
+    const cond = this.bookConditions.find((c) => c.value === value);
+    return cond?.label || value;
+  }
+
   // Multi-select
   toggleLoanSelection(loanId: number): void {
     if (this.selectedLoans.has(loanId)) {
@@ -244,12 +253,25 @@ export class ReturnBookComponent implements OnInit {
       return;
     }
 
-    const count = this.selectedLoans.size;
-    if (!confirm(`Xác nhận trả ${count} cuốn sách đã chọn?`)) {
+    // Open confirmation modal for multi-return
+    this.pendingReturnIds = Array.from(this.selectedLoans);
+    this.showMultiReturnModal = true;
+  }
+
+  cancelMultiReturn(): void {
+    this.showMultiReturnModal = false;
+    this.pendingReturnIds = [];
+  }
+
+  confirmMultiReturn(): void {
+    if (!this.pendingReturnIds || this.pendingReturnIds.length === 0) {
+      this.toastr.error('Không có phiếu mượn để trả');
       return;
     }
 
-    const selectedIds = Array.from(this.selectedLoans);
+    this.processingMultiple = true;
+    const selectedIds = this.pendingReturnIds;
+    const count = selectedIds.length;
     let successCount = 0;
     let errorCount = 0;
 
@@ -257,20 +279,28 @@ export class ReturnBookComponent implements OnInit {
       this.borrowService.returnLoan(loanId).subscribe({
         next: () => {
           successCount++;
+        },
+        error: () => {
+          errorCount++;
+        },
+        complete: () => {
+          // When last completed, show summary
           if (index === selectedIds.length - 1) {
-            this.toastr.success(
-              `Trả thành công ${successCount}/${count} cuốn sách`,
-            );
+            if (successCount > 0) {
+              this.toastr.success(
+                `Trả thành công ${successCount}/${count} cuốn sách`,
+              );
+            }
+            if (errorCount > 0) {
+              this.toastr.error(`Lỗi khi trả ${errorCount}/${count} cuốn sách`);
+            }
             this.selectedLoans.clear();
             this.searchResults = [];
             this.searchQuery = '';
             this.loadUserBorrows();
-          }
-        },
-        error: () => {
-          errorCount++;
-          if (index === selectedIds.length - 1) {
-            this.toastr.error(`Lỗi khi trả ${errorCount}/${count} cuốn sách`);
+            this.showMultiReturnModal = false;
+            this.pendingReturnIds = [];
+            this.processingMultiple = false;
           }
         },
       });

@@ -434,3 +434,59 @@
   *ngIf="showPreviewModal"
   (click)="closePreviewModal()"
 ></div>
+
+<!-- Multi-Return Confirmation Modal -->
+<div
+  class="modal fade show"
+  tabindex="-1"
+  [ngStyle]="{ display: showMultiReturnModal ? 'block' : 'none' }"
+  *ngIf="showMultiReturnModal"
+>
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header bg-warning">
+        <h5 class="modal-title">
+          <i class="fa-solid fa-hand-holding-heart me-2"></i>
+          Xác Nhận Trả Nhiều Sách
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="cancelMultiReturn()"
+        ></button>
+      </div>
+
+      <div class="modal-body">
+        <p>
+          Bạn sắp xác nhận trả <strong>{{ pendingReturnIds.length }}</strong>
+          cuốn sách đã chọn. Tiếp tục?
+        </p>
+        <div *ngIf="pendingReturnIds.length > 0" class="small text-muted">
+          ID phiếu mượn: {{ pendingReturnIds.join(', ') }}
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="cancelMultiReturn()">
+          Hủy
+        </button>
+        <button
+          class="btn btn-success"
+          (click)="confirmMultiReturn()"
+          [disabled]="processingMultiple"
+        >
+          <span *ngIf="!processingMultiple">Xác Nhận Trả</span>
+          <span *ngIf="processingMultiple">
+            <i class="fa-solid fa-spinner fa-spin me-2"></i>Đang xử lý...
+          </span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div
+  class="modal-backdrop fade show"
+  *ngIf="showMultiReturnModal"
+  (click)="cancelMultiReturn()"
+></div>

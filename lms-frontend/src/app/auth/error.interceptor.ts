@@ -5,6 +5,7 @@ import {
   HttpHandler,
   HttpEvent,
   HttpErrorResponse,
+  HttpContext,
 } from '@angular/common/http';
 import { Observable, throwError, BehaviorSubject } from 'rxjs';
 import { catchError, switchMap, filter, take } from 'rxjs/operators';
@@ -13,6 +14,7 @@ import { ToastrService } from 'ngx-toastr';
 import { UserAuthService } from '../services/user-auth.service';
 import { environment } from 'src/environments/environment';
 import { HttpClient } from '@angular/common/http';
+import { IS_PUBLIC_API } from '../services/api.service';
 
 @Injectable()
 export class ErrorInterceptor implements HttpInterceptor {
@@ -41,6 +43,11 @@ export class ErrorInterceptor implements HttpInterceptor {
         } else {
           // Server-side error
           if (error.status === 401) {
+            // Nếu là public API thì không cố refresh, tránh redirect về login khi đăng ký/forgot
+            if (req.context.get(IS_PUBLIC_API)) {
+              return throwError(() => error);
+            }
+
             // Try refresh token before logging out
             return this.handle401Error(req, next);
           } else if (error.status === 403) {
@@ -84,17 +91,15 @@ export class ErrorInterceptor implements HttpInterceptor {
       this.isRefreshing = true;
       this.refreshTokenSubject.next(null);
 
-      const refreshToken = this.authService.getRefreshToken();
-      if (!refreshToken) {
-        this.authService.clear();
-        this.router.navigate(['/login']);
-        return throwError(() => new Error('No refresh token available'));
-      }
-
       return this.http
-        .post<any>(`${environment.apiBaseUrl}/auth/refresh-token`, {
-          refreshToken,
-        })
+        .post<any>(
+          `${environment.apiBaseUrl}/auth/refresh-token`,
+          {},
+          {
+            withCredentials: true,
+            context: new HttpContext().set(IS_PUBLIC_API, true),
+          },
+        )
         .pipe(
           switchMap((response: any) => {
             this.isRefreshing = false;

@@ -5,11 +5,8 @@ import { UsersService } from '../services/users.service';
 import { UserAuthService } from '../services/user-auth.service';
 import { GamificationService } from '../services/gamification.service';
 import { InactivityService } from '../services/inactivity.service';
-import {
-  SocialAuthService,
-  GoogleLoginProvider,
-  SocialUser,
-} from '@abacritt/angularx-social-login';
+import { OAuth2Service } from '../services/oauth2.service';
+// Social login removed
 import { HttpClient } from '@angular/common/http';
 import { environment } from 'src/environments/environment';
 
@@ -31,7 +28,7 @@ export class LoginComponent implements OnInit {
     private userAuth: UserAuthService,
     private router: Router,
     private route: ActivatedRoute,
-    // private socialAuthService: SocialAuthService, // Tạm tắt
+    private oauth2Service: OAuth2Service,
     private http: HttpClient,
     private gamificationService: GamificationService,
     private inactivityService: InactivityService,
@@ -94,11 +91,6 @@ export class LoginComponent implements OnInit {
 
         this.userAuth.setToken(token);
 
-        // Save refresh token if available
-        if (res?.refreshToken) {
-          this.userAuth.setRefreshToken(res.refreshToken);
-        }
-
         // Decode JWT an toàn
         const payload = this.safeDecodeJwt(token);
 
@@ -148,21 +140,25 @@ export class LoginComponent implements OnInit {
     });
   }
 
-  // Google Social Login (Tạm tắt)
+  // Google OAuth2 Login
   signInWithGoogle(): void {
-    this.error = 'Tính năng đăng nhập Google đang được bảo trì';
-    // this.loading = true;
-    // this.error = '';
-    // this.socialAuthService
-    //   .signIn(GoogleLoginProvider.PROVIDER_ID)
-    //   .catch((err) => {
-    //     console.error('Google login failed:', err);
-    //     this.error = 'Đăng nhập Google thất bại';
-    //     this.loading = false;
-    //   });
+    this.loading = true;
+    this.oauth2Service.getGoogleConfig().subscribe({
+      next: (config) => {
+        this.oauth2Service.initiateGoogleLogin(
+          config.clientId,
+          config.redirectUri,
+        );
+      },
+      error: (err) => {
+        console.error('Failed to get Google config:', err);
+        this.error = 'Không thể khởi tạo đăng nhập Google';
+        this.loading = false;
+      },
+    });
   }
 
-  private handleGoogleLogin(socialUser: SocialUser): void {
+  private handleGoogleLogin(socialUser: any): void {
     // Gửi Google user info lên backend để tạo/update user và nhận JWT
     const payload = {
       email: socialUser.email,
@@ -201,5 +197,28 @@ export class LoginComponent implements OnInit {
         },
         complete: () => (this.loading = false),
       });
+  }
+
+  /**
+   * Sign in with Facebook OAuth2
+   */
+  signInWithFacebook(): void {
+    if (this.loading) return;
+
+    this.loading = true;
+    this.oauth2Service.getFacebookConfig().subscribe({
+      next: (config) => {
+        this.oauth2Service.initiateFacebookLogin(
+          config.clientId,
+          config.redirectUri,
+        );
+        // User will be redirected to Facebook, then back to /auth/facebook/callback
+      },
+      error: (err) => {
+        console.error('Failed to get Facebook config:', err);
+        this.error = 'Không thể kết nối với Facebook. Vui lòng thử lại.';
+        this.loading = false;
+      },
+    });
   }
 }

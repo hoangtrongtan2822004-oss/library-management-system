@@ -35,7 +35,14 @@ import jakarta.persistence.PrePersist;
 @Getter
 @Setter
 @Entity
-@Table(name = "books")
+@Table(
+    name = "books",
+    indexes = {
+        @Index(name = "idx_books_name", columnList = "name"),
+        @Index(name = "idx_books_isbn", columnList = "isbn"),
+        @Index(name = "idx_books_published_year", columnList = "published_year")
+    }
+)
 @JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class Books extends BaseEntity {

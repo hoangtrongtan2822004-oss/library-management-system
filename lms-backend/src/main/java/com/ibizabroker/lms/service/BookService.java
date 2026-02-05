@@ -82,6 +82,12 @@ public class BookService {
     }
     
     @Transactional(readOnly = true)
+    public List<Books> getBooksByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        return booksRepository.findAllByIdIn(ids);
+    }
+    
+    @Transactional(readOnly = true)
     public List<Author> getAllAuthors() {
         return authorRepository.findAll();
     }

@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -110,7 +111,8 @@ public class GamificationService {
         List<Badge> allBadges = badgeRepository.findByIsActiveTrue();
         
         for (Badge badge : allBadges) {
-            if (userBadgeRepository.existsByUserIdAndBadgeId(userId, badge.getId())) {
+            Long badgeId = Objects.requireNonNull(badge.getId());
+            if (userBadgeRepository.existsByUserIdAndBadgeId(userId, badgeId)) {
                 continue; // Already has this badge
             }
             
@@ -198,15 +200,15 @@ public class GamificationService {
         for (UserChallengeProgress progress : activeProgress) {
             progress.incrementProgress();
             
-            if (progress.getIsCompleted()) {
+                if (progress.getIsCompleted()) {
                 // Award challenge completion bonus
                 ReadingChallenge challenge = progress.getChallenge();
                 awardPoints(userId, challenge.getPointsReward(), "Hoàn thành thử thách: " + challenge.getNameVi());
                 
                 // Award badge if specified
-                if (challenge.getBadgeId() != null) {
-                    @SuppressWarnings("null")
-                    Badge badge = badgeRepository.findById(challenge.getBadgeId()).orElse(null);
+                    if (challenge.getBadgeId() != null) {
+                    Long badgeId = Objects.requireNonNull(challenge.getBadgeId());
+                    Badge badge = badgeRepository.findById(badgeId).orElse(null);
                     if (badge != null) {
                         awardBadge(userId, badge);
                     }
@@ -278,13 +280,14 @@ public class GamificationService {
         
         List<RewardItemsResponse.RewardItemDTO> rewardDTOs = rewards.stream()
                 .map(reward -> {
-                    boolean canAfford = userPoints.getTotalPoints() >= reward.getCost();
-                    long redemptionsCount = userRewardRepository.countByRewardId(reward.getId());
-                    boolean available = reward.getAvailable() && 
+                        boolean canAfford = userPoints.getTotalPoints() >= reward.getCost();
+                        Long rewardId = Objects.requireNonNull(reward.getId());
+                        long redemptionsCount = userRewardRepository.countByRewardId(rewardId);
+                        boolean available = reward.getAvailable() && 
                             (reward.getMaxRedemptions() == null || redemptionsCount < reward.getMaxRedemptions());
                     
                     return new RewardItemsResponse.RewardItemDTO(
-                            reward.getId(),
+                            rewardId,
                             reward.getName(),
                             reward.getDescription(),
                             reward.getIcon(),
@@ -408,9 +411,10 @@ public class GamificationService {
             // Award points
             awardPoints(userId, quest.getPoints(), "Hoàn thành nhiệm vụ: " + quest.getTitle());
             
-            // Log transaction
-            logPointTransaction(userId, quest.getPoints(), "quest", 
-                    "Nhiệm vụ: " + quest.getTitle(), quest.getId(), 
+                // Log transaction
+                Long questId = Objects.requireNonNull(quest.getId());
+                logPointTransaction(userId, quest.getPoints(), "quest", 
+                    "Nhiệm vụ: " + quest.getTitle(), questId, 
                     getUserPoints(userId).getTotalPoints());
         }
         
@@ -493,5 +497,153 @@ public class GamificationService {
         logPointTransaction(userId, -FREEZE_COST, "special", 
                 "Mua Streak Freeze (❄️ +1 lần bảo vệ chuỗi)", null, 
                 userPoints.getTotalPoints());
+    }
+
+    // ============ ADMIN MANAGEMENT METHODS ============
+
+    @Transactional(readOnly = true)
+    public List<Reward> getAllRewards() {
+        return rewardRepository.findAll();
+    }
+
+    @Transactional
+    public Reward createReward(Reward reward) {
+        if (reward.getAvailable() == null) reward.setAvailable(true);
+        return rewardRepository.save(reward);
+    }
+
+    @Transactional
+    public Reward updateReward(Long id, Reward rewardData) {
+        @SuppressWarnings("null")
+        Reward reward = rewardRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy reward với ID: " + id));
+        
+        reward.setName(rewardData.getName());
+        reward.setDescription(rewardData.getDescription());
+        reward.setIcon(rewardData.getIcon());
+        reward.setCost(rewardData.getCost());
+        reward.setCategory(rewardData.getCategory());
+        reward.setAvailable(rewardData.getAvailable());
+        reward.setMaxRedemptions(rewardData.getMaxRedemptions());
+        
+        return rewardRepository.save(reward);
+    }
+
+    @Transactional
+    public void deleteReward(Long id) {
+        @SuppressWarnings("null")
+        boolean exists = rewardRepository.existsById(id);
+        if (!exists) {
+            throw new NotFoundException("Không tìm thấy reward với ID: " + id);
+        }
+        rewardRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReadingChallenge> getAllChallenges() {
+        return challengeRepository.findAll();
+    }
+
+    @Transactional
+    public ReadingChallenge createChallenge(ReadingChallenge challenge) {
+        if (challenge.getIsActive() == null) challenge.setIsActive(true);
+        if (challenge.getPointsReward() == null) challenge.setPointsReward(50);
+        if (challenge.getCreatedAt() == null) challenge.setCreatedAt(LocalDateTime.now());
+        return challengeRepository.save(challenge);
+    }
+
+    @Transactional
+    public ReadingChallenge updateChallenge(Long id, ReadingChallenge challengeData) {
+        @SuppressWarnings("null")
+        ReadingChallenge challenge = challengeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy challenge với ID: " + id));
+        
+        challenge.setNameVi(challengeData.getNameVi());
+        challenge.setNameEn(challengeData.getNameEn());
+        challenge.setDescriptionVi(challengeData.getDescriptionVi());
+        challenge.setDescriptionEn(challengeData.getDescriptionEn());
+        challenge.setTargetBooks(challengeData.getTargetBooks());
+        challenge.setStartDate(challengeData.getStartDate());
+        challenge.setEndDate(challengeData.getEndDate());
+        challenge.setPointsReward(challengeData.getPointsReward());
+        challenge.setBadgeId(challengeData.getBadgeId());
+        challenge.setIsActive(challengeData.getIsActive());
+        
+        return challengeRepository.save(challenge);
+    }
+
+    @Transactional
+    public void deleteChallenge(Long id) {
+        @SuppressWarnings("null")
+        boolean exists = challengeRepository.existsById(id);
+        if (!exists) {
+            throw new NotFoundException("Không tìm thấy challenge với ID: " + id);
+        }
+        challengeRepository.deleteById(id);
+    }
+
+    @Transactional
+    public Badge createBadge(Badge badge) {
+        if (badge.getIsActive() == null) badge.setIsActive(true);
+
+        // Ensure badge.code is set (DB requires non-null)
+        if (badge.getCode() == null || badge.getCode().trim().isEmpty()) {
+            String source = badge.getNameEn() != null && !badge.getNameEn().isBlank()
+                    ? badge.getNameEn()
+                    : badge.getNameVi();
+
+            if (source == null || source.isBlank()) {
+                throw new IllegalArgumentException("Badge must include a code or a nameEn/nameVi to generate code");
+            }
+
+            // Generate code: uppercase, replace non-alphanumeric with underscore
+            String baseCode = source.toUpperCase().replaceAll("[^A-Z0-9]+", "_");
+            baseCode = baseCode.replaceAll("^_+|_+$", "");
+            if (baseCode.length() > 50) baseCode = baseCode.substring(0, 50);
+
+            String candidate = baseCode;
+            int suffix = 1;
+            while (badgeRepository.findByCode(candidate).isPresent()) {
+                candidate = baseCode;
+                String suffixStr = "_" + suffix++;
+                if (candidate.length() + suffixStr.length() > 50) {
+                    candidate = candidate.substring(0, 50 - suffixStr.length());
+                }
+                candidate = candidate + suffixStr;
+            }
+
+            badge.setCode(candidate);
+        }
+
+        return badgeRepository.save(badge);
+    }
+
+    @Transactional
+    public Badge updateBadge(Long id, Badge badgeData) {
+        @SuppressWarnings("null")
+        Badge badge = badgeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy badge với ID: " + id));
+        
+        badge.setCode(badgeData.getCode());
+        badge.setNameVi(badgeData.getNameVi());
+        badge.setNameEn(badgeData.getNameEn());
+        badge.setDescriptionVi(badgeData.getDescriptionVi());
+        badge.setDescriptionEn(badgeData.getDescriptionEn());
+        badge.setIconUrl(badgeData.getIconUrl());
+        badge.setRequirementValue(badgeData.getRequirementValue());
+        badge.setPointsReward(badgeData.getPointsReward());
+        badge.setIsActive(badgeData.getIsActive());
+        
+        return badgeRepository.save(badge);
+    }
+
+    @Transactional
+    public void deleteBadge(Long id) {
+        @SuppressWarnings("null")
+        boolean exists = badgeRepository.existsById(id);
+        if (!exists) {
+            throw new NotFoundException("Không tìm thấy badge với ID: " + id);
+        }
+        badgeRepository.deleteById(id);
     }
 }

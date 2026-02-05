@@ -1,0 +1,91 @@
+{
+  "info": {
+    "_postman_id": "lms-api-collection",
+    "name": "LMS API - Test Collection",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Login - Get Access Token",
+      "request": {
+        "method": "POST",
+        "header": [{ "key": "Content-Type", "value": "application/json" }],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"admin@example.com\",\n  \"password\": \"adminpassword\"\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/auth/login" }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "try {",
+              "  var json = pm.response.json();",
+              "  var token = json.data && json.data.accessToken ? json.data.accessToken : (json.accessToken || '');",
+              "  if (token) pm.environment.set('accessToken', token);",
+              "  else pm.test('accessToken found', function(){pm.expect(token).to.not.eql('');});",
+              "} catch(e) { console.log('no-json-response', e); }"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Get My Loan History",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/user/loans" }
+      }
+    },
+    {
+      "name": "Get Authors (admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/admin/books/authors" }
+      }
+    },
+    {
+      "name": "Get Categories (admin)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/admin/books/categories" }
+      }
+    },
+    {
+      "name": "Create Book (admin) - sample",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" },
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"title\": \"Test Book from Postman\",\n  \"isbn\": \"9780000000000\",\n  \"authors\": [1],\n  \"categories\": [1],\n  \"numberOfCopies\": 2,\n  \"publishedYear\": 2024\n}"
+        },
+        "url": { "raw": "{{baseUrl}}/api/admin/books" }
+      }
+    },
+    {
+      "name": "Get Gamification Stats (me)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{accessToken}}" }
+        ],
+        "url": { "raw": "{{baseUrl}}/api/user/gamification/stats" }
+      }
+    }
+  ]
+}

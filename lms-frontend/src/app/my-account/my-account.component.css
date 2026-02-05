@@ -43,6 +43,24 @@
   background: rgba(255, 255, 255, 0.05);
 }
 
+.member-card-meta {
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 0.75rem;
+  padding: 0.75rem 1rem;
+}
+
+.barcode-wrapper {
+  background: #ffffff;
+  border-radius: 0.75rem;
+  padding: 0.5rem;
+  text-align: center;
+}
+
+.barcode-img {
+  max-height: 120px;
+  object-fit: contain;
+}
+
 /* --- Navigation Menu --- */
 .list-group-item {
   background-color: #21262d;

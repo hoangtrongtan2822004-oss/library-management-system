@@ -1,0 +1,15 @@
+.member-cards-page .card {
+  border-radius: 10px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.member-cards-page .table code {
+  background: #f1f3f5;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.member-cards-page .page-header h3 {
+  font-weight: 700;
+}

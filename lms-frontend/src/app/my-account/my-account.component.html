@@ -29,9 +29,43 @@
             </div>
             <div class="d-flex justify-content-between">
               <span>Trạng thái</span>
-              <span class="badge bg-success">Hoạt động</span>
+              <span
+                class="badge"
+                [ngClass]="statusBadgeClass(memberCard?.status)"
+                *ngIf="memberCard"
+              >
+                {{ memberCardStatusLabel }}
+              </span>
+              <span class="text-muted small" *ngIf="!memberCard"
+                >Đang tải thẻ...</span
+              >
             </div>
           </div>
+
+          <div class="member-card-meta mt-3">
+            <div class="d-flex justify-content-between text-uppercase small opacity-75">
+              <span>Mã thẻ</span>
+              <span class="fw-bold">{{ memberCard?.cardNumber || 'Đang tạo' }}</span>
+            </div>
+            <div class="d-flex justify-content-between text-uppercase small opacity-75 mt-1">
+              <span>Loại mã</span>
+              <span>{{ memberCard?.barcodeType || '---' }}</span>
+            </div>
+            <div class="d-flex justify-content-between text-uppercase small opacity-75 mt-1" *ngIf="memberCard?.expiredAt">
+              <span>Hết hạn</span>
+              <span>{{ memberCard?.expiredAt | date: 'dd/MM/yyyy' }}</span>
+            </div>
+          </div>
+
+          <div class="barcode-wrapper mt-3" *ngIf="barcodeUrl; else barcodeLoading">
+            <img [src]="barcodeUrl" alt="Mã thẻ thư viện" class="img-fluid barcode-img" />
+            <div class="small text-muted mt-1 text-center">
+              Đưa mã này để thủ thư quét
+            </div>
+          </div>
+          <ng-template #barcodeLoading>
+            <div class="small text-muted mt-2">Đang tải mã thẻ...</div>
+          </ng-template>
 
           <!-- Level Progress Bar (Gamification) -->
           <div class="level-progress-section mt-4" *ngIf="gamificationStats">

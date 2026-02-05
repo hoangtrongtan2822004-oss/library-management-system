@@ -77,10 +77,11 @@ public class PublicBooksController {
     @Operation(summary = "Chi tiết sách", description = "Lấy thông tin chi tiết của một cuốn sách (full entity)")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thành công")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Sách không tồn tại")
-    public ResponseEntity<ApiResponse<Books>> getBookById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<BookListDto>> getBookById(@PathVariable Integer id) {
         try {
             Books book = bookService.getBookById(id);
-            return ResponseEntity.ok(ApiResponse.success(book, "Lấy thông tin sách thành công"));
+            BookListDto dto = BookListDto.fromEntity(book);
+            return ResponseEntity.ok(ApiResponse.success(dto, "Lấy thông tin sách thành công"));
         } catch (NotFoundException e) {
             return ResponseEntity.status(404)
                     .body(ApiResponse.error("Sách không tồn tại", 404));

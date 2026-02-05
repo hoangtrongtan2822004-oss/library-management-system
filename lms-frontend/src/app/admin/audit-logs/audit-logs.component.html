@@ -1,0 +1,161 @@
+<div class="container py-4">
+  <div class="d-flex align-items-center mb-3">
+    <h2 class="mb-0">
+      <i class="fa-solid fa-clipboard-list me-2 text-primary"></i>
+      Audit Logs
+    </h2>
+  </div>
+
+  <div class="card shadow-sm mb-3">
+    <div class="card-body">
+      <div class="row g-3 align-items-end">
+        <div class="col-md-3">
+          <label class="form-label">Actor</label>
+          <input
+            class="form-control"
+            [(ngModel)]="actor"
+            placeholder="username"
+          />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">Action</label>
+          <input
+            class="form-control"
+            [(ngModel)]="action"
+            placeholder="method name"
+          />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Status</label>
+          <select class="form-select" [(ngModel)]="status">
+            <option value="">Tất cả</option>
+            <option value="SUCCESS">SUCCESS</option>
+            <option value="FAILURE">FAILURE</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Từ ngày</label>
+          <input
+            type="datetime-local"
+            class="form-control"
+            [(ngModel)]="from"
+          />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label">Đến ngày</label>
+          <input type="datetime-local" class="form-control" [(ngModel)]="to" />
+        </div>
+        <div class="col-12 d-flex gap-2 mt-2">
+          <button
+            class="btn btn-primary"
+            (click)="applyFilters()"
+            [disabled]="loading"
+          >
+            <i class="fa-solid fa-filter me-1"></i>Lọc
+          </button>
+          <button
+            class="btn btn-outline-secondary"
+            (click)="resetFilters()"
+            [disabled]="loading"
+          >
+            <i class="fa-solid fa-rotate-left me-1"></i>Reset
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card shadow-sm">
+    <div class="card-body p-0">
+      <div *ngIf="loading" class="p-4 text-center text-muted">
+        <i class="fa-solid fa-spinner fa-spin me-2"></i>Đang tải...
+      </div>
+
+      <div
+        *ngIf="!loading && logs.length === 0"
+        class="p-4 text-center text-muted"
+      >
+        Không có bản ghi.
+      </div>
+
+      <div class="table-responsive" *ngIf="!loading && logs.length > 0">
+        <table class="table table-striped mb-0">
+          <thead class="table-light">
+            <tr>
+              <th>Thời gian</th>
+              <th>Actor</th>
+              <th>Action</th>
+              <th>Resource</th>
+              <th>Trạng thái</th>
+              <th>IP</th>
+              <th>Đường dẫn</th>
+              <th>Chi tiết</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of logs">
+              <td>{{ log.createdAt | date: "short" }}</td>
+              <td>
+                <div class="fw-semibold">{{ log.actor }}</div>
+                <div class="text-muted small">{{ log.actorRoles }}</div>
+              </td>
+              <td>{{ log.action }}</td>
+              <td>{{ log.resource }}</td>
+              <td>
+                <span
+                  class="badge"
+                  [ngClass]="
+                    log.status === 'SUCCESS' ? 'bg-success' : 'bg-danger'
+                  "
+                >
+                  {{ log.status }}
+                </span>
+                <div *ngIf="log.errorMessage" class="text-danger small">
+                  {{ log.errorMessage }}
+                </div>
+              </td>
+              <td>{{ log.ip }}</td>
+              <td>{{ log.path }}</td>
+              <td>
+                <details>
+                  <summary>Payload</summary>
+                  <div class="small text-muted">
+                    {{ formatPayload(log.requestPayload) }}
+                  </div>
+                  <div class="small text-muted">
+                    {{ formatPayload(log.responsePayload) }}
+                  </div>
+                </details>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div
+      class="card-footer d-flex justify-content-between align-items-center"
+      *ngIf="totalPages > 1"
+    >
+      <div class="text-muted small">
+        Trang {{ page + 1 }} / {{ totalPages }} ({{ totalElements }} bản ghi)
+      </div>
+      <div class="btn-group">
+        <button
+          class="btn btn-outline-secondary"
+          (click)="onPageChange(page - 1)"
+          [disabled]="page === 0"
+        >
+          Trước
+        </button>
+        <button
+          class="btn btn-outline-secondary"
+          (click)="onPageChange(page + 1)"
+          [disabled]="page + 1 >= totalPages"
+        >
+          Sau
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

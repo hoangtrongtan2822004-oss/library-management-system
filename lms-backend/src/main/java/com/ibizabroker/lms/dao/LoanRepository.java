@@ -103,6 +103,17 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "FROM Loan l JOIN l.book b JOIN l.member u " +
            "WHERE l.fineStatus = 'UNPAID' AND l.member.userId = :memberId ORDER BY l.returnDate DESC")
     List<FineDetailsDto> findUnpaidFineDetailsByMemberId(@Param("memberId") Integer memberId);
+
+    @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
+           "WHERE l.fineStatus = 'PAID' ORDER BY l.returnDate DESC")
+    List<FineDetailsDto> findPaidFineDetails();
+
+    @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
+           "WHERE l.fineStatus = 'PAID' AND ((l.returnDate IS NOT NULL AND l.returnDate BETWEEN :start AND :end) OR (l.returnDate IS NULL AND l.loanDate BETWEEN :start AND :end)) " +
+           "ORDER BY l.returnDate DESC")
+    List<FineDetailsDto> findPaidFineDetailsBetween(@Param("start") java.time.LocalDate start, @Param("end") java.time.LocalDate end);
     
     List<Loan> findByStatusAndDueDate(LoanStatus status, LocalDate dueDate);
     
@@ -135,13 +146,20 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
     @Query("SELECT l.status, COUNT(l) FROM Loan l GROUP BY l.status")
     List<Object[]> countLoansByStatus();
 
-       // Tổng tất cả tiền phạt đã phát sinh
-       @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l")
-       BigDecimal getTotalFines();
+               // Tổng tất cả tiền phạt đã phát sinh
+               @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l")
+               BigDecimal getTotalFines();
 
-       // Tổng tiền phạt chưa thanh toán
-       @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l WHERE l.fineStatus = 'UNPAID'")
-       BigDecimal getTotalUnpaidFines();
+               // Tổng tiền phạt chưa thanh toán
+               @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l WHERE l.fineStatus = 'UNPAID'")
+               BigDecimal getTotalUnpaidFines();
+
+        // Sum/count of paid fines for a specific date (match by returnDate or loanDate)
+        @Query("SELECT COALESCE(SUM(l.fineAmount), 0) FROM Loan l WHERE l.fineStatus = 'PAID' AND (l.returnDate = :date OR l.loanDate = :date)")
+        BigDecimal sumPaidFinesByDate(@Param("date") java.time.LocalDate date);
+
+        @Query("SELECT COUNT(l) FROM Loan l WHERE l.fineStatus = 'PAID' AND (l.returnDate = :date OR l.loanDate = :date)")
+        long countPaidFinesByDate(@Param("date") java.time.LocalDate date);
 
     // === Report Export Queries ===
     

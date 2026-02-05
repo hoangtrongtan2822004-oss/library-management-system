@@ -1,6 +1,5 @@
 import { NgModule, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-
 import { BrowserModule } from '@angular/platform-browser';
 import { MarkdownModule } from 'ngx-markdown';
 import { SecurityContext } from '@angular/core';
@@ -51,8 +50,7 @@ import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.co
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CreateUserComponent } from './create-user/create-user.component';
 import { ChatbotComponent } from './chatbot/chatbot.component';
-import { CreateLoanComponent } from './admin/create-loan/create-loan.component'; // Import
-// Import thư viện QR và Scanner
+import { CreateLoanComponent } from './admin/create-loan/create-loan.component';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
@@ -62,11 +60,9 @@ import { RenewalsComponent } from './admin/renewals/renewals.component';
 import { GamificationComponent } from './gamification/gamification.component';
 import { RulesComponent } from './rules/rules.component';
 import { WishlistComponent } from './wishlist/wishlist.component';
-import {
-  SocialLoginModule,
-  GoogleLoginProvider,
-  SocialAuthServiceConfig,
-} from '@abacritt/angularx-social-login';
+import { AuditLogsComponent } from './admin/audit-logs/audit-logs.component';
+import { MemberCardsComponent } from './admin/member-cards/member-cards.component';
+// Social login tạm tắt: gỡ module + provider để tránh lỗi injector
 import { SharedModule } from './shared/shared.module';
 
 @NgModule({
@@ -102,6 +98,8 @@ import { SharedModule } from './shared/shared.module';
     RenewalsComponent,
     GamificationComponent,
     RulesComponent,
+    AuditLogsComponent,
+    MemberCardsComponent,
   ],
   imports: [
     BrowserModule,
@@ -123,7 +121,6 @@ import { SharedModule } from './shared/shared.module';
     MarkdownModule.forRoot({
       sanitize: SecurityContext.HTML,
     }),
-    // SocialLoginModule, // Tạm tắt để fix lỗi
   ],
   providers: [
     AuthGuard,
@@ -144,24 +141,6 @@ import { SharedModule } from './shared/shared.module';
     },
     UsersService,
     BooksService,
-    // Tạm tắt Google Login để fix lỗi
-    // {
-    //   provide: 'SocialAuthServiceConfig',
-    //   useValue: {
-    //     autoLogin: false,
-    //     providers: [
-    //       {
-    //         id: GoogleLoginProvider.PROVIDER_ID,
-    //         provider: new GoogleLoginProvider(
-    //           '1086947846339-o9j7dfersslfn681jbdq6qelivervlft.apps.googleusercontent.com'
-    //         ),
-    //       },
-    //     ],
-    //     onError: (err: any) => {
-    //       console.error('Social auth error:', err);
-    //     },
-    //   } as SocialAuthServiceConfig,
-    // },
     UserAuthService,
     DatePipe,
     CurrencyPipe,

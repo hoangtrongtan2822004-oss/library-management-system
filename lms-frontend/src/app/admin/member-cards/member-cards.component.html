@@ -1,0 +1,213 @@
+<div class="member-cards-page">
+  <div
+    class="page-header d-flex justify-content-between align-items-center mb-3"
+  >
+    <div>
+      <h3 class="mb-1">Thẻ thành viên</h3>
+      <p class="text-muted mb-0">
+        Quản lý phát hành, thu hồi và tải PDF/Barcode
+      </p>
+    </div>
+    <button class="btn btn-outline-secondary" (click)="resetForm()">
+      <i class="fa-solid fa-rotate-left"></i> Làm mới form
+    </button>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <div class="col-lg-8">
+      <div class="card">
+        <div class="card-body">
+          <div class="d-flex flex-wrap gap-2 mb-3">
+            <input
+              type="text"
+              class="form-control w-auto"
+              placeholder="Từ khóa (mã thẻ, username, họ tên)"
+              [(ngModel)]="keyword"
+            />
+            <select class="form-select w-auto" [(ngModel)]="statusFilter">
+              <option value="">Tất cả trạng thái</option>
+              <option value="ACTIVE">ACTIVE</option>
+              <option value="REVOKED">REVOKED</option>
+              <option value="EXPIRED">EXPIRED</option>
+            </select>
+            <select class="form-select w-auto" [(ngModel)]="barcodeTypeFilter">
+              <option value="">Mọi loại mã</option>
+              <option value="CODE128">CODE128</option>
+              <option value="QR">QR</option>
+            </select>
+            <input
+              type="datetime-local"
+              class="form-control w-auto"
+              [(ngModel)]="from"
+              placeholder="Từ"
+            />
+            <input
+              type="datetime-local"
+              class="form-control w-auto"
+              [(ngModel)]="to"
+              placeholder="Đến"
+            />
+            <button class="btn btn-primary" (click)="applyFilters()">
+              <i class="fa-solid fa-filter"></i> Lọc
+            </button>
+            <button class="btn btn-outline-secondary" (click)="resetFilters()">
+              Đặt lại
+            </button>
+          </div>
+
+          <div class="table-responsive" *ngIf="!loading">
+            <table class="table table-sm align-middle">
+              <thead>
+                <tr>
+                  <th>Mã thẻ</th>
+                  <th>Chủ thẻ</th>
+                  <th>Loại</th>
+                  <th>Trạng thái</th>
+                  <th>Hết hạn</th>
+                  <th class="text-end">Hành động</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let c of cards">
+                  <td>
+                    <code>{{ c.cardNumber }}</code>
+                  </td>
+                  <td>
+                    <div>{{ c.fullName || c.username }}</div>
+                    <small class="text-muted">{{
+                      c.email || c.username
+                    }}</small>
+                  </td>
+                  <td>{{ c.barcodeType }}</td>
+                  <td>
+                    <span class="badge bg-success" *ngIf="c.status === 'ACTIVE'"
+                      >ACTIVE</span
+                    >
+                    <span
+                      class="badge bg-secondary"
+                      *ngIf="c.status === 'REVOKED'"
+                      >REVOKED</span
+                    >
+                    <span
+                      class="badge bg-warning text-dark"
+                      *ngIf="c.status === 'EXPIRED'"
+                      >EXPIRED</span
+                    >
+                  </td>
+                  <td>{{ c.expiredAt | date: "dd/MM/yyyy HH:mm" }}</td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button
+                        class="btn btn-outline-primary"
+                        (click)="editCard(c)"
+                      >
+                        <i class="fa-solid fa-pen"></i>
+                      </button>
+                      <button
+                        class="btn btn-outline-secondary"
+                        (click)="downloadPng(c)"
+                      >
+                        PNG
+                      </button>
+                      <button
+                        class="btn btn-outline-secondary"
+                        (click)="downloadPdf(c)"
+                      >
+                        PDF
+                      </button>
+                      <button
+                        class="btn btn-outline-danger"
+                        (click)="revoke(c)"
+                        [disabled]="c.status === 'REVOKED'"
+                      >
+                        Thu hồi
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="cards.length === 0">
+                  <td colspan="6" class="text-center text-muted py-3">
+                    Không có thẻ nào.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div *ngIf="loading" class="text-center py-4">Đang tải...</div>
+
+          <div class="d-flex justify-content-between align-items-center mt-2">
+            <div class="text-muted small">Tổng {{ totalElements }} thẻ</div>
+            <div class="btn-group">
+              <button
+                class="btn btn-outline-secondary btn-sm"
+                (click)="onPageChange(page - 1)"
+                [disabled]="page === 0"
+              >
+                <i class="fa-solid fa-chevron-left"></i>
+              </button>
+              <span class="btn btn-outline-secondary btn-sm disabled">
+                {{ page + 1 }} / {{ totalPages || 1 }}
+              </span>
+              <button
+                class="btn btn-outline-secondary btn-sm"
+                (click)="onPageChange(page + 1)"
+                [disabled]="page + 1 >= totalPages"
+              >
+                <i class="fa-solid fa-chevron-right"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="col-lg-4">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            {{ form.id ? "Cập nhật thẻ" : "Tạo thẻ mới" }}
+          </h5>
+          <div class="mb-3">
+            <label class="form-label">User ID</label>
+            <input
+              type="number"
+              class="form-control"
+              [(ngModel)]="form.userId"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Loại mã</label>
+            <select class="form-select" [(ngModel)]="form.barcodeType">
+              <option value="CODE128">CODE128</option>
+              <option value="QR">QR</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Hết hạn</label>
+            <input
+              type="datetime-local"
+              class="form-control"
+              [(ngModel)]="form.expiredAt"
+            />
+          </div>
+          <div class="mb-3">
+            <label class="form-label">Ghi chú</label>
+            <textarea
+              class="form-control"
+              rows="3"
+              [(ngModel)]="form.metadata"
+            ></textarea>
+          </div>
+          <div class="d-flex gap-2">
+            <button class="btn btn-primary" (click)="submitForm()">
+              {{ form.id ? "Lưu thay đổi" : "Tạo thẻ" }}
+            </button>
+            <button class="btn btn-outline-secondary" (click)="resetForm()">
+              Làm mới
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

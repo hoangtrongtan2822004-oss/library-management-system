@@ -34,6 +34,10 @@ import { AdminNewsComponent } from './admin/admin-news/admin-news.component';
 import { RenewalsComponent } from './admin/renewals/renewals.component';
 import { RulesComponent } from './rules/rules.component';
 import { GamificationComponent } from './gamification/gamification.component';
+import { GoogleCallbackComponent } from './auth/google-callback/google-callback.component';
+import { FacebookCallbackComponent } from './auth/facebook-callback/facebook-callback.component';
+import { AuditLogsComponent } from './admin/audit-logs/audit-logs.component';
+import { MemberCardsComponent } from './admin/member-cards/member-cards.component';
 
 const routes: Routes = [
   // ADMIN pages
@@ -166,6 +170,18 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: { roles: ['ROLE_ADMIN'] },
   },
+  {
+    path: 'admin/audit-logs',
+    component: AuditLogsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
+  {
+    path: 'admin/member-cards',
+    component: MemberCardsComponent,
+    canActivate: [AuthGuard],
+    data: { roles: ['ROLE_ADMIN'] },
+  },
 
   // USER pages
   {
@@ -208,6 +224,8 @@ const routes: Routes = [
   // public
   { path: 'register', component: SignupComponent },
   { path: 'login', component: LoginComponent },
+  { path: 'auth/google/callback', component: GoogleCallbackComponent },
+  { path: 'auth/facebook/callback', component: FacebookCallbackComponent },
   { path: 'forgot-password', component: ForgotPasswordComponent },
   { path: 'reset-password', component: ResetPasswordComponent },
   { path: 'logout', component: LogoutComponent },

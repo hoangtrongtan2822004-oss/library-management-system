@@ -1,16 +1,20 @@
 package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dao.LoanRepository;
+import com.ibizabroker.lms.dao.UsersRepository;
 import com.ibizabroker.lms.dto.UserCreateDto;
 import com.ibizabroker.lms.dto.UserDto;
 import com.ibizabroker.lms.dto.UserUpdateDto;
 import com.ibizabroker.lms.entity.Users;
+import com.ibizabroker.lms.exceptions.NotFoundException;
 import com.ibizabroker.lms.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -28,6 +32,7 @@ import java.util.Map;
 public class AdminController {
 
     private final UserService userService;
+    private final UsersRepository usersRepository;
     private final LoanRepository loanRepository; // Inject LoanRepository để lấy stats
 
     // === USER MANAGEMENT ENDPOINTS (/api/admin/users) ===
@@ -44,8 +49,21 @@ public class AdminController {
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<UserDto> getUserById(@PathVariable Integer id) {
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> getUserById(@PathVariable Integer id, @AuthenticationPrincipal UserDetails principal) {
         Users user = userService.getUserById(id);
+        
+        // Get current user ID from database
+        Users currentUser = usersRepository.findByUsername(principal.getUsername())
+                .orElseThrow(() -> new NotFoundException("User not found"));
+        
+        // Allow user to view their own profile OR allow admin to view anyone's profile
+        boolean isAdmin = principal.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_ADMIN"));
+        if (!currentUser.getUserId().equals(id) && !isAdmin) {
+            throw new NotFoundException("Không có quyền truy cập hồ sơ người dùng khác");
+        }
+        
         UserDto dto = userService.mapToUserDto(user);
         return ResponseEntity.ok(dto);
     }
@@ -82,14 +100,20 @@ public class AdminController {
         List<Map<String, Object>> loanStats = loanRepository.findLoanCountsByMonth(startOfYear, endOfYear);
         long[] monthlyData = new long[12];
         for (Map<String, Object> row : loanStats) {
-            // row keys: "month", "count"
+            // row keys: "month" (format: "YYYY-MM"), "count"
             Object monthObj = row.get("month");
             Object countObj = row.get("count");
             if (monthObj != null && countObj != null) {
-                int month = ((Number) monthObj).intValue();
-                long count = ((Number) countObj).longValue();
-                if (month >= 1 && month <= 12) {
-                    monthlyData[month - 1] = count;
+                try {
+                    // Parse month from "YYYY-MM" format string
+                    String monthStr = monthObj.toString();
+                    int month = Integer.parseInt(monthStr.split("-")[1]);
+                    long count = ((Number) countObj).longValue();
+                    if (month >= 1 && month <= 12) {
+                        monthlyData[month - 1] = count;
+                    }
+                } catch (Exception e) {
+                    // Skip invalid data
                 }
             }
         }

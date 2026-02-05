@@ -150,15 +150,19 @@ export class BooksService {
   }
 
   public getAllAuthors(): Observable<Author[]> {
-    return this.http.get<Author[]>(
-      this.apiService.buildUrl('/admin/books/authors'),
-    );
+    return this.http
+      .get<
+        ApiResponse<Author[]>
+      >(this.apiService.buildUrl('/admin/books/authors'))
+      .pipe(map((resp) => resp.data));
   }
 
   public getAllCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(
-      this.apiService.buildUrl('/admin/books/categories'),
-    );
+    return this.http
+      .get<
+        ApiResponse<Category[]>
+      >(this.apiService.buildUrl('/admin/books/categories'))
+      .pipe(map((resp) => resp.data));
   }
 
   public createCategory(name: string): Observable<Category> {

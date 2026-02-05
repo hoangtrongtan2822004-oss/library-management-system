@@ -73,4 +73,27 @@ public abstract class BaseEntity {
     @LastModifiedBy
     @Column(name = "updated_by", length = 50)
     private String updatedBy;
+
+    /**
+     * 🛡️ Dự phòng: Tự động set createdAt và updatedAt nếu JPA Auditing không hoạt động
+     * Callback này luôn chạy trước khi INSERT vào database
+     */
+    @PrePersist
+    protected void onCreate() {
+        if (this.createdAt == null) {
+            this.createdAt = LocalDateTime.now();
+        }
+        if (this.updatedAt == null) {
+            this.updatedAt = LocalDateTime.now();
+        }
+    }
+
+    /**
+     * 🛡️ Dự phòng: Tự động cập nhật updatedAt mỗi khi UPDATE
+     * Callback này luôn chạy trước khi UPDATE vào database
+     */
+    @PreUpdate
+    protected void onUpdate() {
+        this.updatedAt = LocalDateTime.now();
+    }
 }

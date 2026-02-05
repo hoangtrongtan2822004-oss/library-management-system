@@ -241,8 +241,14 @@ public class ChatbotController {
         }
 
         // Retrieve relevant context from library database (RAG)
-        String libraryContext = ragService.retrieveContext(chatRequest.getPrompt());
-        logger.info("📚 RAG Context retrieved: {}", libraryContext);
+        String libraryContext;
+        try {
+            libraryContext = ragService.retrieveContext(chatRequest.getPrompt());
+            logger.info("📚 RAG Context retrieved: {}", libraryContext);
+        } catch (Exception e) {
+            logger.error("❌ RAG Service error: ", e);
+            libraryContext = "Thông tin thư viện hiện không khả dụng.";
+        }
 
         // Build context-aware prompt with library knowledge
         String systemPrompt = "Bạn là trợ lý thư viện trường THCS Phương Tú. Hãy trả lời câu hỏi dựa trên thông tin sau:\n\n" + libraryContext + "\n\n";

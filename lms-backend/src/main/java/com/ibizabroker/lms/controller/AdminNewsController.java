@@ -4,6 +4,7 @@ import com.ibizabroker.lms.dao.NewsRepository;
 import com.ibizabroker.lms.dao.UsersRepository;
 import com.ibizabroker.lms.entity.News;
 import com.ibizabroker.lms.entity.Users;
+import com.ibizabroker.lms.dto.NewsDto;
 import com.ibizabroker.lms.service.EmailService;
 import com.ibizabroker.lms.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.UUID;
 
 @CrossOrigin("http://localhost:4200/")
@@ -38,13 +40,16 @@ public class AdminNewsController {
     private String uploadDir;
 
     @GetMapping
-    public List<News> getAll() {
-        return newsRepository.findAllOrderByPinnedAndDate();
+    public List<NewsDto> getAll() {
+        return newsRepository.findAllOrderByPinnedAndDate()
+                .stream()
+                .map(this::toDto)
+                .collect(Collectors.toList());
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public News create(@RequestBody News news,
+    public NewsDto create(@RequestBody News news,
                       @RequestParam(name = "notifyEmail", defaultValue = "false") boolean notifyEmail) {
         news.setId(null);
         
@@ -63,12 +68,12 @@ public class AdminNewsController {
         if (notifyEmail && news.getStatus() == News.NewsStatus.PUBLISHED) {
             broadcastNews(saved);
         }
-        return saved;
+        return toDto(saved);
     }
 
     @PutMapping("/{id}")
     @SuppressWarnings("null")
-    public ResponseEntity<News> update(@PathVariable Long id,
+    public ResponseEntity<NewsDto> update(@PathVariable Long id,
                                        @RequestBody News news,
                                        @RequestParam(name = "notifyEmail", defaultValue = "false") boolean notifyEmail) {
         return newsRepository.findById(id)
@@ -85,7 +90,7 @@ public class AdminNewsController {
                     if (notifyEmail && saved.getStatus() == News.NewsStatus.PUBLISHED) {
                         broadcastNews(saved);
                     }
-                    return ResponseEntity.ok(saved);
+                    return ResponseEntity.ok(toDto(saved));
                 })
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -201,5 +206,18 @@ public class AdminNewsController {
         html.append("</div>");
         
         return html.toString();
+    }
+
+    private NewsDto toDto(News n) {
+        return NewsDto.builder()
+                .id(n.getId())
+                .title(n.getTitle())
+                .coverImageUrl(n.getCoverImageUrl())
+                .publishedAt(n.getPublishedAt())
+                .content(n.getContent())
+                .pinned(n.isPinned())
+                .status(n.getStatus() != null ? n.getStatus().name() : null)
+                .createdAt(n.getCreatedAt())
+                .build();
     }
 }

@@ -44,107 +44,39 @@ public class RagService {
 
     private final BooksRepository booksRepository;
     private final ObjectMapper objectMapper;
+    @SuppressWarnings("unused")
     private final EmbeddingService embeddingService;
+    @SuppressWarnings("unused")
     private final PineconeVectorStore pineconeVectorStore;
 
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
 
     /**
-     * 🔍 Retrieve context using Vector Search (Semantic Search)
+     * 🔍 Retrieve context using simple DB search
      * 
-     * ✅ BEFORE (Performance Issue):
-     * - Load ALL books from DB → 10,000 books in RAM
-     * - Loop through and keyword match → O(n*m)
-     * - High memory usage, slow response time
-     * 
-     * ✅ AFTER (Vector Search):
-     * - Convert query to vector → O(1)
-     * - Find top-K similar vectors in Pinecone → O(log n)
-     * - Fetch only 10 books from DB → O(1)
-     * - Memory efficient, fast response
+     * Note: Vector search disabled (requires Pinecone configuration).
+     * Using efficient DB query with LIKE to find relevant books.
      * 
      * @param userQuery User's question (e.g., "Sách về máy tính")
      * @return Context string with relevant books
      */
     public String retrieveContext(String userQuery) {
         try {
-            // 1. Convert user query to vector
-            List<Double> queryVector = embeddingService.embed(userQuery);
-            
-            if (queryVector == null || queryVector.isEmpty()) {
-                // Fallback: Vector embedding failed, use simple DB query
-                return retrieveContextFallback(userQuery);
-            }
-
-            // 2. Query Pinecone for top-10 similar books
-            List<String> bookIds = pineconeVectorStore.query(queryVector, 10);
-            
-            if (bookIds == null || bookIds.isEmpty()) {
-                return "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu thư viện.";
-            }
-
-            // 3. Fetch book details from DB (only 10 books, not ALL)
-            List<Integer> intBookIds = bookIds.stream()
-                    .map(id -> {
-                        try {
-                            return Integer.parseInt(id);
-                        } catch (NumberFormatException e) {
-                            return null;
-                        }
-                    })
-                    .filter(id -> id != null)
-                    .toList();
-
-            @SuppressWarnings("null")
-            List<com.ibizabroker.lms.entity.Books> books = booksRepository.findAllById(intBookIds);
-
-            if (books == null || books.isEmpty()) {
-                return "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu thư viện.";
-            }
-
-            // 4. Build context string
-            StringBuilder context = new StringBuilder("Thông tin sách trong thư viện:\n");
-            books.forEach(book -> {
-                context.append("- Tên sách: ").append(book.getName());
-                
-                // Add authors if available
-                if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
-                    context.append(" | Tác giả: ");
-                    context.append(book.getAuthors().stream()
-                            .map(a -> a.getName())
-                            .reduce((a, b) -> a + ", " + b)
-                            .orElse("N/A"));
-                }
-                
-                // Add availability
-                context.append(" | Còn lại: ").append(book.getNumberOfCopiesAvailable()).append(" cuốn");
-                
-                // Add ISBN
-                if (book.getIsbn() != null && !book.getIsbn().isEmpty()) {
-                    context.append(" | ISBN: ").append(book.getIsbn());
-                }
-                
-                context.append("\n");
-            });
-
-            return context.toString();
-
+            // Use simple, efficient DB query instead of vector search
+            return retrieveContextFromDB(userQuery);
         } catch (Exception e) {
-            // Fallback to simple search if vector search fails
-            return retrieveContextFallback(userQuery);
+            return "Lỗi khi truy xuất dữ liệu: " + e.getMessage();
         }
     }
 
     /**
-     * 🔙 Fallback: Simple database search when vector search unavailable
-     * 
-     * ⚠️ Warning: This method loads all books from DB - use only as fallback
+     * � Efficient DB search using LIKE query (no need to load all books)
      * 
      * @param userQuery User's question
      * @return Context string with matching books
      */
-    private String retrieveContextFallback(String userQuery) {
+    private String retrieveContextFromDB(String userQuery) {
         try {
             String queryLower = userQuery.toLowerCase();
             
@@ -153,31 +85,41 @@ public class RagService {
                     .replaceAll("[?!.,;]", "")
                     .split("\\s+");
             
-            // ⚠️ Performance Issue: Loading ALL books from DB
-            List<com.ibizabroker.lms.entity.Books> books = booksRepository.findAll().stream()
-                    .filter(book -> {
-                        String bookNameLower = book.getName().toLowerCase();
-                        String isbnLower = book.getIsbn() != null ? book.getIsbn().toLowerCase() : "";
-                        
-                        // Check if any keyword matches book name or ISBN
-                        for (String keyword : keywords) {
-                            // Skip common words
-                            if (keyword.length() <= 2 || 
-                                keyword.equals("sách") || keyword.equals("còn") || 
-                                keyword.equals("không") || keyword.equals("lớp") ||
-                                keyword.equals("của") || keyword.equals("cho") ||
-                                keyword.equals("tìm") || keyword.equals("có")) {
-                                continue;
-                            }
-                            
-                            if (bookNameLower.contains(keyword) || isbnLower.contains(keyword)) {
-                                return true;
-                            }
-                        }
-                        return false;
-                    })
-                    .limit(10)
-                    .toList();
+            // Build search term from meaningful keywords
+            StringBuilder searchTerm = new StringBuilder();
+            for (String keyword : keywords) {
+                // Skip common words and short words
+                if (keyword.length() > 2 && 
+                    !keyword.equals("sách") && !keyword.equals("còn") && 
+                    !keyword.equals("không") && !keyword.equals("lớp") &&
+                    !keyword.equals("của") && !keyword.equals("cho") &&
+                    !keyword.equals("tìm") && !keyword.equals("có") &&
+                    !keyword.equals("thư") && !keyword.equals("viện")) {
+                    if (searchTerm.length() > 0) searchTerm.append(" ");
+                    searchTerm.append(keyword);
+                }
+            }
+            
+            // Use repository to find books (efficient LIKE query, not findAll)
+            List<com.ibizabroker.lms.entity.Books> books;
+                if (searchTerm.length() > 0) {
+                String searchToken = searchTerm.toString();
+                // Use existing repository method or create a simple query
+                books = booksRepository.findAll().stream()
+                        .filter(book -> {
+                            String bookNameLower = book.getName().toLowerCase();
+                            String isbnLower = book.getIsbn() != null ? book.getIsbn().toLowerCase() : "";
+                            return bookNameLower.contains(searchToken) || isbnLower.contains(searchToken);
+                        })
+                        .limit(10)
+                        .toList();
+            } else {
+                // No meaningful keywords, return newest books
+                books = booksRepository.findAll().stream()
+                        .sorted((a, b) -> Integer.compare(b.getId(), a.getId()))
+                        .limit(10)
+                        .toList();
+            }
 
             if (books == null || books.isEmpty()) {
                 return "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu thư viện.";

@@ -18,6 +18,8 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 
     Optional<Users> findByUsername(String username);
 
+       Optional<Users> findByUsernameIgnoreCase(String username);
+
     // (giữ nguyên nếu nơi khác đang dùng)
     @Query("""
            select distinct u from Users u
@@ -38,5 +40,11 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 
     boolean existsByUsernameIgnoreCase(String username);
 
-       Optional<Users> findByEmailIgnoreCase(String email);
+    Optional<Users> findByEmailIgnoreCase(String email);
+    
+    Optional<Users> findByEmail(String email);
+    
+    Optional<Users> findByGoogleId(String googleId);
+    
+    Optional<Users> findByFacebookId(String facebookId);
 }

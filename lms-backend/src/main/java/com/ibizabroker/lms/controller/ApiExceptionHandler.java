@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 🛡️ Centralized Exception Handler
@@ -36,6 +38,9 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+        private static final Logger LOGGER = LoggerFactory.getLogger(ApiExceptionHandler.class);
+
 
     /**
      * 🏗️ Handle BaseException - All custom exceptions
@@ -165,8 +170,8 @@ public class ApiExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception ex) {
-        // TODO: Replace printStackTrace with proper logging (Log4j, SLF4J)
-        ex.printStackTrace();
+                // Log exception using SLF4J instead of printing stacktrace
+                LOGGER.error("Unhandled exception in API: {}", ex.getMessage(), ex);
         
         ApiResponse<Object> response = ApiResponse.builder()
                 .success(false)

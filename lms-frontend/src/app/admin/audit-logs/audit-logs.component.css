@@ -1,0 +1,11 @@
+.card {
+  border-radius: 10px;
+}
+
+.summary {
+  cursor: pointer;
+}
+
+table td {
+  vertical-align: middle;
+}

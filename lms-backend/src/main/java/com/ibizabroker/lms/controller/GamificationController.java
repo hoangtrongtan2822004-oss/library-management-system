@@ -208,4 +208,122 @@ public class GamificationController {
                 "streakFreezeCount", userPoints.getStreakFreezeCount()
         ));
     }
+
+    // ============ ADMIN MANAGEMENT ENDPOINTS ============
+
+    /**
+     * Admin: Get all rewards
+     */
+    @GetMapping("/admin/gamification/rewards")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Reward>> getAllRewardsAdmin() {
+        return ResponseEntity.ok(gamificationService.getAllRewards());
+    }
+
+    /**
+     * Admin: Create reward
+     */
+    @PostMapping("/admin/gamification/rewards")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Reward> createReward(@RequestBody Reward reward) {
+        return ResponseEntity.ok(gamificationService.createReward(reward));
+    }
+
+    /**
+     * Admin: Update reward
+     */
+    @PutMapping("/admin/gamification/rewards/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Reward> updateReward(@PathVariable Long id, @RequestBody Reward reward) {
+        return ResponseEntity.ok(gamificationService.updateReward(id, reward));
+    }
+
+    /**
+     * Admin: Delete reward
+     */
+    @DeleteMapping("/admin/gamification/rewards/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteReward(@PathVariable Long id) {
+        gamificationService.deleteReward(id);
+        return ResponseEntity.ok(Map.of("message", "Đã xóa phần thưởng"));
+    }
+
+    /**
+     * Admin: Get all challenges
+     */
+    @GetMapping("/admin/gamification/challenges")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReadingChallenge>> getAllChallengesAdmin() {
+        return ResponseEntity.ok(gamificationService.getAllChallenges());
+    }
+
+    /**
+     * Admin: Create challenge
+     */
+    @PostMapping("/admin/gamification/challenges")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ReadingChallenge> createChallenge(@RequestBody ReadingChallenge challenge) {
+        return ResponseEntity.ok(gamificationService.createChallenge(challenge));
+    }
+
+    /**
+     * Admin: Update challenge
+     */
+    @PutMapping("/admin/gamification/challenges/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ReadingChallenge> updateChallenge(@PathVariable Long id, @RequestBody ReadingChallenge challenge) {
+        return ResponseEntity.ok(gamificationService.updateChallenge(id, challenge));
+    }
+
+    /**
+     * Admin: Delete challenge
+     */
+    @DeleteMapping("/admin/gamification/challenges/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteChallenge(@PathVariable Long id) {
+        gamificationService.deleteChallenge(id);
+        return ResponseEntity.ok(Map.of("message", "Đã xóa thử thách"));
+    }
+
+    /**
+     * Admin: Get all badges
+     */
+    @GetMapping("/admin/gamification/badges")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Badge>> getAllBadgesAdmin() {
+        return ResponseEntity.ok(gamificationService.getAllBadges());
+    }
+
+    /**
+     * Admin: Create badge
+     */
+    @PostMapping("/admin/gamification/badges")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<?> createBadge(@RequestBody Badge badge) {
+        try {
+            Badge created = gamificationService.createBadge(badge);
+            return ResponseEntity.ok(created);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.badRequest().body(com.ibizabroker.lms.dto.ApiResponse.error(ex.getMessage(), 400));
+        }
+    }
+
+    /**
+     * Admin: Update badge
+     */
+    @PutMapping("/admin/gamification/badges/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Badge> updateBadge(@PathVariable Long id, @RequestBody Badge badge) {
+        return ResponseEntity.ok(gamificationService.updateBadge(id, badge));
+    }
+
+    /**
+     * Admin: Delete badge
+     */
+    @DeleteMapping("/admin/gamification/badges/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Map<String, String>> deleteBadge(@PathVariable Long id) {
+        gamificationService.deleteBadge(id);
+        return ResponseEntity.ok(Map.of("message", "Đã xóa huy hiệu"));
+    }
 }
