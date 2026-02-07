@@ -23,7 +23,7 @@ import java.util.Map;
 @CrossOrigin("http://localhost:4200/")
 @RestController
 @RequestMapping("/api/admin") // Đổi root path để chứa cả users và dashboard
-@PreAuthorize("hasRole('ROLE_ADMIN')")
+@PreAuthorize("hasAnyAuthority('ADMIN','ROLE_ADMIN')")
 @RequiredArgsConstructor
 public class AdminController {
 
@@ -82,14 +82,19 @@ public class AdminController {
         List<Map<String, Object>> loanStats = loanRepository.findLoanCountsByMonth(startOfYear, endOfYear);
         long[] monthlyData = new long[12];
         for (Map<String, Object> row : loanStats) {
-            // row keys: "month", "count"
+            // row keys: "month" (YYYY-MM as String), "count"
             Object monthObj = row.get("month");
             Object countObj = row.get("count");
             if (monthObj != null && countObj != null) {
-                int month = ((Number) monthObj).intValue();
+                String monthStr = monthObj.toString();
                 long count = ((Number) countObj).longValue();
-                if (month >= 1 && month <= 12) {
-                    monthlyData[month - 1] = count;
+                try {
+                    int month = java.time.YearMonth.parse(monthStr).getMonthValue();
+                    if (month >= 1 && month <= 12) {
+                        monthlyData[month - 1] = count;
+                    }
+                } catch (Exception ignored) {
+                    // Skip malformed month strings instead of failing the dashboard
                 }
             }
         }

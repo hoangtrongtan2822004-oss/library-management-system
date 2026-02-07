@@ -98,6 +98,10 @@
   transition: color 0.2s;
 }
 
+.btn-action.active {
+  color: #4f46e5;
+}
+
 .btn-action:hover {
   color: #111827;
 }
@@ -152,6 +156,38 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: #fff;
   border-color: transparent;
+}
+
+.feedback-row {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.25rem;
+}
+
+.feedback-btn {
+  border: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 999px;
+  padding: 4px 10px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.feedback-btn:hover:not(:disabled) {
+  background: #eef2ff;
+  border-color: #c7d2fe;
+}
+
+.feedback-btn.selected {
+  background: #4f46e5;
+  color: #fff;
+  border-color: #4338ca;
+}
+
+.feedback-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 .chat-body::-webkit-scrollbar {

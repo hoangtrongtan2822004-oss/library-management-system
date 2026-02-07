@@ -43,4 +43,15 @@ export class ChatbotService {
   getUserConversations(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/conversations`);
   }
+
+  /**
+   * Send feedback for a bot message
+   */
+  sendFeedback(payload: {
+    conversationId: string | null;
+    messageId?: string;
+    helpful: boolean;
+  }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/feedback`, payload);
+  }
 }

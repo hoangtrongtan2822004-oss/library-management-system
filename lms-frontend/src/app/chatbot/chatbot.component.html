@@ -12,6 +12,23 @@
       <div class="header-actions">
         <button
           class="btn-action"
+          (click)="toggleTts()"
+          [class.active]="ttsEnabled"
+          [disabled]="!ttsSupported"
+          title="Đọc trả lời (TTS)"
+        >
+          <i class="fas" [ngClass]="ttsEnabled ? 'fa-volume-up' : 'fa-volume-mute'"></i>
+        </button>
+        <button
+          class="btn-action"
+          (click)="replayLastAnswer()"
+          [disabled]="!ttsSupported"
+          title="Nghe lại trả lời cuối"
+        >
+          <i class="fas fa-rotate-right"></i>
+        </button>
+        <button
+          class="btn-action"
           (click)="clearChat()"
           title="Clear chat"
           *ngIf="messages.length > 1"
@@ -31,6 +48,28 @@
         <div class="message-content">
           <ng-container *ngIf="message.author === 'bot'; else userMessage">
             <markdown [data]="message.text"></markdown>
+            <div class="feedback-row" *ngIf="message.author === 'bot'">
+              <button
+                type="button"
+                class="feedback-btn"
+                [class.selected]="message.feedback === 'up'"
+                (click)="sendFeedback(message, true)"
+                [disabled]="message.feedbackSent"
+                title="Hữu ích"
+              >
+                👍
+              </button>
+              <button
+                type="button"
+                class="feedback-btn"
+                [class.selected]="message.feedback === 'down'"
+                (click)="sendFeedback(message, false)"
+                [disabled]="message.feedbackSent"
+                title="Chưa ổn"
+              >
+                👎
+              </button>
+            </div>
 
             <!-- Book Card for interactive responses -->
             <div class="book-card" *ngIf="message.bookCard">
@@ -81,18 +120,13 @@
           <span></span>
         </div>
       </div>
-      <div class="quick-replies" *ngIf="messages.length === 1 && !isLoading">
+      <div class="quick-replies" *ngIf="quickReplies.length && !isLoading">
         <button
           class="chip"
-          (click)="fillMessage('Sách Toán lớp 6 còn không?')"
+          *ngFor="let chip of quickReplies | slice:0:5"
+          (click)="fillMessage(chip)"
         >
-          Sách Toán lớp 6
-        </button>
-        <button class="chip" (click)="fillMessage('Thư viện mở cửa lúc nào?')">
-          Giờ mở cửa
-        </button>
-        <button class="chip" (click)="fillMessage('Hướng dẫn mượn sách')">
-          Cách mượn sách
+          {{ chip }}
         </button>
       </div>
     </div>

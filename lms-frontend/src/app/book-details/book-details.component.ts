@@ -386,7 +386,7 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
     // Load full user profile from API for read-only display
     this.borrowLoading = true;
     this.usersService
-      .getUserById(userId)
+      .getMyProfile()
       .pipe(
         finalize(() => (this.borrowLoading = false)),
         takeUntil(this.destroy$),
@@ -427,7 +427,7 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
     // Load full user profile from API for read-only display
     this.reserveLoading = true;
     this.usersService
-      .getUserById(userId)
+      .getMyProfile()
       .pipe(
         finalize(() => (this.reserveLoading = false)),
         takeUntil(this.destroy$),

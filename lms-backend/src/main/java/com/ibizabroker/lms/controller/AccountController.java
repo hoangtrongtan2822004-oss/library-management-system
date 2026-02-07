@@ -2,6 +2,7 @@ package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dao.UsersRepository;
 import com.ibizabroker.lms.dto.ChangePasswordRequest;
+import com.ibizabroker.lms.dto.UserDto;
 import com.ibizabroker.lms.entity.Users;
 import com.ibizabroker.lms.exceptions.NotFoundException;
 import com.ibizabroker.lms.service.UserService;
@@ -24,6 +25,14 @@ public class AccountController {
 
     private final UsersRepository usersRepository;
     private final UserService userService;
+
+    @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    public ResponseEntity<UserDto> getProfile(@AuthenticationPrincipal UserDetails principal) {
+        Users currentUser = usersRepository.findByUsername(principal.getUsername())
+                .orElseThrow(() -> new NotFoundException("User not found for token"));
+        return ResponseEntity.ok(userService.mapToUserDto(currentUser));
+    }
 
     @PutMapping("/password")
     @PreAuthorize("isAuthenticated()")

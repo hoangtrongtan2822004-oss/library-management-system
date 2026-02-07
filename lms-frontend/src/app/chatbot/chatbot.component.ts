@@ -15,6 +15,9 @@ interface Message {
   author: 'user' | 'bot';
   text: string;
   timestamp?: Date;
+  id?: string;
+  feedback?: 'up' | 'down';
+  feedbackSent?: boolean;
   bookCard?: BookCard; // For interactive book responses
 }
 
@@ -42,6 +45,18 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   conversationId: string | null = null;
   private hasInitializedChat = false;
 
+  // TTS
+  ttsEnabled = false;
+  ttsSupported = typeof window !== 'undefined' && 'speechSynthesis' in window;
+  private ttsVoice?: SpeechSynthesisVoice;
+  private lastUtterance: SpeechSynthesisUtterance | null = null;
+
+  quickReplies: string[] = [
+    'Sách Toán lớp 6 còn không?',
+    'Thư viện mở cửa lúc nào?',
+    'Hướng dẫn mượn sách',
+  ];
+
   // Voice input
   isListening = false;
   recognition: any = null;
@@ -66,6 +81,15 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     // Initialize conversation only on first user login
     this.initializeChatIfNeeded();
+
+    // Load TTS preference
+    const savedTts = localStorage.getItem('chatbot_tts_enabled');
+    this.ttsEnabled = savedTts ? savedTts === 'true' : false;
+    if (this.ttsSupported && window.speechSynthesis.getVoices().length) {
+      this.ttsVoice = window.speechSynthesis
+        .getVoices()
+        .find((v) => v.lang.startsWith('vi'));
+    }
   }
 
   private initializeChatIfNeeded(): void {
@@ -117,6 +141,9 @@ export class ChatbotComponent implements OnInit, OnDestroy {
 
       this.recognition.onend = () => {
         this.isListening = false;
+        if (this.currentMessage && this.currentMessage.trim().length > 0) {
+          this.sendMessage();
+        }
       };
     }
   }
@@ -129,10 +156,23 @@ export class ChatbotComponent implements OnInit, OnDestroy {
     if (this.recognition) {
       this.recognition.stop();
     }
+
+    // Stop any ongoing speech
+    if (this.ttsSupported) {
+      window.speechSynthesis.cancel();
+    }
   }
 
   toggleChat(): void {
     this.isOpen = !this.isOpen;
+  }
+
+  replayLastAnswer(): void {
+    if (!this.ttsSupported) return;
+    const lastBot = [...this.messages].reverse().find((m) => m.author === 'bot');
+    if (lastBot?.text) {
+      this.speakBotMessage(lastBot.text);
+    }
   }
 
   toggleVoiceInput(): void {
@@ -158,6 +198,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
       author: 'user',
       text: userMessage,
       timestamp: new Date(),
+      id: this.generateUUID(),
     });
     this.currentMessage = '';
     this.isLoading = true;
@@ -186,12 +227,24 @@ export class ChatbotComponent implements OnInit, OnDestroy {
           // Try to parse book card from response
           const bookCard = this.parseBookCard(botText);
 
-          this.messages.push({
+          const botMessage: Message = {
             author: 'bot',
             text: botText,
             timestamp: new Date(),
             bookCard: bookCard || undefined,
-          });
+            id: this.generateUUID(),
+          };
+
+          this.messages.push(botMessage);
+
+          // Dynamic quick replies if provided
+          if (Array.isArray((response as any).suggestions)) {
+            this.quickReplies = (response as any).suggestions
+              .map((s: any) => (typeof s === 'string' ? s : s?.label))
+              .filter((s: string) => !!s);
+          }
+
+          this.speakBotMessage(botText);
 
           this.isLoading = false;
           this.saveChatHistory();
@@ -203,6 +256,7 @@ export class ChatbotComponent implements OnInit, OnDestroy {
             author: 'bot',
             text: errorMsg,
             timestamp: new Date(),
+            id: this.generateUUID(),
           });
           this.isLoading = false;
           this.saveChatHistory();
@@ -338,5 +392,53 @@ export class ChatbotComponent implements OnInit, OnDestroy {
         return v.toString(16);
       },
     );
+  }
+
+  // === Feedback ===
+  sendFeedback(message: Message, isPositive: boolean): void {
+    if (!message || message.feedbackSent || message.author !== 'bot') return;
+    const payload = {
+      conversationId: this.conversationId,
+      messageId: message.id,
+      helpful: isPositive,
+    };
+
+    this.chatbotService.sendFeedback(payload).pipe(takeUntil(this.destroy$)).subscribe({
+      next: () => {
+        message.feedback = isPositive ? 'up' : 'down';
+        message.feedbackSent = true;
+        this.saveChatHistory();
+      },
+      error: () => {
+        message.feedback = isPositive ? 'up' : 'down';
+        message.feedbackSent = true;
+        this.saveChatHistory();
+      },
+    });
+  }
+
+  // === Text-to-Speech ===
+  toggleTts(): void {
+    this.ttsEnabled = !this.ttsEnabled;
+    localStorage.setItem('chatbot_tts_enabled', String(this.ttsEnabled));
+    if (!this.ttsEnabled && this.ttsSupported) {
+      window.speechSynthesis.cancel();
+    }
+  }
+
+  private speakBotMessage(text: string): void {
+    if (!this.ttsSupported || !this.ttsEnabled || !text) return;
+    try {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = 'vi-VN';
+      if (this.ttsVoice) {
+        utterance.voice = this.ttsVoice;
+      }
+      this.lastUtterance = utterance;
+      window.speechSynthesis.speak(utterance);
+    } catch (err) {
+      console.error('TTS speak error', err);
+    }
   }
 }

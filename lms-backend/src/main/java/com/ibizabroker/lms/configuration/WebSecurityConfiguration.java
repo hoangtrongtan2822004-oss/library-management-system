@@ -81,13 +81,15 @@ public class WebSecurityConfiguration {
         c.setAllowedHeaders(Arrays.asList(
             "Origin", "Access-Control-Allow-Origin", "Content-Type",
             "Accept", "Authorization", "X-Requested-With",
-            "Access-Control-Request-Method", "Access-Control-Request-Headers"
+            "Access-Control-Request-Method", "Access-Control-Request-Headers",
+            "Cookie"
         ));
         
         // Expose headers so frontend can read them
         c.setExposedHeaders(Arrays.asList(
             "Origin", "Content-Type", "Accept", "Authorization",
-            "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials"
+            "Access-Control-Allow-Origin", "Access-Control-Allow-Credentials",
+            "Set-Cookie"
         ));
         
         // Allow credentials (cookies, authorization headers)

@@ -3,6 +3,8 @@ package com.ibizabroker.lms.controller;
 import com.ibizabroker.lms.dto.ChatRequestDto;
 import com.ibizabroker.lms.service.ConversationService;
 import com.ibizabroker.lms.service.RagService;
+import com.ibizabroker.lms.service.AdvancedSearchService;
+import com.ibizabroker.lms.dto.ChatFeedbackRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -49,6 +51,7 @@ public class ChatbotController {
     private final RestTemplate restTemplate;
     private final ConversationService conversationService;
     private final RagService ragService;
+    private final AdvancedSearchService advancedSearchService;
     private final UsersRepository usersRepository;
     private final ObjectMapper objectMapper;
     private final ChatRateLimiter chatRateLimiter;
@@ -278,10 +281,22 @@ public class ChatbotController {
             conversationService.saveMessage(conversationId, userId, chatRequest.getPrompt(), geminiJsonResponse);
             conversationService.saveHistoryToCache(conversationId, history + "\nUser: " + chatRequest.getPrompt() + "\nAssistant: " + geminiJsonResponse);
 
+            var suggestionsCandidate = advancedSearchService.getSearchSuggestions(chatRequest.getPrompt(), 5);
+            var suggestions = (suggestionsCandidate != null && !suggestionsCandidate.isEmpty())
+                    ? suggestionsCandidate
+                    : java.util.List.of(
+                        "Sách Toán lớp 6 còn không?",
+                        "Hướng dẫn mượn sách",
+                        "Giờ mở cửa",
+                        "Sách tham khảo Ngữ văn",
+                        "Top sách mượn nhiều"
+                    );
+
             String responseJson = objectToJson(Map.of(
                 "status", "ok",
                 "conversationId", conversationId,
-                "answer", answer
+                "answer", answer,
+                "suggestions", suggestions
             ));
 
             logger.info("✅ Chatbot response (length={}): {}", responseJson.length(), responseJson);
@@ -372,6 +387,30 @@ public class ChatbotController {
                 .body(body);
         }
     }
+
+        /**
+         * Feedback endpoint for chatbot responses
+         */
+        @PostMapping("/feedback")
+        @Operation(summary = "Send feedback for chatbot response")
+        public ResponseEntity<String> feedback(@Valid @RequestBody ChatFeedbackRequest feedback) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        Integer userId = resolveUserId(auth);
+
+        logger.info("Chatbot feedback: userId={}, conversationId={}, messageId={}, helpful={} reason={}",
+            userId, feedback.getConversationId(), feedback.getMessageId(), feedback.isHelpful(), feedback.getReason());
+
+        String body = objectToJson(Map.of(
+            "status", "ok",
+            "conversationId", feedback.getConversationId(),
+            "messageId", feedback.getMessageId(),
+            "helpful", feedback.isHelpful()
+        ));
+
+        return ResponseEntity.ok()
+            .contentType(new MediaType(MediaType.APPLICATION_JSON, java.nio.charset.StandardCharsets.UTF_8))
+            .body(body);
+        }
 
     /**
      * Extract user ID from authentication with type safety check

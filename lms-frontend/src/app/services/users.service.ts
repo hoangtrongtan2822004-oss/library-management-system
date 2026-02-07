@@ -91,6 +91,10 @@ export class UsersService {
     );
   }
 
+  public getMyProfile(): Observable<User> {
+    return this.http.get<User>(this.apiService.buildUrl('/account/profile'));
+  }
+
   // ---------- ROLE HANDLING ----------
 
   private getNormalizedRoles(): string[] {
