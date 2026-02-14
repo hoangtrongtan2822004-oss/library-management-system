@@ -1,23 +1,43 @@
-<div class="container py-4">
+<main
+  id="user-details-main"
+  class="container py-4"
+  role="main"
+  aria-labelledby="user-details-title"
+>
   <!-- Header with Action Toolbar -->
   <div
     class="d-flex justify-content-between align-items-center mb-4"
     *ngIf="user"
+    role="region"
+    aria-labelledby="user-actions-title"
   >
-    <h2 class="user-details-title mb-0">
+    <h2 id="user-actions-title" class="user-details-title mb-0">
       <i class="fa-solid fa-user-circle me-2"></i>Hồ sơ người dùng
     </h2>
     <div class="action-toolbar">
-      <button class="btn btn-outline-secondary me-2" (click)="backToList()">
+      <button
+        type="button"
+        class="btn btn-outline-secondary me-2"
+        (click)="backToList()"
+        aria-label="Quay lại danh sách"
+      >
         <i class="fa-solid fa-arrow-left"></i> Quay lại
       </button>
-      <button class="btn btn-info me-2" (click)="editUser()">
+      <button
+        type="button"
+        class="btn btn-info me-2"
+        (click)="editUser()"
+        aria-label="Sửa người dùng"
+      >
         <i class="fa-solid fa-user-pen"></i> Sửa
       </button>
       <button
+        type="button"
         class="btn me-2"
         [ngClass]="user.isActive ? 'btn-danger' : 'btn-success'"
         (click)="toggleLockStatus()"
+        [attr.aria-pressed]="user.isActive ? 'true' : 'false'"
+        aria-label="Khóa hoặc mở khóa người dùng"
       >
         <i
           [ngClass]="
@@ -26,10 +46,20 @@
         ></i>
         {{ user.isActive ? "Khóa" : "Mở khóa" }}
       </button>
-      <button class="btn btn-warning me-2" (click)="resetUserPassword()">
+      <button
+        type="button"
+        class="btn btn-warning me-2"
+        (click)="resetUserPassword()"
+        aria-label="Đặt lại mật khẩu"
+      >
         <i class="fa-solid fa-key"></i> Reset MK
       </button>
-      <button class="btn btn-primary" (click)="navigateToCreateLoan()">
+      <button
+        type="button"
+        class="btn btn-primary"
+        (click)="navigateToCreateLoan()"
+        aria-label="Tạo phiếu mượn"
+      >
         <i class="fa-solid fa-plus"></i> Tạo phiếu mượn
       </button>
     </div>
@@ -120,7 +150,13 @@
   </div>
 
   <!-- Statistics Cards -->
-  <div class="row g-3 mb-4" *ngIf="!isLoadingLoans">
+  <section
+    class="row g-3 mb-4"
+    *ngIf="!isLoadingLoans"
+    role="region"
+    aria-labelledby="stats-title"
+  >
+    <h3 id="stats-title" class="visually-hidden">Thống kê người dùng</h3>
     <div class="col-md-3">
       <div class="stat-card stat-card-primary">
         <div class="stat-icon">
@@ -160,24 +196,24 @@
           <i class="fa-solid fa-coins"></i>
         </div>
         <div class="stat-content">
-          <h3>{{ stats.totalFines | number : "1.0-0" }} đ</h3>
+          <h3>{{ stats.totalFines | number: "1.0-0" }} đ</h3>
           <p>Tổng tiền phạt</p>
         </div>
       </div>
     </div>
-  </div>
+  </section>
 
   <!-- Loan History Section -->
   <div class="card shadow-sm">
     <div class="card-header bg-dark text-white">
-      <h5 class="mb-0">
+      <h5 id="loan-history-title" class="mb-0">
         <i class="fa-solid fa-history me-2"></i>Lịch sử mượn sách
         <span class="badge bg-secondary ms-2"
           >{{ borrow.length }} giao dịch</span
         >
       </h5>
     </div>
-    <div class="card-body">
+    <div class="card-body" role="region" aria-labelledby="loan-history-title">
       <div *ngIf="isLoadingLoans" class="text-center py-4">
         <div class="spinner-border text-primary" role="status">
           <span class="visually-hidden">Đang tải...</span>
@@ -194,17 +230,37 @@
 
       <div *ngIf="!isLoadingLoans && borrow.length > 0">
         <div class="table-responsive">
-          <table class="table table-hover user-details-table">
+          <table
+            class="table table-hover user-details-table"
+            role="table"
+            aria-label="Lịch sử mượn sách"
+          >
             <thead>
               <tr>
-                <th><i class="fa-solid fa-book me-2"></i>Tên Sách</th>
-                <th><i class="fa-solid fa-calendar me-2"></i>Ngày Mượn</th>
-                <th><i class="fa-solid fa-calendar-check me-2"></i>Hạn Trả</th>
-                <th><i class="fa-solid fa-calendar-xmark me-2"></i>Ngày Trả</th>
-                <th><i class="fa-solid fa-hourglass me-2"></i>Số Ngày Trễ</th>
-                <th><i class="fa-solid fa-circle-info me-2"></i>Trạng Thái</th>
-                <th><i class="fa-solid fa-money-bill me-2"></i>Tiền Phạt</th>
-                <th><i class="fa-solid fa-wrench me-2"></i>Hành Động</th>
+                <th scope="col">
+                  <i class="fa-solid fa-book me-2"></i>Tên Sách
+                </th>
+                <th scope="col">
+                  <i class="fa-solid fa-calendar me-2"></i>Ngày Mượn
+                </th>
+                <th scope="col">
+                  <i class="fa-solid fa-calendar-check me-2"></i>Hạn Trả
+                </th>
+                <th scope="col">
+                  <i class="fa-solid fa-calendar-xmark me-2"></i>Ngày Trả
+                </th>
+                <th scope="col">
+                  <i class="fa-solid fa-hourglass me-2"></i>Số Ngày Trễ
+                </th>
+                <th scope="col">
+                  <i class="fa-solid fa-circle-info me-2"></i>Trạng Thái
+                </th>
+                <th scope="col">
+                  <i class="fa-solid fa-money-bill me-2"></i>Tiền Phạt
+                </th>
+                <th scope="col">
+                  <i class="fa-solid fa-wrench me-2"></i>Hành Động
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -225,11 +281,11 @@
                     </ng-template>
                   </strong>
                 </td>
-                <td>{{ borrower.loanDate | date : "dd/MM/yyyy" }}</td>
-                <td>{{ borrower.dueDate | date : "dd/MM/yyyy" }}</td>
+                <td>{{ borrower.loanDate | date: "dd/MM/yyyy" }}</td>
+                <td>{{ borrower.dueDate | date: "dd/MM/yyyy" }}</td>
                 <td>
                   <span *ngIf="borrower.returnDate; else notReturned">
-                    {{ borrower.returnDate | date : "dd/MM/yyyy" }}
+                    {{ borrower.returnDate | date: "dd/MM/yyyy" }}
                   </span>
                   <ng-template #notReturned>
                     <span class="text-muted fst-italic">Chưa trả</span>
@@ -267,7 +323,7 @@
                     "
                     class="text-danger fw-bold"
                   >
-                    {{ borrower.fineAmount | number : "1.0-0" }} đ
+                    {{ borrower.fineAmount | number: "1.0-0" }} đ
                   </span>
                   <ng-template #noFine>
                     <span class="text-success">0 đ</span>
@@ -275,12 +331,14 @@
                 </td>
                 <td>
                   <button
+                    type="button"
                     class="btn btn-sm btn-warning"
                     *ngIf="
                       borrower.status === 'ACTIVE' ||
                       borrower.status === 'OVERDUE'
                     "
                     (click)="onReturnLoan(borrower.loanId)"
+                    aria-label="Trả sách"
                   >
                     <i class="fa-solid fa-rotate-left me-1"></i>Trả sách
                   </button>
@@ -309,13 +367,25 @@
           <nav>
             <ul class="pagination mb-0">
               <li class="page-item" [class.disabled]="currentPage === 1">
-                <a class="page-link" (click)="goToPage(1)">
-                  <i class="fa-solid fa-angles-left"></i>
+                <a
+                  class="page-link"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Trang đầu"
+                  (click)="goToPage(1)"
+                >
+                  <i class="fa-solid fa-angles-left" aria-hidden="true"></i>
                 </a>
               </li>
               <li class="page-item" [class.disabled]="currentPage === 1">
-                <a class="page-link" (click)="goToPage(currentPage - 1)">
-                  <i class="fa-solid fa-angle-left"></i>
+                <a
+                  class="page-link"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Trang trước"
+                  (click)="goToPage(currentPage - 1)"
+                >
+                  <i class="fa-solid fa-angle-left" aria-hidden="true"></i>
                 </a>
               </li>
               <li
@@ -323,22 +393,41 @@
                 *ngFor="let page of [].constructor(totalPages); let i = index"
                 [class.active]="i + 1 === currentPage"
               >
-                <a class="page-link" (click)="goToPage(i + 1)">{{ i + 1 }}</a>
+                <a
+                  class="page-link"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Trang {{ i + 1 }}"
+                  (click)="goToPage(i + 1)"
+                  >{{ i + 1 }}</a
+                >
               </li>
               <li
                 class="page-item"
                 [class.disabled]="currentPage === totalPages"
               >
-                <a class="page-link" (click)="goToPage(currentPage + 1)">
-                  <i class="fa-solid fa-angle-right"></i>
+                <a
+                  class="page-link"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Trang sau"
+                  (click)="goToPage(currentPage + 1)"
+                >
+                  <i class="fa-solid fa-angle-right" aria-hidden="true"></i>
                 </a>
               </li>
               <li
                 class="page-item"
                 [class.disabled]="currentPage === totalPages"
               >
-                <a class="page-link" (click)="goToPage(totalPages)">
-                  <i class="fa-solid fa-angles-right"></i>
+                <a
+                  class="page-link"
+                  role="button"
+                  tabindex="0"
+                  aria-label="Trang cuối"
+                  (click)="goToPage(totalPages)"
+                >
+                  <i class="fa-solid fa-angles-right" aria-hidden="true"></i>
                 </a>
               </li>
             </ul>
@@ -347,4 +436,4 @@
       </div>
     </div>
   </div>
-</div>
+</main>

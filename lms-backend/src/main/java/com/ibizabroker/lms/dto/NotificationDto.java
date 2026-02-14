@@ -1,6 +1,7 @@
 package com.ibizabroker.lms.dto;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.ibizabroker.lms.entity.NotificationType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -83,17 +84,6 @@ public class NotificationDto {
      */
     @Builder.Default
     private Integer priority = 3;
-    
-    /**
-     * Enum cho loại notification
-     */
-    public enum NotificationType {
-        INFO,       // Thông tin thường
-        SUCCESS,    // Thành công
-        WARNING,    // Cảnh báo
-        ERROR,      // Lỗi
-        URGENT      // Khẩn cấp (có âm thanh + popup)
-    }
     
     // ============= BUILDER HELPERS =============
     

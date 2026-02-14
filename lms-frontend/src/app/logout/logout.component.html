@@ -38,7 +38,12 @@
 
     <!-- Progress Bar -->
     <div class="progress-bar">
-      <div class="progress-fill" [style.width.%]="(10 - countdown) * 10"></div>
+      <div
+        class="progress-fill"
+        [style.width.%]="
+          ((autoLogoutSeconds - countdown) / autoLogoutSeconds) * 100
+        "
+      ></div>
     </div>
   </div>
 </div>

@@ -179,28 +179,99 @@
     </thead>
     <tbody *ngIf="listLoading">
       <tr *ngFor="let _ of skeletonRows">
-        <td><div class="sk-circle"></div></td>
-        <td><div class="sk-thumbnail"></div></td>
-        <td><div class="sk-line w-60"></div></td>
-        <td><div class="sk-line w-100"></div></td>
-        <td><div class="sk-line w-90"></div></td>
-        <td><div class="sk-line w-90"></div></td>
-        <td><div class="sk-line w-50"></div></td>
-        <td><div class="sk-line w-80"></div></td>
-        <td><div class="sk-line w-40"></div></td>
+        <td>
+          <div class="skeleton rounded" style="width: 18px; height: 18px"></div>
+        </td>
+        <td>
+          <div class="skeleton" style="width: 48px; height: 48px"></div>
+        </td>
+        <td><div class="skeleton sm" style="width: 60%"></div></td>
+        <td><div class="skeleton sm" style="width: 100%"></div></td>
+        <td><div class="skeleton sm" style="width: 90%"></div></td>
+        <td><div class="skeleton sm" style="width: 90%"></div></td>
+        <td><div class="skeleton sm" style="width: 50%"></div></td>
+        <td><div class="skeleton sm" style="width: 80%"></div></td>
+        <td><div class="skeleton sm" style="width: 40%"></div></td>
         <td>
           <div class="d-flex gap-1">
-            <div class="sk-circle"></div>
-            <div class="sk-circle"></div>
-            <div class="sk-circle"></div>
+            <div
+              class="skeleton rounded"
+              style="width: 24px; height: 24px"
+            ></div>
+            <div
+              class="skeleton rounded"
+              style="width: 24px; height: 24px"
+            ></div>
+
+            <!-- Logout Confirmation Modal -->
+            <div class="modal-backdrop fade show" *ngIf="showLogout"></div>
+            <div
+              class="modal fade show d-block"
+              tabindex="-1"
+              *ngIf="showLogout"
+            >
+              <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                  <div class="modal-header bg-warning text-dark">
+                    <h5 class="modal-title">
+                      <i class="fa-solid fa-right-from-bracket me-2"></i> Xác
+                      nhận đăng xuất
+                    </h5>
+                    <button
+                      type="button"
+                      class="btn-close"
+                      (click)="showLogout = false"
+                    ></button>
+                  </div>
+                  <div class="modal-body">
+                    <p>Bạn có chắc chắn muốn đăng xuất khỏi tài khoản không?</p>
+                    <p class="text-muted mb-0">
+                      Bạn sẽ cần đăng nhập lại để tiếp tục.
+                    </p>
+                  </div>
+                  <div class="modal-footer border-0">
+                    <button
+                      type="button"
+                      class="btn btn-secondary"
+                      (click)="showLogout = false"
+                    >
+                      Hủy
+                    </button>
+                    <button
+                      type="button"
+                      class="btn btn-warning"
+                      (click)="confirmLogout()"
+                    >
+                      Đăng xuất
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div
+              class="skeleton rounded"
+              style="width: 24px; height: 24px"
+            ></div>
           </div>
         </td>
       </tr>
     </tbody>
     <tbody *ngIf="!listLoading">
       <tr *ngIf="books.length === 0">
-        <td colspan="10" class="text-center text-muted py-4">
-          Không tìm thấy kết quả nào.
+        <td colspan="10">
+          <div class="empty-state">
+            <div class="display-6">📚</div>
+            <p class="mb-1">Không tìm thấy kết quả nào.</p>
+            <small class="text-muted">Thử xóa bộ lọc hoặc tìm kiếm khác.</small>
+            <div class="empty-action">
+              <button
+                class="btn btn-outline-secondary btn-sm"
+                (click)="resetFilters()"
+              >
+                Xóa bộ lọc
+              </button>
+            </div>
+          </div>
         </td>
       </tr>
       <tr *ngFor="let r of books; trackBy: trackByBookId">
@@ -283,10 +354,10 @@
   <div *ngIf="listLoading" class="row g-3">
     <div class="col-md-2 col-sm-4" *ngFor="let _ of skeletonRows">
       <div class="card book-grid-card">
-        <div class="sk-thumbnail-large"></div>
+        <div class="skeleton" style="height: 220px"></div>
         <div class="card-body">
-          <div class="sk-line w-100 mb-2"></div>
-          <div class="sk-line w-70"></div>
+          <div class="skeleton sm mb-2" style="width: 100%"></div>
+          <div class="skeleton sm" style="width: 70%"></div>
         </div>
       </div>
     </div>
@@ -359,10 +430,19 @@
         </div>
       </div>
     </div>
-
-    <div *ngIf="books.length === 0" class="col-12 text-center py-5 text-muted">
-      <i class="fa-solid fa-box-open fa-3x mb-3 opacity-50"></i>
-      <p>Không tìm thấy sách nào.</p>
+    <div *ngIf="books.length === 0" class="col-12">
+      <div class="empty-state">
+        <div class="display-6">📦</div>
+        <p class="mb-2">Không tìm thấy sách nào.</p>
+        <div class="empty-action">
+          <button
+            class="btn btn-outline-primary btn-sm"
+            (click)="resetFilters()"
+          >
+            Làm mới bộ lọc
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </div>

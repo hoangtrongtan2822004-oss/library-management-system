@@ -130,3 +130,178 @@
 .bg-dark {
   background-color: #21262d !important;
 }
+
+/* --- Borrow Book: UI Enhancements & Responsive --- */
+.search-box {
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(2, 6, 23, 0.35);
+}
+
+.search-box h2 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.book-card {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease,
+    border-color 0.18s ease;
+}
+.book-card:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 14px 30px rgba(2, 6, 23, 0.45) !important;
+  border-color: rgba(88, 166, 255, 0.12);
+}
+
+.badge {
+  font-weight: 600;
+  border-radius: 0.6rem;
+}
+
+.book-card .card-body .btn.grow {
+  transition:
+    transform 0.12s ease,
+    box-shadow 0.12s ease;
+}
+.book-card .card-body .btn.grow:active {
+  transform: scale(0.98);
+}
+
+/* Cart badge small circle */
+.position-absolute .badge {
+  padding: 0.35rem 0.5rem;
+  font-size: 0.75rem;
+}
+
+/* Scanner overlay emphasised border */
+.scanner-overlay > div {
+  border-radius: 8px;
+  border-width: 3px !important;
+}
+
+/* Cart modal list enhancements */
+.list-group-item {
+  transition:
+    background 0.12s ease,
+    transform 0.12s ease;
+}
+.list-group-item:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Footer controls spacing */
+.modal-footer .btn {
+  min-width: 120px;
+}
+
+/* Responsive card grid */
+@media (max-width: 767px) {
+  .col-md-3 {
+    width: 50%;
+  }
+  .book-cover {
+    height: 220px !important;
+  }
+  .search-box .row.g-3 > .col-md-5,
+  .search-box .row.g-3 > .col-md-3 {
+    flex: 0 0 100%;
+    max-width: 100%;
+  }
+  .search-box .row.g-3 > .col-md-1 {
+    flex: 0 0 20%;
+    max-width: 20%;
+  }
+}
+
+/* Small accessibility focus for interactive elements */
+.btn:focus,
+.form-control:focus,
+.form-select:focus {
+  outline: none;
+  box-shadow: 0 0 0 0.2rem rgba(88, 166, 255, 0.12);
+}
+
+/* Borrow cart modal contrast (light + dark theme) */
+.borrow-modal-content {
+  --borrow-modal-bg: #111827;
+  --borrow-modal-body-bg: #0f172a;
+  --borrow-modal-text: #e5e7eb;
+  --borrow-modal-muted: #cbd5e1;
+  --borrow-input-bg: #1f2937;
+  --borrow-input-text: #f9fafb;
+  --borrow-input-border: #4b5563;
+  --borrow-item-bg: rgba(148, 163, 184, 0.12);
+
+  background-color: var(--borrow-modal-bg) !important;
+  color: var(--borrow-modal-text) !important;
+}
+
+.borrow-modal-content .modal-body {
+  background-color: var(--borrow-modal-body-bg);
+  color: var(--borrow-modal-text);
+}
+
+.borrow-modal-content .modal-footer {
+  background-color: var(--borrow-modal-bg);
+}
+
+.borrow-modal-content .form-label,
+.borrow-modal-content h6,
+.borrow-modal-content p,
+.borrow-modal-content .small {
+  color: var(--borrow-modal-text);
+}
+
+.borrow-empty-text,
+.borrow-item-meta {
+  color: var(--borrow-modal-muted) !important;
+}
+
+.borrow-cart-item {
+  background-color: var(--borrow-item-bg) !important;
+}
+
+.borrow-form-control {
+  background-color: var(--borrow-input-bg) !important;
+  color: var(--borrow-input-text) !important;
+  border-color: var(--borrow-input-border) !important;
+}
+
+.borrow-form-control::placeholder {
+  color: var(--borrow-modal-muted) !important;
+}
+
+.borrow-form-control:focus {
+  border-color: #60a5fa !important;
+  box-shadow: 0 0 0 0.2rem rgba(96, 165, 250, 0.25) !important;
+}
+
+.borrow-form-control option {
+  background-color: var(--borrow-input-bg);
+  color: var(--borrow-input-text);
+}
+
+:host-context(body.light-theme) .borrow-modal-content {
+  --borrow-modal-bg: #ffffff;
+  --borrow-modal-body-bg: #f8fafc;
+  --borrow-modal-text: #111827;
+  --borrow-modal-muted: #475569;
+  --borrow-input-bg: #ffffff;
+  --borrow-input-text: #111827;
+  --borrow-input-border: #cbd5e1;
+  --borrow-item-bg: #f1f5f9;
+}
+
+:host-context(body.dark-theme) .borrow-modal-content {
+  --borrow-modal-bg: #0f172a;
+  --borrow-modal-body-bg: #111827;
+  --borrow-modal-text: #e5e7eb;
+  --borrow-modal-muted: #cbd5e1;
+  --borrow-input-bg: #1f2937;
+  --borrow-input-text: #f9fafb;
+  --borrow-input-border: #4b5563;
+  --borrow-item-bg: rgba(148, 163, 184, 0.12);
+}

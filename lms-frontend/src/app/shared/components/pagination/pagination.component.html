@@ -1,5 +1,5 @@
 <div class="pagination-container" *ngIf="totalPages > 0">
-  <div class="pagination-info">
+  <div class="pagination-info" aria-live="polite" aria-atomic="true">
     <span class="text-muted">
       Hiển thị {{ startElement }} - {{ endElement }} trong tổng số
       {{ totalElements }} kết quả
@@ -9,12 +9,13 @@
   <div class="pagination-controls">
     <!-- Page size selector -->
     <div class="page-size-selector" *ngIf="showPageSizeSelector">
-      <label for="pageSize" class="me-2">Số dòng:</label>
+      <label id="pageSizeLabel" for="pageSize" class="me-2">Số dòng:</label>
       <select
         id="pageSize"
         class="form-select form-select-sm"
         [value]="pageSize"
         (change)="onPageSizeSelected($event)"
+        aria-labelledby="pageSizeLabel"
       >
         <option *ngFor="let size of pageSizeOptions" [value]="size">
           {{ size }}
@@ -28,35 +29,44 @@
         <!-- First page -->
         <li class="page-item" [class.disabled]="!hasPrevious">
           <button
+            type="button"
             class="page-link"
             (click)="goToFirstPage()"
             [disabled]="!hasPrevious"
             aria-label="First"
           >
-            <i class="bi bi-chevron-double-left"></i>
+            <i class="bi bi-chevron-double-left" aria-hidden="true"></i>
           </button>
         </li>
 
         <!-- Previous page -->
         <li class="page-item" [class.disabled]="!hasPrevious">
           <button
+            type="button"
             class="page-link"
             (click)="goToPreviousPage()"
             [disabled]="!hasPrevious"
             aria-label="Previous"
           >
-            <i class="bi bi-chevron-left"></i>
+            <i class="bi bi-chevron-left" aria-hidden="true"></i>
           </button>
         </li>
 
         <!-- First page if not in range -->
         <li class="page-item" *ngIf="showFirstEllipsis">
-          <button class="page-link" (click)="goToPage(0)">1</button>
+          <button
+            type="button"
+            class="page-link"
+            (click)="goToPage(0)"
+            aria-label="Page 1"
+          >
+            1
+          </button>
         </li>
 
         <!-- Ellipsis before -->
         <li class="page-item disabled" *ngIf="showFirstEllipsis">
-          <span class="page-link">...</span>
+          <span class="page-link" aria-hidden="true">...</span>
         </li>
 
         <!-- Page numbers -->
@@ -66,9 +76,11 @@
           [class.active]="page === currentPage"
         >
           <button
+            type="button"
             class="page-link"
             (click)="goToPage(page)"
             [attr.aria-current]="page === currentPage ? 'page' : null"
+            [attr.aria-label]="'Trang ' + (page + 1)"
           >
             {{ page + 1 }}
           </button>
@@ -76,12 +88,17 @@
 
         <!-- Ellipsis after -->
         <li class="page-item disabled" *ngIf="showLastEllipsis">
-          <span class="page-link">...</span>
+          <span class="page-link" aria-hidden="true">...</span>
         </li>
 
         <!-- Last page if not in range -->
         <li class="page-item" *ngIf="showLastEllipsis">
-          <button class="page-link" (click)="goToPage(totalPages - 1)">
+          <button
+            type="button"
+            class="page-link"
+            (click)="goToPage(totalPages - 1)"
+            [attr.aria-label]="'Trang ' + totalPages"
+          >
             {{ totalPages }}
           </button>
         </li>
@@ -89,24 +106,26 @@
         <!-- Next page -->
         <li class="page-item" [class.disabled]="!hasNext">
           <button
+            type="button"
             class="page-link"
             (click)="goToNextPage()"
             [disabled]="!hasNext"
             aria-label="Next"
           >
-            <i class="bi bi-chevron-right"></i>
+            <i class="bi bi-chevron-right" aria-hidden="true"></i>
           </button>
         </li>
 
         <!-- Last page -->
         <li class="page-item" [class.disabled]="!hasNext">
           <button
+            type="button"
             class="page-link"
             (click)="goToLastPage()"
             [disabled]="!hasNext"
             aria-label="Last"
           >
-            <i class="bi bi-chevron-double-right"></i>
+            <i class="bi bi-chevron-double-right" aria-hidden="true"></i>
           </button>
         </li>
       </ul>

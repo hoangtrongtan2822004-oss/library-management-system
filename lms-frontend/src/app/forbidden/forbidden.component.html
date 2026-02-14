@@ -1,5 +1,9 @@
-<div class="forbidden-container">
-  <div class="forbidden-content">
+<div class="forbidden-container" role="main" aria-labelledby="forbidden-title">
+  <div
+    class="forbidden-content"
+    role="region"
+    aria-labelledby="forbidden-title"
+  >
     <!-- Friendly Illustration -->
     <div class="illustration">
       <div class="guard-emoji">🚪🔒</div>
@@ -7,7 +11,9 @@
     </div>
 
     <!-- Friendly Message -->
-    <h1 class="friendly-title">Oops! Khu vực này có chút riêng tư</h1>
+    <h1 id="forbidden-title" class="friendly-title">
+      Oops! Khu vực này có chút riêng tư
+    </h1>
 
     <p class="friendly-message">
       Có vẻ bạn đi lạc rồi! 😅 Trang này chỉ dành cho
@@ -16,58 +22,90 @@
     </p>
 
     <!-- Auto-redirect Countdown -->
-    <div class="countdown-box" *ngIf="countdown > 0 && !showReportForm">
-      <i class="fa-solid fa-clock"></i>
+    <div
+      class="countdown-box"
+      *ngIf="countdown > 0 && !showReportForm"
+      role="status"
+      aria-live="polite"
+    >
+      <i class="fa-solid fa-clock" aria-hidden="true"></i>
       Tự động quay về Trang chủ sau <strong>{{ countdown }}</strong> giây...
     </div>
 
     <!-- Report Success Message -->
-    <div class="alert-success" *ngIf="reportSubmitted">
-      <i class="fa-solid fa-check-circle"></i>
+    <div
+      class="alert-success"
+      *ngIf="reportSubmitted"
+      role="status"
+      aria-live="polite"
+    >
+      <i class="fa-solid fa-check-circle" aria-hidden="true"></i>
       Cảm ơn bạn! Báo cáo đã được gửi đến Admin.
     </div>
 
     <!-- Report Form -->
-    <div class="report-form" *ngIf="showReportForm && !reportSubmitted">
-      <h3><i class="fa-solid fa-flag"></i> Báo cáo vấn đề</h3>
-      <p class="report-hint">
+    <div
+      class="report-form"
+      *ngIf="showReportForm && !reportSubmitted"
+      role="form"
+      aria-labelledby="report-title"
+    >
+      <h3 id="report-title">
+        <i class="fa-solid fa-flag" aria-hidden="true"></i> Báo cáo vấn đề
+      </h3>
+      <p id="report-hint" class="report-hint">
         Nếu bạn tin rằng mình có quyền truy cập, vui lòng mô tả vấn đề:
       </p>
+      <label for="reportMessage" class="visually-hidden"
+        >Nội dung báo cáo</label
+      >
       <textarea
+        id="reportMessage"
         [(ngModel)]="reportMessage"
         placeholder="Ví dụ: Tôi là thủ thư nhưng không vào được trang quản lý sách..."
         rows="4"
+        aria-describedby="report-hint"
       ></textarea>
       <div class="report-actions">
         <button
+          type="button"
           class="btn btn-primary"
           (click)="submitReport()"
-          [disabled]="!reportMessage.trim()"
+          [disabled]="!reportMessage || !reportMessage.trim()"
         >
-          <i class="fa-solid fa-paper-plane"></i> Gửi báo cáo
+          <i class="fa-solid fa-paper-plane" aria-hidden="true"></i> Gửi báo cáo
         </button>
-        <button class="btn btn-outline" (click)="cancelReport()">Hủy</button>
+        <button type="button" class="btn btn-outline" (click)="cancelReport()">
+          Hủy
+        </button>
       </div>
     </div>
 
     <!-- Navigation Buttons -->
     <div class="action-buttons" *ngIf="!showReportForm">
-      <button class="btn btn-back" (click)="goBack()">
-        <i class="fa-solid fa-arrow-left"></i> Quay lại trang trước
+      <button type="button" class="btn btn-back" (click)="goBack()">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> Quay lại trang
+        trước
       </button>
-      <button class="btn btn-primary" (click)="goHome()">
-        <i class="fa-solid fa-house"></i> Về Trang Chủ
+      <button type="button" class="btn btn-primary" (click)="goHome()">
+        <i class="fa-solid fa-house" aria-hidden="true"></i> Về Trang Chủ
       </button>
-      <button class="btn btn-outline" (click)="goToLogin()">
-        <i class="fa-solid fa-sign-in-alt"></i> Đăng Nhập Lại
+      <button type="button" class="btn btn-outline" (click)="goToLogin()">
+        <i class="fa-solid fa-sign-in-alt" aria-hidden="true"></i> Đăng Nhập Lại
       </button>
     </div>
 
     <!-- Report Issue Link -->
     <div class="support-link" *ngIf="!showReportForm">
-      <button class="btn-link" (click)="toggleReportForm()">
-        <i class="fa-solid fa-question-circle"></i> Bạn tin rằng mình có quyền
-        truy cập?
+      <button
+        type="button"
+        class="btn-link"
+        (click)="toggleReportForm()"
+        aria-expanded="false"
+        aria-controls="reportMessage"
+      >
+        <i class="fa-solid fa-question-circle" aria-hidden="true"></i> Bạn tin
+        rằng mình có quyền truy cập?
       </button>
     </div>
   </div>

@@ -299,6 +299,61 @@ public class GamificationService {
         return new RewardItemsResponse(rewardDTOs, userPoints.getTotalPoints());
     }
 
+    @Transactional(readOnly = true)
+    public List<Reward> getAllRewards() {
+        return rewardRepository.findAll();
+    }
+
+    @Transactional
+    public Reward createReward(Reward reward) {
+        if (reward.getCategory() == null || reward.getCategory().isBlank()) {
+            reward.setCategory("special");
+        }
+        if (reward.getAvailable() == null) {
+            reward.setAvailable(Boolean.TRUE);
+        }
+        reward.setCreatedAt(LocalDateTime.now());
+        reward.setUpdatedAt(LocalDateTime.now());
+        return rewardRepository.save(reward);
+    }
+
+    @Transactional
+    public Reward updateReward(Long rewardId, Reward payload) {
+        Reward reward = rewardRepository.findById(rewardId)
+                .orElseThrow(() -> new NotFoundException("Phần thưởng không tồn tại: " + rewardId));
+
+        reward.setName(payload.getName());
+        reward.setDescription(payload.getDescription());
+        reward.setIcon(payload.getIcon());
+        reward.setCost(payload.getCost());
+        reward.setCategory(
+                payload.getCategory() == null || payload.getCategory().isBlank()
+                        ? reward.getCategory()
+                        : payload.getCategory()
+        );
+        reward.setAvailable(payload.getAvailable() != null ? payload.getAvailable() : reward.getAvailable());
+        reward.setMaxRedemptions(payload.getMaxRedemptions());
+        reward.setUpdatedAt(LocalDateTime.now());
+
+        return rewardRepository.save(reward);
+    }
+
+    @Transactional
+    public void deleteReward(Long rewardId) {
+        Reward reward = rewardRepository.findById(rewardId)
+                .orElseThrow(() -> new NotFoundException("Phần thưởng không tồn tại: " + rewardId));
+        rewardRepository.delete(reward);
+    }
+
+    @Transactional
+    public Reward updateRewardStock(Long rewardId, Integer stock) {
+        Reward reward = rewardRepository.findById(rewardId)
+                .orElseThrow(() -> new NotFoundException("Phần thưởng không tồn tại: " + rewardId));
+        reward.setMaxRedemptions(stock);
+        reward.setUpdatedAt(LocalDateTime.now());
+        return rewardRepository.save(reward);
+    }
+
     @SuppressWarnings("null")
     @Transactional
     public void redeemReward(Integer userId, Long rewardId) {

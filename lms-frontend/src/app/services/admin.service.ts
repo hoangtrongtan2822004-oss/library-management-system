@@ -1,11 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { environment } from 'src/environments/environment';
 // SỬA: Import đúng tên và đường dẫn
 import { Book } from '../models/book';
 import { User } from '../models/user';
 import { GroupedSettingsResponse } from '../models/setting';
+import { HttpParams } from '@angular/common/http';
 
 export interface DashboardStats {
   totalBooks: number;
@@ -115,6 +116,100 @@ export interface RenewalRequestDto {
   bookWaitlistCount?: number; // Number of users waiting for this book
 
   reason?: string; // User's reason for renewal request
+}
+
+export interface AuditLog {
+  id: number;
+  actor: string;
+  actorRoles?: string;
+  action: string;
+  resource?: string;
+  targetId?: string;
+  httpMethod?: string;
+  path?: string;
+  ip?: string;
+  userAgent?: string;
+  status: string;
+  errorMessage?: string;
+  requestPayload?: string;
+  responsePayload?: string;
+  createdAt?: string;
+}
+
+export interface MemberCard {
+  id: number;
+  cardNumber: string;
+  barcodeType: 'CODE128' | 'QR';
+  status: 'ACTIVE' | 'REVOKED' | 'EXPIRED';
+  issuedAt?: string;
+  expiredAt?: string;
+  metadata?: string;
+  userId: number;
+  username: string;
+  fullName?: string;
+  email?: string;
+  studentClass?: string;
+}
+
+export interface Page<T> {
+  content: T[];
+  totalPages: number;
+  totalElements: number;
+  number: number;
+  size: number;
+}
+
+export interface InventorySession {
+  id: number;
+  name?: string;
+  status?: 'IN_PROGRESS' | 'COMPLETED';
+  startedAt?: string;
+  completedAt?: string;
+  expectedTotal?: number;
+  scannedTotal?: number;
+}
+
+export interface InventoryScanResult {
+  sessionId?: number;
+  bookId?: number;
+  bookName?: string;
+  isbn?: string;
+  shelfCode?: string;
+  scannedAt?: string;
+  duplicate?: boolean;
+  unknown?: boolean;
+}
+
+export interface InventorySummary {
+  sessionId?: number;
+  expectedTotal?: number;
+  scannedTotal?: number;
+  missingTotal?: number;
+  misplacedTotal?: number;
+  unknownTotal?: number;
+  missingItems?: Array<{
+    bookId?: number;
+    bookName?: string;
+    isbn?: string;
+    expectedShelfCode?: string;
+  }>;
+  misplacedItems?: Array<{
+    bookId?: number;
+    bookName?: string;
+    isbn?: string;
+    expectedShelfCode?: string;
+    scannedShelfCode?: string;
+  }>;
+  unknownItems?: Array<{
+    isbn?: string;
+    shelfCode?: string;
+  }>;
+}
+
+interface ApiResponse<T> {
+  data: T;
+  message?: string;
+  success?: boolean;
 }
 
 @Injectable({
@@ -302,6 +397,188 @@ export class AdminService {
     return this.http.post(
       `${this.API_URL}/settings/reset-category/${category}`,
       {},
+    );
+  }
+
+  // ---------- AUDIT LOGS ----------
+  public getAuditLogs(params: {
+    actor?: string;
+    action?: string;
+    status?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    size?: number;
+  }): Observable<Page<AuditLog>> {
+    let httpParams = new HttpParams();
+    if (params.actor) httpParams = httpParams.set('actor', params.actor);
+    if (params.action) httpParams = httpParams.set('action', params.action);
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    if (params.from) httpParams = httpParams.set('from', params.from);
+    if (params.to) httpParams = httpParams.set('to', params.to);
+    if (params.page !== undefined)
+      httpParams = httpParams.set('page', params.page);
+    if (params.size !== undefined)
+      httpParams = httpParams.set('size', params.size);
+
+    return this.http.get<Page<AuditLog>>(`${this.API_URL}/audit-logs`, {
+      params: httpParams,
+    });
+  }
+
+  // ---------- INVENTORY ----------
+  public startInventorySession(payload: {
+    name?: string;
+    expectedTotal?: number;
+  }): Observable<InventorySession> {
+    return this.http
+      .post<
+        ApiResponse<InventorySession>
+      >(`${this.API_URL}/inventory/sessions`, payload)
+      .pipe(this.unwrapApiResponse<InventorySession>());
+  }
+
+  public recordInventoryScan(
+    sessionId: number,
+    payload: { code: string; shelfCode?: string },
+  ): Observable<InventoryScanResult> {
+    return this.http
+      .post<
+        ApiResponse<InventoryScanResult>
+      >(`${this.API_URL}/inventory/sessions/${sessionId}/scan`, payload)
+      .pipe(this.unwrapApiResponse<InventoryScanResult>());
+  }
+
+  public completeInventorySession(
+    sessionId: number,
+  ): Observable<InventorySession> {
+    return this.http
+      .post<
+        ApiResponse<InventorySession>
+      >(`${this.API_URL}/inventory/sessions/${sessionId}/complete`, {})
+      .pipe(this.unwrapApiResponse<InventorySession>());
+  }
+
+  public getInventorySummary(sessionId: number): Observable<InventorySummary> {
+    return this.http
+      .get<
+        ApiResponse<InventorySummary>
+      >(`${this.API_URL}/inventory/sessions/${sessionId}/summary`)
+      .pipe(this.unwrapApiResponse<InventorySummary>());
+  }
+
+  public exportInventoryExcel(sessionId: number): Observable<Blob> {
+    return this.http.get(
+      `${this.API_URL}/inventory/sessions/${sessionId}/export/excel`,
+      {
+        responseType: 'blob',
+      },
+    );
+  }
+
+  // ---------- MEMBER CARDS ----------
+  public searchMemberCards(params: {
+    keyword?: string;
+    status?: string;
+    barcodeType?: string;
+    from?: string;
+    to?: string;
+    page?: number;
+    size?: number;
+  }): Observable<Page<MemberCard>> {
+    let httpParams = new HttpParams();
+    if (params.keyword) httpParams = httpParams.set('keyword', params.keyword);
+    if (params.status) httpParams = httpParams.set('status', params.status);
+    if (params.barcodeType)
+      httpParams = httpParams.set('barcodeType', params.barcodeType);
+    if (params.from) httpParams = httpParams.set('from', params.from);
+    if (params.to) httpParams = httpParams.set('to', params.to);
+    if (params.page !== undefined)
+      httpParams = httpParams.set('page', params.page);
+    if (params.size !== undefined)
+      httpParams = httpParams.set('size', params.size);
+
+    return this.http
+      .get<
+        ApiResponse<Page<MemberCard>> | Page<MemberCard>
+      >(`${this.API_URL}/member-cards`, { params: httpParams })
+      .pipe(this.unwrapApiResponse<Page<MemberCard>>());
+  }
+
+  public getMemberCard(id: number): Observable<MemberCard> {
+    return this.http
+      .get<
+        ApiResponse<MemberCard> | MemberCard
+      >(`${this.API_URL}/member-cards/${id}`)
+      .pipe(this.unwrapApiResponse<MemberCard>());
+  }
+
+  public createMemberCard(payload: {
+    userId: number;
+    barcodeType: 'CODE128' | 'QR';
+    expiredAt?: string;
+    metadata?: string;
+  }): Observable<MemberCard> {
+    return this.http
+      .post<
+        ApiResponse<MemberCard> | MemberCard
+      >(`${this.API_URL}/member-cards`, payload)
+      .pipe(this.unwrapApiResponse<MemberCard>());
+  }
+
+  public updateMemberCard(
+    id: number,
+    payload: {
+      userId: number;
+      barcodeType: 'CODE128' | 'QR';
+      expiredAt?: string;
+      metadata?: string;
+    },
+  ): Observable<MemberCard> {
+    return this.http
+      .put<
+        ApiResponse<MemberCard> | MemberCard
+      >(`${this.API_URL}/member-cards/${id}`, payload)
+      .pipe(this.unwrapApiResponse<MemberCard>());
+  }
+
+  public revokeMemberCard(id: number, reason?: string): Observable<MemberCard> {
+    let params = new HttpParams();
+    if (reason) {
+      params = params.set('reason', reason);
+    }
+    return this.http
+      .post<
+        ApiResponse<MemberCard> | MemberCard
+      >(`${this.API_URL}/member-cards/${id}/revoke`, null, { params })
+      .pipe(this.unwrapApiResponse<MemberCard>());
+  }
+
+  public downloadMemberCardPdf(id: number): Observable<Blob> {
+    return this.http.get(`${this.API_URL}/member-cards/${id}/pdf`, {
+      responseType: 'blob',
+    });
+  }
+
+  public downloadMemberCardBarcode(
+    id: number,
+    width?: number,
+    height?: number,
+  ): Observable<Blob> {
+    let params = new HttpParams();
+    if (width) params = params.set('width', width);
+    if (height) params = params.set('height', height);
+    return this.http.get(`${this.API_URL}/member-cards/${id}/barcode`, {
+      params,
+      responseType: 'blob',
+    });
+  }
+
+  private unwrapApiResponse<T>() {
+    return map((res: ApiResponse<T> | T) =>
+      (res as ApiResponse<T>).data !== undefined
+        ? (res as ApiResponse<T>).data
+        : (res as T),
     );
   }
 }

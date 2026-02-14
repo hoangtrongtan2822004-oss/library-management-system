@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { ApiService } from '../../services/api.service';
 
 export interface Badge {
@@ -32,6 +33,17 @@ export interface RewardItem {
   stock: number;
   imageUrl?: string;
   active?: boolean;
+}
+
+interface BackendReward {
+  id?: number;
+  name: string;
+  description: string;
+  icon?: string;
+  cost: number;
+  category?: string;
+  available?: boolean;
+  maxRedemptions?: number | null;
 }
 
 export interface LeaderboardEntry {
@@ -132,24 +144,57 @@ export class GamificationAdminService {
 
   // ==================== REWARDS ====================
 
+  private toRewardItem(reward: BackendReward): RewardItem {
+    return {
+      id: reward.id,
+      name: reward.name,
+      description: reward.description,
+      pointsCost: reward.cost,
+      stock: reward.maxRedemptions ?? 0,
+      imageUrl: reward.icon,
+      active: reward.available ?? true,
+    };
+  }
+
+  private toBackendReward(reward: RewardItem): BackendReward {
+    return {
+      id: reward.id,
+      name: reward.name,
+      description: reward.description,
+      icon: reward.imageUrl,
+      cost: reward.pointsCost,
+      category: 'special',
+      available: reward.active ?? true,
+      maxRedemptions: reward.stock,
+    };
+  }
+
   getAllRewards(): Observable<RewardItem[]> {
-    return this.http.get<RewardItem[]>(
-      this.apiService.buildUrl('/admin/gamification/rewards'),
-    );
+    return this.http
+      .get<
+        BackendReward[]
+      >(this.apiService.buildUrl('/admin/gamification/rewards'))
+      .pipe(
+        map((rewards) => rewards.map((reward) => this.toRewardItem(reward))),
+      );
   }
 
   createReward(reward: RewardItem): Observable<RewardItem> {
-    return this.http.post<RewardItem>(
-      this.apiService.buildUrl('/admin/gamification/rewards'),
-      reward,
-    );
+    return this.http
+      .post<BackendReward>(
+        this.apiService.buildUrl('/admin/gamification/rewards'),
+        this.toBackendReward(reward),
+      )
+      .pipe(map((created) => this.toRewardItem(created)));
   }
 
   updateReward(id: number, reward: RewardItem): Observable<RewardItem> {
-    return this.http.put<RewardItem>(
-      this.apiService.buildUrl(`/admin/gamification/rewards/${id}`),
-      reward,
-    );
+    return this.http
+      .put<BackendReward>(
+        this.apiService.buildUrl(`/admin/gamification/rewards/${id}`),
+        this.toBackendReward(reward),
+      )
+      .pipe(map((updated) => this.toRewardItem(updated)));
   }
 
   deleteReward(id: number): Observable<void> {
@@ -159,10 +204,12 @@ export class GamificationAdminService {
   }
 
   updateRewardStock(id: number, newStock: number): Observable<RewardItem> {
-    return this.http.patch<RewardItem>(
-      this.apiService.buildUrl(`/admin/gamification/rewards/${id}/stock`),
-      { stock: newStock },
-    );
+    return this.http
+      .patch<BackendReward>(
+        this.apiService.buildUrl(`/admin/gamification/rewards/${id}/stock`),
+        { stock: newStock },
+      )
+      .pipe(map((updated) => this.toRewardItem(updated)));
   }
 
   // ==================== LEADERBOARD & STATS ====================

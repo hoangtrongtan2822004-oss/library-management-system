@@ -161,7 +161,7 @@ export class UsersService {
   toggleUserStatus(userId: number, isActive: boolean): Observable<any> {
     return this.http.put(
       this.apiService.buildUrl(`/admin/users/${userId}/status`),
-      { isActive },
+      { active: isActive },
     );
   }
 }

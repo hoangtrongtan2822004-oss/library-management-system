@@ -1,4 +1,9 @@
-<div class="container py-4">
+<main
+  id="update-user-main"
+  class="container py-4"
+  role="main"
+  aria-labelledby="update-user-title"
+>
   <!-- Breadcrumb -->
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
@@ -16,6 +21,8 @@
       </li>
     </ol>
   </nav>
+
+  <h1 id="update-user-title" class="visually-hidden">Chỉnh sửa người dùng</h1>
 
   <!-- Loading Spinner -->
   <div *ngIf="isLoading" class="text-center py-5">
@@ -41,7 +48,7 @@
           </h5>
         </div>
         <div class="card-body">
-          <form [formGroup]="userForm" (ngSubmit)="onSubmit()">
+          <form [formGroup]="userForm" (ngSubmit)="onSubmit()" novalidate>
             <!-- Name Field -->
             <div class="form-group mb-3">
               <label for="name" class="form-label">
@@ -54,11 +61,17 @@
                 class="form-control"
                 formControlName="name"
                 [class.is-invalid]="hasError('name')"
+                [attr.aria-invalid]="hasError('name') ? 'true' : 'false'"
+                [attr.aria-describedby]="hasError('name') ? 'nameError' : null"
                 placeholder="Nhập họ tên đầy đủ"
               />
-              <div *ngIf="hasError('name')" class="invalid-feedback">
-                <i class="fa-solid fa-circle-exclamation me-1"></i
-                >{{ getErrorMessage("name") }}
+              <div
+                *ngIf="hasError('name')"
+                id="nameError"
+                class="invalid-feedback"
+              >
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                {{ getErrorMessage("name") }}
               </div>
             </div>
 
@@ -74,11 +87,19 @@
                 class="form-control"
                 formControlName="username"
                 [class.is-invalid]="hasError('username')"
+                [attr.aria-invalid]="hasError('username') ? 'true' : 'false'"
+                [attr.aria-describedby]="
+                  hasError('username') ? 'usernameError' : null
+                "
                 placeholder="Chỉ chứa chữ, số và dấu gạch dưới"
               />
-              <div *ngIf="hasError('username')" class="invalid-feedback">
-                <i class="fa-solid fa-circle-exclamation me-1"></i
-                >{{ getErrorMessage("username") }}
+              <div
+                *ngIf="hasError('username')"
+                id="usernameError"
+                class="invalid-feedback"
+              >
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                {{ getErrorMessage("username") }}
               </div>
             </div>
 
@@ -94,11 +115,19 @@
                 class="form-control"
                 formControlName="email"
                 [class.is-invalid]="hasError('email')"
+                [attr.aria-invalid]="hasError('email') ? 'true' : 'false'"
+                [attr.aria-describedby]="
+                  hasError('email') ? 'emailError' : null
+                "
                 placeholder="user@example.com"
               />
-              <div *ngIf="hasError('email')" class="invalid-feedback">
-                <i class="fa-solid fa-circle-exclamation me-1"></i
-                >{{ getErrorMessage("email") }}
+              <div
+                *ngIf="hasError('email')"
+                id="emailError"
+                class="invalid-feedback"
+              >
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                {{ getErrorMessage("email") }}
               </div>
             </div>
 
@@ -127,11 +156,19 @@
                 class="form-control"
                 formControlName="phoneNumber"
                 [class.is-invalid]="hasError('phoneNumber')"
+                [attr.aria-invalid]="hasError('phoneNumber') ? 'true' : 'false'"
+                [attr.aria-describedby]="
+                  hasError('phoneNumber') ? 'phoneNumberError' : null
+                "
                 placeholder="0912345678 (10-11 chữ số)"
               />
-              <div *ngIf="hasError('phoneNumber')" class="invalid-feedback">
-                <i class="fa-solid fa-circle-exclamation me-1"></i
-                >{{ getErrorMessage("phoneNumber") }}
+              <div
+                *ngIf="hasError('phoneNumber')"
+                id="phoneNumberError"
+                class="invalid-feedback"
+              >
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                {{ getErrorMessage("phoneNumber") }}
               </div>
             </div>
 
@@ -146,6 +183,7 @@
                 class="form-select"
                 formControlName="role"
                 [class.is-invalid]="hasError('role')"
+                [attr.aria-describedby]="hasError('role') ? 'roleError' : null"
               >
                 <option *ngFor="let role of rolesOptions" [value]="role">
                   {{ role === "ROLE_ADMIN" ? "👑 Admin" : "👤 User" }} -
@@ -155,6 +193,14 @@
               <div class="form-text">
                 <i class="fa-solid fa-info-circle me-1"></i>Admin có toàn quyền
                 quản lý hệ thống
+              </div>
+              <div
+                *ngIf="hasError('role')"
+                id="roleError"
+                class="invalid-feedback"
+              >
+                <i class="fa-solid fa-circle-exclamation me-1"></i>
+                {{ getErrorMessage("role") }}
               </div>
             </div>
 
@@ -222,14 +268,24 @@
               [src]="getAvatarDisplay()"
               alt="Avatar"
               class="avatar-preview"
+              loading="lazy"
             />
           </div>
 
           <div class="mb-3">
-            <label for="avatarUpload" class="btn btn-outline-primary btn-sm">
+            <label
+              for="avatarUpload"
+              class="btn btn-outline-primary btn-sm"
+              tabindex="0"
+              role="button"
+              (keydown.enter)="avatarUploadInput.click()"
+              (keydown.space)="avatarUploadInput.click()"
+              aria-controls="avatarUpload"
+            >
               <i class="fa-solid fa-upload me-2"></i>Chọn ảnh mới
             </label>
             <input
+              #avatarUploadInput
               type="file"
               id="avatarUpload"
               class="d-none"
@@ -292,4 +348,4 @@
       </div>
     </div>
   </div>
-</div>
+</main>

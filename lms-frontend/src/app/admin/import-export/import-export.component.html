@@ -39,7 +39,33 @@
             >Cột: Tên sách, ISBN, Năm XB, Số lượng, Ảnh bìa</small
           >
         </div>
+
         <div class="card-body">
+          <div *ngIf="booksFile" class="mt-3 mb-0">
+            <div class="file-info">
+              <div class="file-meta">
+                <i class="fa-solid fa-check-circle text-success me-2"></i>
+                Đã chọn: <strong>{{ booksFile.name }}</strong>
+                <span class="ms-2"
+                  >• {{ booksFile.size / 1024 | number: "1.0-0" }} KB</span
+                >
+              </div>
+              <div class="preview-controls">
+                <span class="mapping-badge"
+                  >Mapped: {{ booksMappedCount || 0 }}/{{
+                    expectedBooksFields.length
+                  }}</span
+                >
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  (click)="autoMap('books')"
+                >
+                  Auto-map
+                </button>
+              </div>
+            </div>
+          </div>
+
           <!-- DRAG & DROP ZONE -->
           <div
             class="drop-zone"
@@ -76,13 +102,18 @@
               <h6 class="mb-0 fw-bold">
                 <i class="fa-solid fa-eye me-1"></i> Preview (5 dòng đầu)
               </h6>
-              <button
-                class="btn btn-sm btn-outline-secondary"
-                (click)="toggleMapping('books')"
-              >
-                <i class="fa-solid fa-cog me-1"></i>
-                {{ showBooksMapping ? "Ẩn" : "Hiện" }} Mapping
-              </button>
+              <div class="d-flex gap-2">
+                <div class="small text-muted">
+                  Rows: {{ booksPreviewData?.length || 0 }}
+                </div>
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  (click)="toggleMapping('books')"
+                >
+                  <i class="fa-solid fa-cog me-1"></i
+                  >{{ showBooksMapping ? "Ẩn" : "Hiện" }} Mapping
+                </button>
+              </div>
             </div>
             <div class="table-responsive">
               <table class="table table-sm table-bordered mb-0">
@@ -105,9 +136,14 @@
             *ngIf="showBooksMapping"
             class="mt-3 p-3 border rounded bg-light animate-fade-in"
           >
-            <h6 class="fw-bold mb-3">
-              <i class="fa-solid fa-exchange-alt me-1"></i> Column Mapping
-            </h6>
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <h6 class="fw-bold mb-0">
+                <i class="fa-solid fa-exchange-alt me-1"></i> Column Mapping
+              </h6>
+              <div class="small text-muted">
+                Auto-detected: {{ booksAutoDetected || 0 }}
+              </div>
+            </div>
             <div class="row g-2">
               <div class="col-md-6" *ngFor="let field of expectedBooksFields">
                 <label class="form-label small mb-1">{{ field }}</label>
@@ -167,6 +203,11 @@
               >
                 <i class="fa-solid fa-file-download me-1"></i> Tải báo cáo lỗi
               </button>
+            </div>
+            <div *ngIf="isUploadingBooks" class="mt-2">
+              <div class="progress-upload">
+                <div class="bar" [style.width.%]="uploadProgress"></div>
+              </div>
             </div>
             <div class="small">
               Thành công:
@@ -239,9 +280,29 @@
             />
           </div>
 
-          <div *ngIf="usersFile" class="alert alert-success mt-3 mb-0">
-            <i class="fa-solid fa-check-circle me-2"></i>
-            Đã chọn: <strong>{{ usersFile.name }}</strong>
+          <div *ngIf="usersFile" class="mt-3 mb-0">
+            <div class="file-info">
+              <div class="file-meta">
+                <i class="fa-solid fa-check-circle text-success me-2"></i>
+                Đã chọn: <strong>{{ usersFile.name }}</strong>
+                <span class="ms-2"
+                  >• {{ usersFile.size / 1024 | number: "1.0-0" }} KB</span
+                >
+              </div>
+              <div class="preview-controls">
+                <span class="mapping-badge"
+                  >Mapped: {{ usersMappedCount || 0 }}/{{
+                    expectedUsersFields.length
+                  }}</span
+                >
+                <button
+                  class="btn btn-sm btn-outline-secondary"
+                  (click)="autoMap('users')"
+                >
+                  Auto-map
+                </button>
+              </div>
+            </div>
           </div>
 
           <!-- PREVIEW TABLE -->
@@ -342,6 +403,11 @@
               >
                 <i class="fa-solid fa-file-download me-1"></i> Tải báo cáo lỗi
               </button>
+            </div>
+            <div *ngIf="isUploadingUsers" class="mt-2">
+              <div class="progress-upload">
+                <div class="bar" [style.width.%]="uploadProgress"></div>
+              </div>
             </div>
             <div class="small">
               Thành công:

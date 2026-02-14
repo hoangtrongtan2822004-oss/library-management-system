@@ -2,6 +2,7 @@ package com.ibizabroker.lms.controller;
 
 import com.ibizabroker.lms.dto.ApiResponse;
 import com.ibizabroker.lms.dto.BookCreateDto; // Import DTO
+import com.ibizabroker.lms.dto.BookListDto;
 import com.ibizabroker.lms.dto.BookUpdateDto; // Import DTO
 import com.ibizabroker.lms.entity.Author;
 import com.ibizabroker.lms.entity.Books;
@@ -36,27 +37,27 @@ public class BooksController {
     @Operation(summary = "Lấy chi tiết sách", description = "Lấy thông tin đầy đủ của một cuốn sách theo ID")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thành công")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Sách không tồn tại")
-    public ResponseEntity<ApiResponse<Books>> getBookById(@PathVariable Integer id) {
+    public ResponseEntity<ApiResponse<BookListDto>> getBookById(@PathVariable Integer id) {
         Books book = bookService.getBookById(id);
-        return ResponseEntity.ok(ApiResponse.success(book, "Lấy thông tin sách thành công"));
+        return ResponseEntity.ok(ApiResponse.success(BookListDto.fromEntity(book), "Lấy thông tin sách thành công"));
     }
 
     @PostMapping
     @Operation(summary = "Tạo sách mới", description = "Thêm một cuốn sách mới vào thư viện")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Tạo sách thành công")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "400", description = "Dữ liệu không hợp lệ")
-    public ResponseEntity<ApiResponse<Books>> createBook(@Valid @RequestBody BookCreateDto bookDto) { // Dùng DTO
+    public ResponseEntity<ApiResponse<BookListDto>> createBook(@Valid @RequestBody BookCreateDto bookDto) { // Dùng DTO
         Books created = bookService.createBook(bookDto);
-        return ResponseEntity.ok(ApiResponse.success(created, "Tạo sách thành công"));
+        return ResponseEntity.ok(ApiResponse.success(BookListDto.fromEntity(created), "Tạo sách thành công"));
     }
 
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật sách", description = "Cập nhật thông tin của một cuốn sách hiện có")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Cập nhật thành công")
     @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "404", description = "Sách không tồn tại")
-    public ResponseEntity<ApiResponse<Books>> updateBook(@PathVariable Integer id, @Valid @RequestBody BookUpdateDto bookDto) { // Dùng DTO
+    public ResponseEntity<ApiResponse<BookListDto>> updateBook(@PathVariable Integer id, @Valid @RequestBody BookUpdateDto bookDto) { // Dùng DTO
         Books updatedBook = bookService.updateBook(id, bookDto);
-        return ResponseEntity.ok(ApiResponse.success(updatedBook, "Cập nhật sách thành công"));
+        return ResponseEntity.ok(ApiResponse.success(BookListDto.fromEntity(updatedBook), "Cập nhật sách thành công"));
     }
 
     @DeleteMapping("/{id}")

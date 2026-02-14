@@ -5,7 +5,6 @@ import { BooksService } from '../services/books.service';
 import { Book, Author, Category } from '../models/book';
 import { forkJoin } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { HttpClient } from '@angular/common/http';
 
 interface BookCreateModel {
   name?: string;
@@ -13,26 +12,9 @@ interface BookCreateModel {
   publishedYear?: number;
   isbn?: string;
   coverUrl?: string;
+  shelfCode?: string;
   authorIds?: number[];
   categoryIds?: number[];
-}
-
-interface GoogleBooksResponse {
-  items?: Array<{
-    volumeInfo: {
-      title?: string;
-      authors?: string[];
-      publishedDate?: string;
-      imageLinks?: {
-        thumbnail?: string;
-        smallThumbnail?: string;
-      };
-      industryIdentifiers?: Array<{
-        type: string;
-        identifier: string;
-      }>;
-    };
-  }>;
 }
 
 @Component({
@@ -66,7 +48,6 @@ export class CreateBookComponent implements OnInit {
     private booksService: BooksService,
     private router: Router,
     private toastr: ToastrService,
-    private http: HttpClient,
   ) {}
 
   ngOnInit(): void {
@@ -96,59 +77,44 @@ export class CreateBookComponent implements OnInit {
     this.fetchingIsbn = true;
     this.errorMessage = '';
 
-    const apiUrl = `https://www.googleapis.com/books/v1/volumes?q=isbn:${isbn}`;
-
-    // Use fetch API to avoid sending Authorization header from interceptor
-    fetch(apiUrl)
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}`);
+    this.booksService.lookupByIsbn(isbn).subscribe({
+      next: (response) => {
+        if (response?.title) {
+          this.book.name = response.title;
         }
-        return response.json();
-      })
-      .then((response: GoogleBooksResponse) => {
-        if (response.items && response.items.length > 0) {
-          const bookInfo = response.items[0].volumeInfo;
 
-          // Auto-fill book name
-          if (bookInfo.title) {
-            this.book.name = bookInfo.title;
-          }
+        if (response?.publishedYear) {
+          this.book.publishedYear = response.publishedYear;
+        }
 
-          // Auto-fill published year
-          if (bookInfo.publishedDate) {
-            const year = parseInt(bookInfo.publishedDate.substring(0, 4));
-            if (!isNaN(year)) {
-              this.book.publishedYear = year;
-            }
-          }
+        if (response?.coverUrl) {
+          this.book.coverUrl = response.coverUrl;
+          this.coverPreviewError = false;
+        }
 
-          // Auto-fill cover image
-          if (bookInfo.imageLinks?.thumbnail) {
-            // Use HTTPS and higher resolution
-            this.book.coverUrl = bookInfo.imageLinks.thumbnail
-              .replace('http://', 'https://')
-              .replace('zoom=1', 'zoom=2');
-            this.coverPreviewError = false;
-          }
+        if (response?.authors && response.authors.length > 0) {
+          this.autoSelectOrCreateAuthors(response.authors);
+        }
 
-          // Handle authors - try to match or create new
-          if (bookInfo.authors && bookInfo.authors.length > 0) {
-            this.autoSelectOrCreateAuthors(bookInfo.authors);
-          }
+        if (response?.isbn) {
+          this.book.isbn = response.isbn;
+        }
 
-          this.toastr.success('Đã tải thông tin sách từ Google Books!');
-        } else {
+        this.toastr.success('Đã tải thông tin sách từ Google Books!');
+        this.fetchingIsbn = false;
+      },
+      error: (err) => {
+        console.error('ISBN lookup error:', err);
+        const message = err?.error?.message || 'Không thể tải dữ liệu ISBN.';
+        this.errorMessage = message;
+        if (err?.status === 404) {
           this.toastr.warning('Không tìm thấy thông tin sách với ISBN này.');
+        } else {
+          this.toastr.error(message);
         }
         this.fetchingIsbn = false;
-      })
-      .catch((err) => {
-        console.error('Google Books API error:', err);
-        this.errorMessage = 'Không thể kết nối với Google Books API.';
-        this.toastr.error('Lỗi khi tải dữ liệu từ Google Books.');
-        this.fetchingIsbn = false;
-      });
+      },
+    });
   }
 
   private autoSelectOrCreateAuthors(authorNames: string[]): void {
@@ -216,6 +182,7 @@ export class CreateBookComponent implements OnInit {
       publishedYear: this.book.publishedYear,
       isbn: this.book.isbn,
       coverUrl: this.book.coverUrl,
+      shelfCode: this.book.shelfCode,
     };
 
     // Cast payload cho đúng kiểu tham số của createBook

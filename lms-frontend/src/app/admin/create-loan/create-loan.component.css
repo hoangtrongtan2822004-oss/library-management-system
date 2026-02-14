@@ -27,7 +27,9 @@
 }
 
 .list-group-item-action {
-  transition: background-color 0.2s ease, transform 0.1s ease;
+  transition:
+    background-color 0.2s ease,
+    transform 0.1s ease;
 }
 
 .list-group-item-action:hover {
@@ -40,4 +42,65 @@
 
 .input-group-lg .form-control {
   border-left: 0;
+}
+
+:root {
+  --accent: #0d6efd;
+  --muted: #9aa1aa;
+  --card-bg: #0f1113;
+}
+
+/* Header shortcuts */
+.shortcuts kbd {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 3px 6px;
+  border-radius: 6px;
+  margin-right: 6px;
+  font-family:
+    ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", monospace;
+  font-size: 0.82rem;
+  color: #e6eefc;
+}
+
+/* Card header tweaks */
+.card-header h3 {
+  font-size: 1.15rem;
+}
+.card-header .btn,
+.card-header .btn-outline-light {
+  height: 36px;
+}
+
+/* Badges and small UI */
+.badge-info {
+  background-color: #d1ecf1 !important;
+  color: #0b5460 !important;
+}
+
+/* Selected card subtle lift */
+.selected-card {
+  transform: translateY(0);
+}
+.selected-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Make suggestion lists more touch-friendly on mobile */
+@media (max-width: 768px) {
+  .list-group .list-group-item {
+    padding: 0.7rem 0.75rem;
+  }
+  .input-group-lg .form-control {
+    padding: 0.9rem 1rem;
+  }
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+/* Modal visual tuning */
+.modal-content.border-warning {
+  border-width: 1.25px;
 }

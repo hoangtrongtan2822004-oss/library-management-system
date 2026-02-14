@@ -1,0 +1,54 @@
+.table td,
+.table th {
+  vertical-align: middle;
+}
+
+.form-label {
+  margin-bottom: 0.25rem;
+}
+
+/* Small toolbar spacing */
+.card-header .btn-group {
+  align-items: center;
+}
+
+/* Mobile: render table rows as cards */
+@media (max-width: 767.98px) {
+  .table-responsive table thead {
+    display: none;
+  }
+
+  .table-responsive table tbody tr {
+    display: block;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.02);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 10px;
+  }
+
+  .table-responsive table tbody tr td {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border: none;
+  }
+
+  .table-responsive table tbody tr td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    margin-right: 6px;
+  }
+
+  .table-responsive .btn {
+    font-size: 0.85rem;
+    padding: 6px 8px;
+  }
+}
+
+/* Slight lift on hover for desktop */
+.table-hover tbody tr:hover {
+  transform: translateY(-2px);
+  transition: transform 150ms ease;
+}

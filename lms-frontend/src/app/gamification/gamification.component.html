@@ -2,39 +2,65 @@
   <h2>🎮 Gamification - Điểm thưởng & Thành tích</h2>
 
   <!-- Tabs -->
-  <div class="tabs">
+  <nav class="tabs" role="tablist" aria-label="Gamification tabs">
     <button
+      type="button"
+      id="tab-stats"
+      role="tab"
+      [attr.aria-selected]="activeTab === 'stats'"
       [class.active]="activeTab === 'stats'"
       (click)="setActiveTab('stats')"
+      [attr.aria-controls]="'panel-stats'"
     >
       📊 Tổng quan
     </button>
     <button
+      type="button"
+      id="tab-badges"
+      role="tab"
+      [attr.aria-selected]="activeTab === 'badges'"
       [class.active]="activeTab === 'badges'"
       (click)="setActiveTab('badges')"
+      [attr.aria-controls]="'panel-badges'"
     >
-      🏅 Huy hiệu ({{ badges.length }})
+      🏅 Huy hiệu ({{ badges?.length || 0 }})
     </button>
     <button
+      type="button"
+      id="tab-challenges"
+      role="tab"
+      [attr.aria-selected]="activeTab === 'challenges'"
       [class.active]="activeTab === 'challenges'"
       (click)="setActiveTab('challenges')"
+      [attr.aria-controls]="'panel-challenges'"
     >
       🎯 Thử thách
     </button>
     <button
+      type="button"
+      id="tab-leaderboard"
+      role="tab"
+      [attr.aria-selected]="activeTab === 'leaderboard'"
       [class.active]="activeTab === 'leaderboard'"
       (click)="setActiveTab('leaderboard')"
+      [attr.aria-controls]="'panel-leaderboard'"
     >
       🏆 Bảng xếp hạng
     </button>
-  </div>
+  </nav>
 
   <!-- Loading -->
   <div *ngIf="loading" class="loading">Đang tải...</div>
   <div *ngIf="error" class="error">{{ error }}</div>
 
   <!-- Stats Tab -->
-  <div *ngIf="activeTab === 'stats' && stats" class="tab-content">
+  <div
+    *ngIf="activeTab === 'stats' && stats"
+    id="panel-stats"
+    role="tabpanel"
+    aria-labelledby="tab-stats"
+    class="tab-content"
+  >
     <div class="stats-grid">
       <!-- Level Card -->
       <div class="stat-card level-card">
@@ -100,29 +126,41 @@
   </div>
 
   <!-- Badges Tab -->
-  <div *ngIf="activeTab === 'badges'" class="tab-content">
-    <div class="badges-grid" *ngIf="badges.length > 0">
+  <div
+    *ngIf="activeTab === 'badges'"
+    id="panel-badges"
+    role="tabpanel"
+    aria-labelledby="tab-badges"
+    class="tab-content"
+  >
+    <div class="badges-grid" *ngIf="(badges?.length || 0) > 0">
       <div class="badge-card" *ngFor="let userBadge of badges">
         <div class="badge-icon">
           <img
-            *ngIf="userBadge.badge.iconUrl"
+            *ngIf="userBadge?.badge?.iconUrl"
             [src]="userBadge.badge.iconUrl"
-            alt=""
+            [attr.alt]="userBadge.badge?.nameVi || ''"
           />
-          <span *ngIf="!userBadge.badge.iconUrl">🏆</span>
+          <span *ngIf="!userBadge?.badge?.iconUrl">🏆</span>
         </div>
-        <h4>{{ userBadge.badge.nameVi }}</h4>
-        <p>{{ userBadge.badge.descriptionVi }}</p>
-        <small>Đạt ngày: {{ userBadge.earnedAt | date : "dd/MM/yyyy" }}</small>
+        <h4>{{ userBadge?.badge?.nameVi }}</h4>
+        <p>{{ userBadge?.badge?.descriptionVi }}</p>
+        <small>Đạt ngày: {{ userBadge?.earnedAt | date: "dd/MM/yyyy" }}</small>
       </div>
     </div>
-    <div *ngIf="badges.length === 0" class="empty-state">
+    <div *ngIf="!badges?.length" class="empty-state">
       <p>Chưa có huy hiệu nào. Hãy mượn sách và hoàn thành thử thách!</p>
     </div>
   </div>
 
   <!-- Challenges Tab -->
-  <div *ngIf="activeTab === 'challenges'" class="tab-content">
+  <div
+    *ngIf="activeTab === 'challenges'"
+    id="panel-challenges"
+    role="tabpanel"
+    aria-labelledby="tab-challenges"
+    class="tab-content"
+  >
     <!-- Active Challenges -->
     <h3>🎯 Thử thách đang tham gia</h3>
     <div class="challenges-list" *ngIf="challenges.length > 0">
@@ -171,8 +209,8 @@
         </div>
         <p>{{ challenge.descriptionVi }}</p>
         <p class="dates">
-          {{ challenge.startDate | date : "dd/MM/yyyy" }} -
-          {{ challenge.endDate | date : "dd/MM/yyyy" }}
+          {{ challenge.startDate | date: "dd/MM/yyyy" }} -
+          {{ challenge.endDate | date: "dd/MM/yyyy" }}
         </p>
         <button
           class="join-btn"
@@ -186,7 +224,13 @@
   </div>
 
   <!-- Leaderboard Tab -->
-  <div *ngIf="activeTab === 'leaderboard'" class="tab-content">
+  <div
+    *ngIf="activeTab === 'leaderboard'"
+    id="panel-leaderboard"
+    role="tabpanel"
+    aria-labelledby="tab-leaderboard"
+    class="tab-content"
+  >
     <div class="leaderboard">
       <div
         class="leaderboard-item"

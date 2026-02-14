@@ -1,260 +1,242 @@
-<section class="hero-panel">
-  <div class="aurora-background">
-    <div class="aurora__item"></div>
-    <div class="aurora__item"></div>
-    <div class="aurora__item"></div>
-    <div class="aurora__item"></div>
-  </div>
-  <div class="hero-content">
-    <div class="hero-text">
-      <p class="eyebrow">CHÀO MỪNG CÁC EM ĐẾN VỚI</p>
-      <h1>Thư Viện Trường THCS Phương Tú</h1>
-      <p class="subtitle">
-        Khơi nguồn tri thức - Thắp sáng ước mơ. <br />
-        Nơi các em tìm thấy những cuốn sách hay phục vụ học tập và giải trí.
-      </p>
-      <p class="current-time">Hôm nay: {{ currentTime }}</p>
-      <form (ngSubmit)="searchBooks()" class="search-form">
-        <i class="fa-solid fa-magnifying-glass search-icon"></i>
-        <input
-          [(ngModel)]="searchTerm"
-          (input)="onSearchInput(searchTerm)"
-          name="searchTerm"
-          type="search"
-          placeholder="Nhập tên sách, tác giả hoặc môn học..."
-          autocomplete="off"
-        />
-        <button class="btn-search" type="submit">Tìm Kiếm</button>
+<main id="main-content" role="main">
+  <section class="hero-panel">
+    <div class="aurora-background">
+      <div class="aurora__item"></div>
+      <div class="aurora__item"></div>
+      <div class="aurora__item"></div>
+      <div class="aurora__item"></div>
+    </div>
+    <div class="hero-content">
+      <div class="hero-text">
+        <p class="eyebrow">CHÀO MỪNG CÁC EM ĐẾN VỚI</p>
+        <h1>Thư Viện Trường THCS Phương Tú</h1>
+        <p class="subtitle">
+          Khơi nguồn tri thức - Thắp sáng ước mơ. <br />
+          Nơi các em tìm thấy những cuốn sách hay phục vụ học tập và giải trí.
+        </p>
+        <p class="current-time" aria-live="polite">
+          Hôm nay: {{ currentTime }}
+        </p>
+        <form (ngSubmit)="searchBooks()" class="search-form">
+          <i class="fa-solid fa-magnifying-glass search-icon"></i>
+          <input
+            [(ngModel)]="searchTerm"
+            (input)="onSearchInput(searchTerm)"
+            name="searchTerm"
+            type="search"
+            id="homeSearchInput"
+            aria-label="Tìm sách theo tên, tác giả hoặc môn học"
+            aria-autocomplete="list"
+            aria-controls="searchSuggestions"
+            placeholder="Nhập tên sách, tác giả hoặc môn học..."
+            autocomplete="off"
+          />
+          <button class="btn-search" type="submit">Tìm Kiếm</button>
 
-        <!-- Autocomplete Suggestions -->
-        <div class="search-suggestions" *ngIf="showSuggestions">
+          <!-- Autocomplete Suggestions -->
           <div
-            class="suggestion-item"
-            *ngFor="let book of searchSuggestions"
-            (click)="selectSuggestion(book)"
+            id="searchSuggestions"
+            class="search-suggestions"
+            *ngIf="showSuggestions"
+            role="listbox"
+            aria-label="Gợi ý tìm kiếm"
           >
-            <img
-              [src]="
-                book.coverUrl ||
-                'https://placehold.co/40x60/161B22/8b949e?text=' +
-                  (book.name || '?').substring(0, 1)
-              "
-              alt="{{ book.name }}"
-            />
-            <div class="suggestion-info">
-              <strong>{{ book.name }}</strong>
-              <small *ngIf="book.authors && book.authors.length > 0">{{
-                book.authors[0].name
-              }}</small>
+            <div
+              class="suggestion-item"
+              *ngFor="let book of searchSuggestions"
+              (click)="selectSuggestion(book)"
+              tabindex="0"
+              (keydown.enter)="selectSuggestion(book)"
+              role="option"
+              [attr.aria-selected]="false"
+            >
+              <img
+                [src]="
+                  book.coverUrl ||
+                  'https://placehold.co/40x60/161B22/8b949e?text=' +
+                    (book.name || '?').substring(0, 1)
+                "
+                alt="{{ book.name }}"
+              />
+              <div class="suggestion-info">
+                <strong>{{ book.name }}</strong>
+                <small *ngIf="book.authors && book.authors.length > 0">{{
+                  book.authors[0].name
+                }}</small>
+              </div>
             </div>
           </div>
+        </form>
+        <div class="cta-buttons">
+          <a class="btn btn-primary" routerLink="/borrow-book">
+            <i class="fa-solid fa-book-open"></i>
+            <span>Vào Kho Sách</span>
+          </a>
+          <a
+            *ngIf="userAuthService.isAdmin()"
+            class="btn btn-secondary"
+            routerLink="/create-book"
+          >
+            <i class="fa-solid fa-plus"></i>
+            <span>Thêm Sách Mới</span>
+          </a>
         </div>
-      </form>
-      <div class="cta-buttons">
-        <a class="btn btn-primary" routerLink="/borrow-book">
-          <i class="fa-solid fa-book-open"></i>
-          <span>Vào Kho Sách</span>
-        </a>
+      </div>
+      <figure class="hero-image" aria-hidden="true">
+        <img
+          src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=2073&auto=format&fit=crop"
+          alt="Thư viện trường học"
+          loading="lazy"
+        />
+      </figure>
+    </div>
+  </section>
+
+  <section class="categories-section">
+    <div class="section-wrap">
+      <h2 class="section-title">Danh Mục Sách</h2>
+      <div class="category-chips" role="list">
         <a
-          *ngIf="userAuthService.isAdmin()"
-          class="btn btn-secondary"
-          routerLink="/create-book"
+          class="chip"
+          *ngFor="let category of categories$ | async"
+          [routerLink]="['/borrow-book']"
+          [queryParams]="{ genre: category }"
+          role="listitem"
+          [attr.aria-label]="'Danh mục ' + category"
         >
-          <i class="fa-solid fa-plus"></i>
-          <span>Thêm Sách Mới</span>
+          {{ category }}
         </a>
       </div>
     </div>
-    <figure class="hero-image" aria-hidden="true">
-      <img
-        src="https://images.unsplash.com/photo-1497633762265-9d179a990aa6?q=80&w=2073&auto=format&fit=crop"
-        alt="Thư viện trường học"
-      />
-    </figure>
-  </div>
-</section>
+  </section>
 
-<section class="categories-section">
-  <div class="section-wrap">
-    <h2 class="section-title">Danh Mục Sách</h2>
-    <div class="category-chips">
-      <a
-        class="chip"
-        *ngFor="let category of categories$ | async"
-        [routerLink]="['/borrow-book']"
-        [queryParams]="{ genre: category }"
-      >
-        {{ category }}
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- NEWS SECTION -->
-<section class="news-section">
-  <div class="section-wrap">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-bullhorn"></i>
-        Bảng Tin Thư Viện
-      </h2>
-    </div>
-
-    <ng-container *ngIf="news$ | async as news; else loadingNews">
-      <div class="news-grid" *ngIf="news.length > 0; else emptyNews">
-        <article class="news-card" *ngFor="let item of news">
-          <div class="news-icon">
-            <i class="fas fa-newspaper"></i>
-          </div>
-          <div class="news-content">
-            <h3 class="news-title">{{ item.title }}</h3>
-            <p class="news-excerpt">{{ item.content.substring(0, 120) }}...</p>
-            <div class="news-meta">
-              <span class="news-date">
-                <i class="far fa-calendar"></i>
-                {{ formatDate(item.createdAt) }}
-              </span>
-            </div>
-          </div>
-        </article>
-      </div>
-    </ng-container>
-
-    <ng-template #loadingNews>
-      <div class="news-grid">
-        <div class="news-card-skeleton" *ngFor="let i of [1, 2, 3]"></div>
-      </div>
-    </ng-template>
-
-    <ng-template #emptyNews>
-      <p class="text-muted text-center py-4">
-        <i class="fas fa-info-circle"></i>
-        Hiện tại chưa có thông báo mới.
-      </p>
-    </ng-template>
-  </div>
-</section>
-
-<!-- LEADERBOARD SECTION -->
-<section
-  class="leaderboard-section"
-  *ngIf="leaderboard$ | async as leaderboard"
->
-  <div class="section-wrap">
-    <div class="leaderboard-container">
-      <div class="leaderboard-header">
-        <i class="fas fa-trophy"></i>
-        <h2>Bảng Vàng Đọc Sách</h2>
-        <p>Top 5 độc giả xuất sắc tháng này</p>
+  <!-- NEWS SECTION -->
+  <section class="news-section" aria-live="polite">
+    <div class="section-wrap">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-bullhorn"></i>
+          Bảng Tin Thư Viện
+        </h2>
       </div>
 
-      <div
-        class="leaderboard-list"
-        *ngIf="leaderboard.length > 0; else emptyLeaderboard"
-      >
-        <div
-          class="leaderboard-item"
-          *ngFor="let entry of leaderboard; let i = index"
-          [class.top-3]="i < 3"
-        >
-          <div class="rank rank-{{ i + 1 }}">
-            <span *ngIf="i === 0">🥇</span>
-            <span *ngIf="i === 1">🥈</span>
-            <span *ngIf="i === 2">🥉</span>
-            <span *ngIf="i >= 3">{{ i + 1 }}</span>
-          </div>
-          <div class="player-info">
-            <div class="player-name">{{ entry.userName }}</div>
-            <div class="player-level">
-              <span
-                class="level-badge"
-                [ngClass]="getLevelBadgeClass(entry.level)"
-              >
-                Level {{ entry.level }}
-              </span>
+      <ng-container *ngIf="news$ | async as news; else loadingNews">
+        <div class="news-grid" *ngIf="news.length > 0; else emptyNews">
+          <article class="news-card" *ngFor="let item of news">
+            <div class="news-icon">
+              <i class="fas fa-newspaper"></i>
             </div>
-          </div>
-          <div class="player-stats">
-            <div class="points">{{ entry.totalPoints }} điểm</div>
-            <div class="badges-count">
-              <i class="fas fa-medal"></i>
-              {{ entry.badgeCount }}
+            <div class="news-content">
+              <h3 class="news-title">{{ item.title }}</h3>
+              <p class="news-excerpt">
+                {{ item.content.substring(0, 120) }}...
+              </p>
+              <div class="news-meta">
+                <span class="news-date">
+                  <i class="far fa-calendar"></i>
+                  {{ formatDate(item.createdAt) }}
+                </span>
+              </div>
             </div>
-          </div>
+          </article>
         </div>
-      </div>
+      </ng-container>
 
-      <ng-template #emptyLeaderboard>
+      <ng-template #loadingNews>
+        <div class="news-grid">
+          <div class="news-card-skeleton" *ngFor="let i of [1, 2, 3]"></div>
+        </div>
+      </ng-template>
+
+      <ng-template #emptyNews>
         <p class="text-muted text-center py-4">
-          Chưa có dữ liệu bảng xếp hạng.
+          <i class="fas fa-info-circle"></i>
+          Hiện tại chưa có thông báo mới.
         </p>
       </ng-template>
     </div>
-  </div>
-</section>
+  </section>
 
-<!-- RECOMMENDED BOOKS SECTION (for logged-in users) -->
-<section
-  class="recommended-books-section"
-  *ngIf="
-    userAuthService.isLoggedIn() && (recommendedBooks$ | async) as recommended
-  "
->
-  <div class="section-wrap" *ngIf="recommended.length > 0">
-    <div class="section-header">
-      <h2 class="section-title">
-        <i class="fas fa-magic"></i>
-        Có Thể Em Sẽ Thích
-      </h2>
-      <p class="section-subtitle">
-        Gợi ý dành riêng cho em dựa trên sở thích đọc sách
-      </p>
-    </div>
-
-    <div class="books-grid">
-      <a
-        class="book-card"
-        *ngFor="let book of recommended"
-        [routerLink]="['/books', book.id]"
-      >
-        <div class="book-cover">
-          <img
-            [src]="
-              book.coverUrl ||
-              'https://placehold.co/200x300/161B22/8b949e?text=' +
-                (book.name || '?').substring(0, 1)
-            "
-            alt="Bìa sách {{ book.name }}"
-          />
+  <!-- LEADERBOARD SECTION -->
+  <section
+    class="leaderboard-section"
+    *ngIf="leaderboard$ | async as leaderboard"
+  >
+    <div class="section-wrap">
+      <div class="leaderboard-container">
+        <div class="leaderboard-header">
+          <i class="fas fa-trophy"></i>
+          <h2>Bảng Vàng Đọc Sách</h2>
+          <p>Top 5 độc giả xuất sắc tháng này</p>
         </div>
-        <div class="book-info">
-          <h3 class="book-title">{{ book.name }}</h3>
-          <p class="book-author">
-            <span *ngIf="book.authors && book.authors.length > 0">{{
-              book.authors[0].name
-            }}</span>
-            <span *ngIf="!book.authors || book.authors.length === 0"
-              >Nhiều tác giả</span
-            >
+
+        <div
+          class="leaderboard-list"
+          *ngIf="leaderboard.length > 0; else emptyLeaderboard"
+        >
+          <div
+            class="leaderboard-item"
+            *ngFor="let entry of leaderboard; let i = index"
+            [class.top-3]="i < 3"
+          >
+            <div class="rank rank-{{ i + 1 }}">
+              <span *ngIf="i === 0">🥇</span>
+              <span *ngIf="i === 1">🥈</span>
+              <span *ngIf="i === 2">🥉</span>
+              <span *ngIf="i >= 3">{{ i + 1 }}</span>
+            </div>
+            <div class="player-info">
+              <div class="player-name">{{ entry.userName }}</div>
+              <div class="player-level">
+                <span
+                  class="level-badge"
+                  [ngClass]="getLevelBadgeClass(entry.level)"
+                >
+                  Level {{ entry.level }}
+                </span>
+              </div>
+            </div>
+            <div class="player-stats">
+              <div class="points">{{ entry.totalPoints }} điểm</div>
+              <div class="badges-count">
+                <i class="fas fa-medal"></i>
+                {{ entry.badgeCount }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <ng-template #emptyLeaderboard>
+          <p class="text-muted text-center py-4">
+            Chưa có dữ liệu bảng xếp hạng.
           </p>
-        </div>
-      </a>
+        </ng-template>
+      </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="new-books-section">
-  <div class="section-wrap">
-    <div class="section-header">
-      <h2 class="section-title">Sách Mới Nhập</h2>
-      <a routerLink="/borrow-book" class="view-all-link">Xem tất cả →</a>
-    </div>
+  <!-- RECOMMENDED BOOKS SECTION (for logged-in users) -->
+  <section
+    class="recommended-books-section"
+    *ngIf="
+      userAuthService.isLoggedIn() && (recommendedBooks$ | async) as recommended
+    "
+  >
+    <div class="section-wrap" *ngIf="recommended.length > 0">
+      <div class="section-header">
+        <h2 class="section-title">
+          <i class="fas fa-magic"></i>
+          Có Thể Em Sẽ Thích
+        </h2>
+        <p class="section-subtitle">
+          Gợi ý dành riêng cho em dựa trên sở thích đọc sách
+        </p>
+      </div>
 
-    <ng-container *ngIf="newestBooks$ | async as books; else loading">
-      <div class="books-grid" *ngIf="books.length > 0; else empty">
+      <div class="books-grid">
         <a
           class="book-card"
-          *ngFor="let book of books"
+          *ngFor="let book of recommended"
           [routerLink]="['/books', book.id]"
         >
           <div class="book-cover">
@@ -280,69 +262,113 @@
           </div>
         </a>
       </div>
-    </ng-container>
+    </div>
+  </section>
 
-    <ng-template #loading>
-      <div class="books-grid">
-        <div
-          class="book-card-skeleton"
-          *ngFor="let i of [1, 2, 3, 4, 5, 6]"
-        ></div>
+  <section class="new-books-section">
+    <div class="section-wrap">
+      <div class="section-header">
+        <h2 class="section-title">Sách Mới Nhập</h2>
+        <a routerLink="/borrow-book" class="view-all-link">Xem tất cả →</a>
       </div>
-    </ng-template>
 
-    <ng-template #empty>
-      <p class="text-muted text-center py-5">
-        Hiện tại chưa có sách mới được cập nhật.
-      </p>
-    </ng-template>
-  </div>
-</section>
+      <ng-container *ngIf="newestBooks$ | async as books; else loading">
+        <div class="books-grid" *ngIf="books.length > 0; else empty">
+          <a
+            class="book-card"
+            *ngFor="let book of books"
+            [routerLink]="['/books', book.id]"
+          >
+            <div class="book-cover">
+              <img
+                [src]="
+                  book.coverUrl ||
+                  'https://placehold.co/200x300/161B22/8b949e?text=' +
+                    (book.name || '?').substring(0, 1)
+                "
+                alt="Bìa sách {{ book.name }}"
+              />
+            </div>
+            <div class="book-info">
+              <h3 class="book-title">{{ book.name }}</h3>
+              <p class="book-author">
+                <span *ngIf="book.authors && book.authors.length > 0">{{
+                  book.authors[0].name
+                }}</span>
+                <span *ngIf="!book.authors || book.authors.length === 0"
+                  >Nhiều tác giả</span
+                >
+              </p>
+            </div>
+          </a>
+        </div>
+      </ng-container>
 
-<footer class="site-footer">
-  <div class="section-wrap">
-    <div class="footer-grid">
-      <div class="footer-col">
-        <h3>Trường THCS Phương Tú</h3>
-        <p>
-          <i class="fa-solid fa-location-dot me-2"></i> Địa chỉ: Xã Phương Tú,
-          Huyện Ứng Hòa, TP. Hà Nội
+      <ng-template #loading>
+        <div class="books-grid">
+          <div
+            class="book-card-skeleton"
+            *ngFor="let i of [1, 2, 3, 4, 5, 6]"
+          ></div>
+        </div>
+      </ng-template>
+
+      <ng-template #empty>
+        <p class="text-muted text-center py-5">
+          Hiện tại chưa có sách mới được cập nhật.
         </p>
-        <p><i class="fa-solid fa-phone me-2"></i> Điện thoại: 024.3xxx.xxxx</p>
+      </ng-template>
+    </div>
+  </section>
+
+  <footer class="site-footer">
+    <div class="section-wrap">
+      <div class="footer-grid">
+        <div class="footer-col">
+          <h3>Trường THCS Phương Tú</h3>
+          <p>
+            <i class="fa-solid fa-location-dot me-2"></i> Địa chỉ: Xã Phương Tú,
+            Huyện Ứng Hòa, TP. Hà Nội
+          </p>
+          <p>
+            <i class="fa-solid fa-phone me-2"></i> Điện thoại: 024.3xxx.xxxx
+          </p>
+          <p>
+            <i class="fa-solid fa-envelope me-2"></i> Email:
+            c2phuongtu-uh@hanoi.edu.vn
+          </p>
+        </div>
+
+        <div class="footer-col">
+          <h3>Liên Kết Nhanh</h3>
+          <nav class="footer-nav-vertical">
+            <a routerLink="/borrow-book">Tra cứu sách</a>
+            <a routerLink="/my-account">Tài khoản của tôi</a>
+            <a routerLink="/rules">Nội quy thư viện</a>
+            <a href="#">Lịch hoạt động</a>
+          </nav>
+        </div>
+
+        <div class="footer-col">
+          <h3>Giờ Mở Cửa Thư Viện</h3>
+          <ul class="opening-hours">
+            <li><strong>Thứ 2 - Thứ 6:</strong></li>
+            <li>Sáng: 7:30 - 11:30</li>
+            <li>Chiều: 13:30 - 17:00</li>
+            <li class="mt-2 text-warning">
+              <i class="fa-solid fa-circle-exclamation me-1"></i> Nghỉ Thứ 7,
+              Chủ Nhật và các ngày lễ.
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
         <p>
-          <i class="fa-solid fa-envelope me-2"></i> Email:
-          c2phuongtu-uh@hanoi.edu.vn
+          &copy; 2025 Thư Viện Trường THCS Phương Tú. Phát triển bởi Đội ngũ
+          CNTT.
         </p>
-      </div>
-
-      <div class="footer-col">
-        <h3>Liên Kết Nhanh</h3>
-        <nav class="footer-nav-vertical">
-          <a routerLink="/borrow-book">Tra cứu sách</a>
-          <a routerLink="/my-account">Tài khoản của tôi</a>
-          <a routerLink="/rules">Nội quy thư viện</a>
-          <a href="#">Lịch hoạt động</a>
-        </nav>
-      </div>
-
-      <div class="footer-col">
-        <h3>Giờ Mở Cửa Thư Viện</h3>
-        <ul class="opening-hours">
-          <li><strong>Thứ 2 - Thứ 6:</strong></li>
-          <li>Sáng: 7:30 - 11:30</li>
-          <li>Chiều: 13:30 - 17:00</li>
-          <li class="mt-2 text-warning">
-            <i class="fa-solid fa-circle-exclamation me-1"></i> Nghỉ Thứ 7, Chủ
-            Nhật và các ngày lễ.
-          </li>
-        </ul>
       </div>
     </div>
-
-    <div class="footer-bottom">
-      <p>
-        &copy; 2025 Thư Viện Trường THCS Phương Tú. Phát triển bởi Đội ngũ CNTT.
-      </p>
-    </div>
-  </div>
-</footer>
+  </footer>
+</main>

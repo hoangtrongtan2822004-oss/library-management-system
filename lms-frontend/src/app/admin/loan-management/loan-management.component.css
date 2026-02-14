@@ -1,80 +1,117 @@
 .table {
-    background-color: #212529;
-    color: #dee2e6;
+  background-color: #1e2226;
+  color: #e9edf0;
 }
 .table thead th {
-    border-bottom: 2px solid #454d55;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  color: #cbd5df;
+  font-weight: 700;
 }
 .table-hover tbody tr:hover {
-    color: #fff;
-    background-color: #32383e;
+  color: #fff;
+  background-color: rgba(255, 255, 255, 0.03);
 }
 a {
-    color: #a5b4fc;
-    text-decoration: none;
+  color: #9fb4ff;
+  text-decoration: none;
 }
 a:hover {
-    text-decoration: underline;
+  text-decoration: underline;
 }
 .text-muted {
-    color: #fff !important;
+  color: #9aa3ad !important;
 }
 
 /* Sortable Columns */
 .sortable {
-    cursor: pointer;
-    user-select: none;
-    transition: background-color 0.2s;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.12s ease;
+  padding: 0.35rem 0.5rem;
+  border-radius: 6px;
 }
 .sortable:hover {
-    background-color: #32383e;
+  background-color: rgba(255, 255, 255, 0.02);
 }
 .sortable i {
-    opacity: 0.5;
-    font-size: 0.8em;
+  opacity: 0.6;
+  font-size: 0.85em;
 }
 .sortable:hover i {
-    opacity: 1;
+  opacity: 1;
 }
 
 /* Hover Tooltips for Book/User Names */
 .book-name-hover,
 .user-name-hover {
-    position: relative;
-    cursor: help;
-    border-bottom: 1px dotted #6c757d;
+  position: relative;
+  cursor: help;
+  border-bottom: 1px dotted rgba(255, 255, 255, 0.06);
 }
 .book-name-hover:hover,
 .user-name-hover:hover {
-    color: #a5b4fc;
+  color: #9fb4ff;
 }
 
 /* Action Buttons */
 .btn-group-sm > .btn {
-    padding: 0.25rem 0.5rem;
-    font-size: 0.875rem;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.88rem;
 }
 
 /* Status Badge Enhancement */
 .badge {
-    font-size: 0.75rem;
-    font-weight: 600;
-    padding: 0.35em 0.65em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 0.3em 0.55em;
 }
 
 /* Empty State Icon */
 .fa-inbox {
-    display: block;
+  display: block;
 }
 
 /* Filter Card */
 .card.bg-dark {
-    border-radius: 0.5rem;
+  border-radius: 0.6rem;
+  background: linear-gradient(
+    180deg,
+    rgba(10, 10, 10, 0.6),
+    rgba(20, 20, 20, 0.6)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.03);
 }
 
 /* Export Button Hover */
+.btn-success {
+  transition:
+    transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
 .btn-success:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 8px rgba(25, 135, 84, 0.3);
-    transition: all 0.3s ease;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 14px rgba(25, 135, 84, 0.18);
+}
+
+/* Nav pills improvements */
+.nav-pills .nav-link {
+  color: #cfd8e3;
+  background: transparent;
+  border-radius: 999px;
+  padding: 0.4rem 0.75rem;
+  margin-right: 0.5rem;
+}
+.nav-pills .nav-link.active {
+  background: #ffc107;
+  color: #1e1e1e;
+  box-shadow: 0 4px 10px rgba(255, 193, 7, 0.12);
+}
+
+@media (max-width: 767.98px) {
+  .sortable {
+    padding: 0.25rem;
+  }
+  .btn-success span.d-none.d-sm-inline {
+    display: none !important;
+  }
 }

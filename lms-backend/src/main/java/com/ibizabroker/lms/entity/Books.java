@@ -75,6 +75,9 @@ public class Books extends BaseEntity {
     @Column(length = 32)
     private String isbn;
 
+    @Column(name = "shelf_code", length = 30)
+    private String shelfCode;
+
     @Column(name = "cover_url", length = 512)
     private String coverUrl;
 
@@ -133,6 +136,7 @@ public class Books extends BaseEntity {
         if (this.addedDate == null) this.addedDate = LocalDate.now();
     }
     
+    @JsonIgnore // tránh đệ quy tuần hoàn khi serialize Books -> reviews -> book
     @OneToMany(mappedBy = "book", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @OrderBy("createdAt DESC")
     private List<Review> reviews = new ArrayList<>();

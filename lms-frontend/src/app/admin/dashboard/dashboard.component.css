@@ -105,7 +105,6 @@
     transform: translateY(0);
   }
 }
-
 /* --- Styles cho Bảng dữ liệu (Table) --- */
 /* Ghi đè màu chữ cho bảng trong dark mode */
 .table {

@@ -65,6 +65,31 @@
   font-weight: 600;
 }
 
+/* Focus styles for keyboard users */
+.list-group-item:focus {
+  outline: 3px solid rgba(88, 166, 255, 0.18);
+  outline-offset: 2px;
+}
+
+.avatar-placeholder {
+  font-size: 1.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Make badges inside cards more readable on small screens */
+@media (max-width: 576px) {
+  .member-card .member-badge {
+    display: none;
+  }
+  .avatar-placeholder {
+    width: 56px;
+    height: 56px;
+    font-size: 1.4rem;
+  }
+}
+
 .width-20 {
   width: 20px;
   text-align: center;

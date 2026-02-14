@@ -5,26 +5,18 @@
     >
       <h4 class="mb-0"><i class="fa-solid fa-qrcode me-2"></i>Admin Scanner</h4>
 
-      <!-- Mode Selector -->
-      <div class="d-flex gap-2 align-items-center">
+      <!-- Mode Selector & Controls -->
+      <div class="scanner-toolbar d-flex gap-2 align-items-center">
         <select
           class="form-select form-select-sm bg-secondary text-white border-secondary"
-          style="width: auto; min-width: 180px"
+          aria-label="Chọn chế độ quét"
           [(ngModel)]="currentMode"
           (change)="changeMode(currentMode)"
         >
-          <option [value]="ScannerMode.SEARCH">
-            <i class="fa-solid fa-search"></i> Tìm kiếm
-          </option>
-          <option [value]="ScannerMode.QUICK_RETURN">
-            <i class="fa-solid fa-rotate-left"></i> Trả nhanh
-          </option>
-          <option [value]="ScannerMode.INVENTORY">
-            <i class="fa-solid fa-clipboard-list"></i> Kiểm kê
-          </option>
-          <option [value]="ScannerMode.LOAN">
-            <i class="fa-solid fa-hand-holding-heart"></i> Mượn sách
-          </option>
+          <option [value]="ScannerMode.SEARCH">Tìm kiếm</option>
+          <option [value]="ScannerMode.QUICK_RETURN">Trả nhanh</option>
+          <option [value]="ScannerMode.INVENTORY">Kiểm kê</option>
+          <option [value]="ScannerMode.LOAN">Mượn sách</option>
         </select>
 
         <!-- Camera Selector -->
@@ -33,6 +25,8 @@
             class="btn btn-outline-light btn-sm dropdown-toggle"
             type="button"
             data-bs-toggle="dropdown"
+            aria-expanded="false"
+            aria-label="Chọn camera"
           >
             <i class="fa-solid fa-camera"></i>
           </button>
@@ -56,6 +50,7 @@
         <button
           class="btn btn-outline-light btn-sm"
           routerLink="/admin/dashboard"
+          aria-label="Đóng scanner"
         >
           <i class="fa-solid fa-times"></i> Đóng
         </button>
@@ -178,6 +173,36 @@
           <i class="fa-solid fa-circle-notch fa-spin me-2"></i>
           <strong>Quét liên tục</strong> - Sẵn sàng nhận mã tiếp theo
         </p>
+        <div
+          class="bg-dark bg-opacity-75 text-white px-3 py-2 rounded mt-2"
+          *ngIf="currentMode === ScannerMode.INVENTORY"
+        >
+          <div class="d-flex flex-wrap align-items-center gap-2">
+            <input
+              type="text"
+              class="form-control form-control-sm"
+              style="max-width: 200px"
+              [(ngModel)]="inventoryShelfCode"
+              placeholder="Mã kệ (VD: A1-01)"
+            />
+            <input
+              type="number"
+              class="form-control form-control-sm"
+              style="max-width: 180px"
+              [(ngModel)]="expectedTotal"
+              placeholder="Tổng số dự kiến"
+            />
+            <button
+              class="btn btn-sm btn-outline-light"
+              (click)="startInventorySession()"
+            >
+              Bắt đầu phiên
+            </button>
+            <span class="small" *ngIf="inventorySession">
+              Phiên #{{ inventorySession.id }}
+            </span>
+          </div>
+        </div>
       </div>
 
       <div
@@ -247,7 +272,9 @@
       <div
         class="inventory-panel position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-90 p-3"
         *ngIf="
-          currentMode === ScannerMode.INVENTORY && inventoryItems.length > 0
+          currentMode === ScannerMode.INVENTORY &&
+          inventoryItems.length > 0 &&
+          !inventorySummary
         "
         style="max-height: 200px; overflow-y: auto"
       >
@@ -278,7 +305,49 @@
               <span class="text-muted ms-2" *ngIf="item.isbn"
                 >({{ item.isbn }})</span
               >
+              <span class="text-muted ms-2" *ngIf="item.shelfCode"
+                >Kệ: {{ item.shelfCode }}</span
+              >
             </small>
+          </div>
+        </div>
+      </div>
+
+      <div
+        class="inventory-panel position-absolute bottom-0 start-0 end-0 bg-dark bg-opacity-90 p-3"
+        *ngIf="currentMode === ScannerMode.INVENTORY && inventorySummary"
+        style="max-height: 200px; overflow-y: auto"
+      >
+        <div
+          class="d-flex flex-wrap justify-content-between align-items-center mb-2"
+        >
+          <strong>
+            <i class="fa-solid fa-chart-bar me-2"></i>
+            Báo cáo kiểm kê
+          </strong>
+          <span class="small text-muted">
+            Đã quét {{ inventorySummary.scannedTotal || 0 }} /
+            {{ inventorySummary.expectedTotal || 0 }}
+          </span>
+        </div>
+        <div class="row g-2 text-white">
+          <div class="col-4">
+            <div class="small">Thiếu</div>
+            <div class="fw-semibold">
+              {{ inventorySummary.missingTotal || 0 }}
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="small">Sai kệ</div>
+            <div class="fw-semibold">
+              {{ inventorySummary.misplacedTotal || 0 }}
+            </div>
+          </div>
+          <div class="col-4">
+            <div class="small">Không rõ</div>
+            <div class="fw-semibold">
+              {{ inventorySummary.unknownTotal || 0 }}
+            </div>
           </div>
         </div>
       </div>
@@ -314,6 +383,153 @@
             >
               <i class="fa-solid fa-xmark"></i>
             </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div
+      class="card-body border-top border-secondary"
+      *ngIf="currentMode === ScannerMode.INVENTORY && inventorySummary"
+    >
+      <div class="d-flex flex-wrap justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-1">Chi tiet kiem ke</h5>
+          <div class="small text-muted">
+            Phien #{{ inventorySummary.sessionId }}
+          </div>
+        </div>
+        <div class="d-flex gap-2">
+          <button
+            class="btn btn-sm btn-outline-info"
+            (click)="exportInventoryExcel()"
+          >
+            <i class="fa-solid fa-file-excel"></i> Xuat Excel
+          </button>
+          <button
+            class="btn btn-sm btn-outline-light"
+            (click)="printInventoryReport()"
+          >
+            <i class="fa-solid fa-print"></i> In/PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="row g-3 mt-1">
+        <div class="col-lg-4">
+          <div class="fw-semibold mb-2">
+            Thieu ({{ inventorySummary.missingTotal || 0 }})
+          </div>
+          <div class="inventory-table">
+            <table class="table table-sm table-dark table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ten</th>
+                  <th>ISBN</th>
+                  <th>Ke du kien</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="
+                    let item of inventorySummary.missingItems;
+                    let i = index
+                  "
+                >
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ item.bookName }}</td>
+                  <td>{{ item.isbn || "-" }}</td>
+                  <td>{{ item.expectedShelfCode || "-" }}</td>
+                </tr>
+                <tr
+                  *ngIf="
+                    !inventorySummary.missingItems ||
+                    inventorySummary.missingItems.length === 0
+                  "
+                >
+                  <td colspan="4" class="text-muted">Khong co du lieu</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="fw-semibold mb-2">
+            Sai ke ({{ inventorySummary.misplacedTotal || 0 }})
+          </div>
+          <div class="inventory-table">
+            <table class="table table-sm table-dark table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ten</th>
+                  <th>ISBN</th>
+                  <th>Ke du kien</th>
+                  <th>Ke quet</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="
+                    let item of inventorySummary.misplacedItems;
+                    let i = index
+                  "
+                >
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ item.bookName }}</td>
+                  <td>{{ item.isbn || "-" }}</td>
+                  <td>{{ item.expectedShelfCode || "-" }}</td>
+                  <td>{{ item.scannedShelfCode || "-" }}</td>
+                </tr>
+                <tr
+                  *ngIf="
+                    !inventorySummary.misplacedItems ||
+                    inventorySummary.misplacedItems.length === 0
+                  "
+                >
+                  <td colspan="5" class="text-muted">Khong co du lieu</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="col-lg-4">
+          <div class="fw-semibold mb-2">
+            Khong ro ({{ inventorySummary.unknownTotal || 0 }})
+          </div>
+          <div class="inventory-table">
+            <table class="table table-sm table-dark table-striped mb-0">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>Ma/ISBN</th>
+                  <th>Ke quet</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr
+                  *ngFor="
+                    let item of inventorySummary.unknownItems;
+                    let i = index
+                  "
+                >
+                  <td>{{ i + 1 }}</td>
+                  <td>{{ item.isbn || "-" }}</td>
+                  <td>{{ item.shelfCode || "-" }}</td>
+                </tr>
+                <tr
+                  *ngIf="
+                    !inventorySummary.unknownItems ||
+                    inventorySummary.unknownItems.length === 0
+                  "
+                >
+                  <td colspan="3" class="text-muted">Khong co du lieu</td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

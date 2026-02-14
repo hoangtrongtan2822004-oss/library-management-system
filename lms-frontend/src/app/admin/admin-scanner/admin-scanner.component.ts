@@ -4,6 +4,11 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { BooksService } from '../../services/books.service';
+import {
+  AdminService,
+  InventorySession,
+  InventorySummary,
+} from '../../services/admin.service';
 import { Book } from '../../models/book';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { BarcodeFormat } from '@zxing/library';
@@ -20,6 +25,7 @@ interface InventoryItem {
   bookId: number;
   bookName: string;
   isbn?: string;
+  shelfCode?: string;
   scannedAt: Date;
 }
 
@@ -70,6 +76,10 @@ export class AdminScannerComponent implements OnInit {
   // Inventory Mode
   inventoryItems: InventoryItem[] = [];
   inventoryStartTime?: Date;
+  inventorySession?: InventorySession;
+  inventorySummary?: InventorySummary;
+  inventoryShelfCode = '';
+  expectedTotal?: number;
 
   // Loan Mode
   loanUserId?: number;
@@ -81,6 +91,7 @@ export class AdminScannerComponent implements OnInit {
     private router: Router,
     private toastr: ToastrService,
     private booksService: BooksService,
+    private adminService: AdminService,
   ) {}
 
   ngOnInit(): void {
@@ -246,43 +257,59 @@ export class AdminScannerComponent implements OnInit {
       this.inventoryStartTime = new Date();
     }
 
-    // Find book and add to inventory list
-    this.searchByKeyword(code, (book: Book) => {
-      const existingIndex = this.inventoryItems.findIndex(
-        (item) => item.bookId === book.id,
-      );
+    if (!this.inventorySession) {
+      this.toastr.info('Vui lòng bắt đầu phiên kiểm kê trước.');
+      return;
+    }
 
-      if (existingIndex >= 0) {
-        this.toastr.warning(
-          `Sách "${book.name}" đã được quét trước đó`,
-          'Trùng lặp',
-          {
-            timeOut: 1500,
-          },
-        );
-        this.vibrateDevice(50, 50, 50);
-      } else {
-        this.inventoryItems.push({
-          bookId: book.id,
-          bookName: book.name,
-          isbn: book.isbn,
-          scannedAt: new Date(),
-        });
+    const shelfCode = (this.inventoryShelfCode || '').trim() || undefined;
+    this.adminService
+      .recordInventoryScan(this.inventorySession.id, {
+        code,
+        shelfCode,
+      })
+      .subscribe({
+        next: (result) => {
+          if (result.duplicate) {
+            this.toastr.warning('Sách đã quét trước đó', 'Trùng lặp', {
+              timeOut: 1500,
+            });
+            this.vibrateDevice(50, 50, 50);
+          } else if (result.unknown) {
+            this.toastr.warning(
+              'Không tìm thấy sách trong hệ thống',
+              'Unknown',
+              {
+                timeOut: 1500,
+              },
+            );
+            this.vibrateDevice(50, 50, 50);
+          } else if (result.bookId && result.bookName) {
+            this.inventoryItems.push({
+              bookId: result.bookId,
+              bookName: result.bookName,
+              isbn: result.isbn,
+              shelfCode: result.shelfCode,
+              scannedAt: result.scannedAt
+                ? new Date(result.scannedAt)
+                : new Date(),
+            });
+            this.toastr.success(
+              `[${this.inventoryItems.length}] ${result.bookName}`,
+              'Đã thêm vào danh sách',
+              { timeOut: 1500 },
+            );
+            this.vibrateDevice(100);
+          }
 
-        this.toastr.success(
-          `[${this.inventoryItems.length}] ${book.name}`,
-          'Đã thêm vào danh sách',
-          {
-            timeOut: 1500,
-          },
-        );
-        this.vibrateDevice(100);
-      }
-
-      // Clear and continue
-      this.scannedResult = '';
-      this.foundBook = null;
-    });
+          this.scannedResult = '';
+          this.foundBook = null;
+        },
+        error: () => {
+          this.toastr.error('Không thể ghi nhận quét kiểm kê');
+          this.vibrateDevice(50, 50, 50);
+        },
+      });
   }
 
   handleLoanMode(code: string): void {
@@ -459,6 +486,10 @@ export class AdminScannerComponent implements OnInit {
       case ScannerMode.INVENTORY:
         this.inventoryItems = [];
         this.inventoryStartTime = new Date();
+        this.inventorySession = undefined;
+        this.inventorySummary = undefined;
+        this.inventoryShelfCode = '';
+        this.expectedTotal = undefined;
         this.toastr.info(
           'Bắt đầu quét liên tục. Quét tất cả sách trên kệ.',
           'Chế độ kiểm kê',
@@ -494,6 +525,55 @@ export class AdminScannerComponent implements OnInit {
       return;
     }
 
+    if (!this.inventorySession) {
+      this.toastr.warning('Chưa có phiên kiểm kê');
+      return;
+    }
+
+    this.adminService
+      .completeInventorySession(this.inventorySession.id)
+      .subscribe({
+        next: () => {
+          this.toastr.success('Đã kết thúc kiểm kê');
+          this.loadInventorySummary();
+        },
+        error: () => {
+          this.toastr.error('Không thể kết thúc kiểm kê');
+        },
+      });
+  }
+
+  startInventorySession(): void {
+    if (this.inventorySession) {
+      return;
+    }
+    this.adminService
+      .startInventorySession({
+        name: `Kiểm kê ${new Date().toLocaleDateString('vi-VN')}`,
+        expectedTotal: this.expectedTotal,
+      })
+      .subscribe({
+        next: (session) => {
+          this.inventorySession = session;
+          this.inventoryItems = [];
+          this.inventoryStartTime = new Date();
+          this.toastr.success('Đã bắt đầu phiên kiểm kê');
+        },
+        error: () => this.toastr.error('Không thể bắt đầu kiểm kê'),
+      });
+  }
+
+  loadInventorySummary(): void {
+    if (!this.inventorySession) return;
+    this.adminService.getInventorySummary(this.inventorySession.id).subscribe({
+      next: (summary) => {
+        this.inventorySummary = summary;
+      },
+      error: () => {
+        this.toastr.error('Không thể tải báo cáo kiểm kê');
+      },
+    });
+
     const duration = this.inventoryStartTime
       ? Math.floor(
           (new Date().getTime() - this.inventoryStartTime.getTime()) / 1000,
@@ -504,44 +584,123 @@ export class AdminScannerComponent implements OnInit {
       `Đã quét ${this.inventoryItems.length} cuốn trong ${duration}s`,
       'Kết thúc kiểm kê',
     );
-
-    // TODO: Send to backend for comparison with database
-    console.log('Inventory Report:', {
-      items: this.inventoryItems,
-      totalScanned: this.inventoryItems.length,
-      duration: duration,
-      startTime: this.inventoryStartTime,
-      endTime: new Date(),
-    });
-
-    // Download JSON report
-    this.downloadInventoryReport();
   }
 
-  downloadInventoryReport(): void {
-    const report = {
-      inventoryDate: new Date().toISOString(),
-      startTime: this.inventoryStartTime?.toISOString(),
-      endTime: new Date().toISOString(),
-      totalScanned: this.inventoryItems.length,
-      items: this.inventoryItems,
-    };
-
-    const blob = new Blob([JSON.stringify(report, null, 2)], {
-      type: 'application/json',
+  exportInventoryExcel(): void {
+    if (!this.inventorySession) {
+      this.toastr.warning('Chưa có phiên kiểm kê');
+      return;
+    }
+    this.adminService.exportInventoryExcel(this.inventorySession.id).subscribe({
+      next: (blob) => {
+        const date = new Date().toISOString().split('T')[0];
+        this.downloadBlob(blob, `inventory-report-${date}.xlsx`);
+      },
+      error: () => {
+        this.toastr.error('Không thể xuất Excel');
+      },
     });
+  }
+
+  printInventoryReport(): void {
+    if (!this.inventorySummary) {
+      this.toastr.warning('Chưa có báo cáo kiểm kê');
+      return;
+    }
+    const html = this.buildInventoryPrintHtml();
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.toastr.error('Không thể mở cửa sổ in');
+      return;
+    }
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
+
+  private downloadBlob(blob: Blob, filename: string): void {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `inventory-report-${new Date().toISOString().split('T')[0]}.json`;
+    a.download = filename;
     a.click();
     window.URL.revokeObjectURL(url);
+  }
+
+  private buildInventoryPrintHtml(): string {
+    const summary = this.inventorySummary;
+    if (!summary) return '';
+
+    const missingRows = (summary.missingItems || [])
+      .map(
+        (item, index) =>
+          `<tr><td>${index + 1}</td><td>${item.bookName || ''}</td><td>${item.isbn || ''}</td><td>${item.expectedShelfCode || ''}</td></tr>`,
+      )
+      .join('');
+    const misplacedRows = (summary.misplacedItems || [])
+      .map(
+        (item, index) =>
+          `<tr><td>${index + 1}</td><td>${item.bookName || ''}</td><td>${item.isbn || ''}</td><td>${item.expectedShelfCode || ''}</td><td>${item.scannedShelfCode || ''}</td></tr>`,
+      )
+      .join('');
+    const unknownRows = (summary.unknownItems || [])
+      .map(
+        (item, index) =>
+          `<tr><td>${index + 1}</td><td>${item.isbn || ''}</td><td>${item.shelfCode || ''}</td></tr>`,
+      )
+      .join('');
+
+    return `<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Inventory Report</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 16px; color: #111; }
+  h1 { font-size: 18px; margin-bottom: 8px; }
+  h2 { font-size: 14px; margin-top: 16px; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 6px; }
+  th, td { border: 1px solid #ddd; padding: 6px; text-align: left; }
+  th { background: #f3f4f6; }
+  .summary { display: flex; gap: 12px; font-size: 12px; }
+</style>
+</head>
+<body onload="window.print(); window.close();">
+  <h1>Bao cao kiem ke</h1>
+  <div class="summary">
+    <div>Da quet: ${summary.scannedTotal || 0}</div>
+    <div>Du kien: ${summary.expectedTotal || 0}</div>
+    <div>Thieu: ${summary.missingTotal || 0}</div>
+    <div>Sai ke: ${summary.misplacedTotal || 0}</div>
+    <div>Khong ro: ${summary.unknownTotal || 0}</div>
+  </div>
+
+  <h2>Thieu</h2>
+  <table>
+    <thead><tr><th>#</th><th>Ten sach</th><th>ISBN</th><th>Ke du kien</th></tr></thead>
+    <tbody>${missingRows || '<tr><td colspan="4">Khong co du lieu</td></tr>'}</tbody>
+  </table>
+
+  <h2>Sai ke</h2>
+  <table>
+    <thead><tr><th>#</th><th>Ten sach</th><th>ISBN</th><th>Ke du kien</th><th>Ke quet</th></tr></thead>
+    <tbody>${misplacedRows || '<tr><td colspan="5">Khong co du lieu</td></tr>'}</tbody>
+  </table>
+
+  <h2>Khong ro</h2>
+  <table>
+    <thead><tr><th>#</th><th>Ma/ISBN</th><th>Ke quet</th></tr></thead>
+    <tbody>${unknownRows || '<tr><td colspan="3">Khong co du lieu</td></tr>'}</tbody>
+  </table>
+</body>
+</html>`;
   }
 
   clearInventory(): void {
     if (confirm(`Xóa danh sách ${this.inventoryItems.length} cuốn đã quét?`)) {
       this.inventoryItems = [];
       this.inventoryStartTime = undefined;
+      this.inventorySummary = undefined;
       this.toastr.info('Đã xóa danh sách kiểm kê');
     }
   }

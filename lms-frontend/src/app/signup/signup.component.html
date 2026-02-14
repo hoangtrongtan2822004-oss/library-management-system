@@ -2,6 +2,38 @@
   <div class="auth-bg" aria-hidden="true"></div>
 
   <section class="auth-card card">
+    <div class="auth-logo" aria-hidden="true">
+      <svg
+        viewBox="0 0 24 24"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
+      >
+        <defs>
+          <linearGradient id="g1" x1="0" x2="1">
+            <stop offset="0" stop-color="#6366f1" />
+            <stop offset="1" stop-color="#4f46e5" />
+          </linearGradient>
+        </defs>
+        <rect
+          x="2"
+          y="5"
+          width="20"
+          height="14"
+          rx="2"
+          stroke="url(#g1)"
+          stroke-width="1.2"
+          fill="rgba(99,102,241,0.06)"
+        />
+        <path
+          d="M6 8h12M6 12h12M6 16h8"
+          stroke="url(#g1)"
+          stroke-width="1.4"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+    </div>
     <h1>Tạo tài khoản</h1>
     <p class="subtitle">Tạo tài khoản của bạn để bắt đầu mượn sách.</p>
 
@@ -312,6 +344,12 @@
           <i class="fa-solid fa-spinner fa-spin me-2"></i>Đang xử lý...
         </span>
       </button>
+
+      <p class="small-note text-muted mt-2">
+        Bằng cách tạo tài khoản, bạn đồng ý với
+        <a routerLink="/terms">Điều khoản</a> và
+        <a routerLink="/privacy">Chính sách bảo mật</a>.
+      </p>
     </form>
 
     <!-- Divider -->
@@ -321,22 +359,14 @@
 
     <!-- Social Login Buttons (Future) -->
     <div class="social-login">
-      <button
-        type="button"
-        class="btn-social google"
-        disabled
-        title="Sắp ra mắt"
-      >
-        <i class="fa-brands fa-google me-2"></i>Đăng ký bằng Google
-      </button>
-      <button
-        type="button"
-        class="btn-social facebook"
-        disabled
-        title="Sắp ra mắt"
-      >
-        <i class="fa-brands fa-facebook me-2"></i>Đăng ký bằng Facebook
-      </button>
+      <asl-google-signin-button
+        class="google-btn"
+        type="standard"
+        size="large"
+        text="signup_with"
+        shape="rectangular"
+        theme="filled_blue"
+      ></asl-google-signin-button>
     </div>
 
     <!-- Footer Link -->

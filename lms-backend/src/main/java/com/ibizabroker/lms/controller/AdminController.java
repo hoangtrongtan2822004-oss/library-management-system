@@ -69,6 +69,19 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @PutMapping("/users/{id}/status")
+    public ResponseEntity<UserDto> updateUserStatus(@PathVariable Integer id, @RequestBody Map<String, Boolean> payload) {
+        Boolean active = payload.get("active");
+        if (active == null) {
+            active = payload.get("isActive");
+        }
+        if (active == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        Users updated = userService.updateUserStatus(id, active);
+        return ResponseEntity.ok(userService.mapToUserDto(updated));
+    }
+
     // === DASHBOARD CHART DATA (/api/admin/dashboard/chart-data) ===
 
     @GetMapping("/dashboard/chart-data")

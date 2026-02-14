@@ -1,133 +1,155 @@
 <div class="container py-3">
-  <h2><i class="fa-solid fa-newspaper"></i> Tin Tức Hệ Thống</h2>
+  <div class="admin-news-header">
+    <h2><i class="fa-solid fa-newspaper"></i> Tin Tức Hệ Thống</h2>
+    <div class="admin-news-subtitle">
+      Quản lý nội dung, ghim tin, và gửi thông báo tới người dùng
+    </div>
+  </div>
 
   <!-- CREATE FORM -->
   <div class="card mt-3">
-    <div class="card-header bg-primary text-white">
-      <i class="fa-solid fa-plus"></i> Tạo tin mới
+    <div
+      class="card-header bg-primary text-white d-flex align-items-center justify-content-between"
+    >
+      <div><i class="fa-solid fa-plus"></i> Tạo tin mới</div>
+      <div class="text-end text-white-50" style="font-size: 0.9rem">
+        Nhập đầy đủ thông tin trước khi đăng
+      </div>
     </div>
     <div class="card-body">
-      <!-- Title -->
-      <div class="mb-3">
-        <label class="form-label fw-bold"
-          >Tiêu đề <span class="text-danger">*</span></label
-        >
-        <input
-          class="form-control"
-          [(ngModel)]="newItem.title"
-          placeholder="Nhập tiêu đề tin tức"
-        />
-      </div>
+      <div class="create-grid">
+        <div>
+          <!-- Title -->
+          <div class="mb-3">
+            <label class="form-label fw-bold"
+              >Tiêu đề <span class="text-danger">*</span></label
+            >
+            <input
+              class="form-control"
+              [(ngModel)]="newItem.title"
+              placeholder="Nhập tiêu đề tin tức"
+            />
+          </div>
 
-      <!-- Cover Image Upload -->
-      <div class="mb-3">
-        <label class="form-label fw-bold">Ảnh bìa</label>
-        <div class="input-group">
-          <input
-            type="file"
-            class="form-control"
-            accept="image/*"
-            (change)="onImageSelect($event, false)"
-            [disabled]="uploadingImage"
-          />
-          <button
-            class="btn btn-outline-secondary"
-            type="button"
-            (click)="removeImage(false)"
-            [disabled]="!previewImageUrl"
-          >
-            <i class="fa-solid fa-xmark"></i>
-          </button>
+          <!-- Content (Rich Text Editor) -->
+          <div class="mb-3">
+            <label class="form-label fw-bold">Nội dung</label>
+            <quill-editor
+              [(ngModel)]="newItem.content"
+              [modules]="quillConfig"
+              placeholder="Nhập nội dung tin tức..."
+              [styles]="{ height: '260px' }"
+            ></quill-editor>
+          </div>
+
+          <!-- Status & Scheduling -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label class="form-label fw-bold">Trạng thái</label>
+              <select class="form-select" [(ngModel)]="newItem.status">
+                <option value="PUBLISHED">Công khai ngay</option>
+                <option value="DRAFT">Lưu nháp</option>
+              </select>
+            </div>
+            <div class="col-md-6" *ngIf="newItem.status === 'DRAFT'">
+              <label class="form-label fw-bold">Hẹn giờ đăng</label>
+              <input
+                type="datetime-local"
+                class="form-control"
+                [(ngModel)]="newItem.publishedAt"
+              />
+              <small class="text-muted">Để trống = không tự động đăng</small>
+            </div>
+          </div>
+
+          <!-- Pinned & Email Notification -->
+          <div class="d-flex gap-3 mb-3 flex-wrap">
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="pinNewItem"
+                [(ngModel)]="newItem.isPinned"
+              />
+              <label class="form-check-label" for="pinNewItem"
+                ><i class="fa-solid fa-thumbtack text-warning"></i>
+                <strong>Ghim lên đầu</strong></label
+              >
+            </div>
+            <div class="form-check">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                id="sendEmailCreate"
+                [(ngModel)]="sendEmailOnCreate"
+              />
+              <label class="form-check-label" for="sendEmailCreate"
+                ><i class="fa-solid fa-envelope"></i> Gửi email thông báo</label
+              >
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="create-actions">
+            <button
+              class="btn btn-primary"
+              (click)="createWithCheck()"
+              [disabled]="uploadingImage"
+            >
+              <i class="fa-solid fa-paper-plane"></i>
+              {{ newItem.status === "DRAFT" ? "Lưu nháp" : "Đăng tin" }}
+            </button>
+            <button
+              class="btn btn-outline-secondary"
+              (click)="sendTestEmail(newItem)"
+              *ngIf="sendEmailOnCreate"
+            >
+              <i class="fa-solid fa-flask"></i> Gửi thử
+            </button>
+          </div>
         </div>
-        <div *ngIf="previewImageUrl" class="mt-2">
-          <img
-            [src]="getImageUrl(previewImageUrl)"
-            alt="Preview"
-            class="img-thumbnail"
-            style="max-height: 200px"
-          />
+
+        <!-- Right column: preview + image upload -->
+        <div>
+          <div class="preview-box">
+            <div
+              *ngIf="!previewImageUrl && !editingImageUrl"
+              class="image-drop-hint"
+            >
+              <div>Chưa có ảnh bìa</div>
+              <div class="text-muted" style="font-size: 0.85rem">
+                Kéo thả hoặc chọn tệp JPG/PNG. Khuyến nghị 1200x630px
+              </div>
+            </div>
+
+            <div *ngIf="previewImageUrl">
+              <img [src]="getImageUrl(previewImageUrl)" alt="Preview" />
+            </div>
+            <div *ngIf="editingImageUrl">
+              <img [src]="getImageUrl(editingImageUrl)" alt="Preview edit" />
+            </div>
+
+            <div class="image-actions">
+              <input
+                type="file"
+                class="form-control form-control-sm"
+                accept="image/*"
+                (change)="onImageSelect($event, false)"
+                [disabled]="uploadingImage"
+              />
+              <button
+                class="btn btn-outline-secondary btn-sm"
+                type="button"
+                (click)="removeImage(false)"
+                [disabled]="!previewImageUrl && !editingImageUrl"
+              >
+                <i class="fa-solid fa-xmark"></i>
+              </button>
+            </div>
+
+            <small class="text-muted">Xem trước ảnh bìa và metadata</small>
+          </div>
         </div>
-        <small class="text-muted"
-          >Khuyến nghị: 1200x630px, định dạng JPG/PNG</small
-        >
-      </div>
-
-      <!-- Content (Rich Text Editor) -->
-      <div class="mb-3">
-        <label class="form-label fw-bold">Nội dung</label>
-        <quill-editor
-          [(ngModel)]="newItem.content"
-          [modules]="quillConfig"
-          placeholder="Nhập nội dung tin tức..."
-          [styles]="{ height: '250px' }"
-        ></quill-editor>
-      </div>
-
-      <!-- Status & Scheduling -->
-      <div class="row mb-3">
-        <div class="col-md-6">
-          <label class="form-label fw-bold">Trạng thái</label>
-          <select class="form-select" [(ngModel)]="newItem.status">
-            <option value="PUBLISHED">Công khai ngay</option>
-            <option value="DRAFT">Lưu nháp</option>
-          </select>
-        </div>
-        <div class="col-md-6" *ngIf="newItem.status === 'DRAFT'">
-          <label class="form-label fw-bold">Hẹn giờ đăng</label>
-          <input
-            type="datetime-local"
-            class="form-control"
-            [(ngModel)]="newItem.publishedAt"
-          />
-          <small class="text-muted">Để trống = không tự động đăng</small>
-        </div>
-      </div>
-
-      <!-- Pinned Checkbox -->
-      <div class="form-check mb-3">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          id="pinNewItem"
-          [(ngModel)]="newItem.isPinned"
-        />
-        <label class="form-check-label" for="pinNewItem">
-          <i class="fa-solid fa-thumbtack text-warning"></i>
-          <strong>Ghim tin này lên đầu</strong>
-        </label>
-      </div>
-
-      <!-- Email Notification -->
-      <div class="form-check mb-3">
-        <input
-          class="form-check-input"
-          type="checkbox"
-          id="sendEmailCreate"
-          [(ngModel)]="sendEmailOnCreate"
-        />
-        <label class="form-check-label" for="sendEmailCreate">
-          <i class="fa-solid fa-envelope"></i>
-          Gửi email thông báo đến tất cả người dùng
-        </label>
-      </div>
-
-      <!-- Action Buttons -->
-      <div class="d-flex gap-2">
-        <button
-          class="btn btn-primary"
-          (click)="createWithCheck()"
-          [disabled]="uploadingImage"
-        >
-          <i class="fa-solid fa-paper-plane"></i>
-          {{ newItem.status === "DRAFT" ? "Lưu nháp" : "Đăng tin" }}
-        </button>
-        <button
-          class="btn btn-outline-secondary"
-          (click)="sendTestEmail(newItem)"
-          *ngIf="sendEmailOnCreate"
-        >
-          <i class="fa-solid fa-flask"></i> Gửi thử cho tôi
-        </button>
       </div>
     </div>
   </div>

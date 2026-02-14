@@ -6,6 +6,7 @@ import { InactivityService } from '../services/inactivity.service';
 import { Subject, timer } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { ToastrService } from 'ngx-toastr';
+import { SocialAuthService } from '@abacritt/angularx-social-login';
 
 @Component({
   selector: 'app-logout',
@@ -14,8 +15,11 @@ import { ToastrService } from 'ngx-toastr';
   standalone: false,
 })
 export class LogoutComponent implements OnInit, OnDestroy {
+  private static readonly AUTO_LOGOUT_SECONDS = 10;
+
+  readonly autoLogoutSeconds: number = LogoutComponent.AUTO_LOGOUT_SECONDS;
   userName: string = '';
-  countdown: number = 10;
+  countdown: number = LogoutComponent.AUTO_LOGOUT_SECONDS;
   isLoggingOut: boolean = false;
   private destroy$ = new Subject<void>();
   private countdownTimer$ = new Subject<void>();
@@ -26,6 +30,7 @@ export class LogoutComponent implements OnInit, OnDestroy {
     private usersService: UsersService,
     private toastr: ToastrService,
     private inactivityService: InactivityService,
+    private socialAuthService: SocialAuthService,
   ) {
     // Get user name for personalized message
     this.userName = this.auth.getName() || 'bạn';
@@ -49,7 +54,7 @@ export class LogoutComponent implements OnInit, OnDestroy {
   }
 
   private startCountdown(): void {
-    timer(0, 1000)
+    timer(1000, 1000)
       .pipe(takeUntil(this.countdownTimer$))
       .subscribe(() => {
         this.countdown--;
@@ -75,6 +80,9 @@ export class LogoutComponent implements OnInit, OnDestroy {
     if (this.isLoggingOut) return;
 
     this.isLoggingOut = true;
+    const socialSignOut = this.socialAuthService
+      .signOut()
+      .catch(() => undefined);
 
     // Call backend to blacklist token
     this.usersService
@@ -89,9 +97,11 @@ export class LogoutComponent implements OnInit, OnDestroy {
           this.toastr.success('Đăng xuất thành công!', 'Tạm biệt!');
 
           // Navigate to login page
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 500);
+          socialSignOut.finally(() => {
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+            }, 500);
+          });
         },
         error: (err) => {
           console.error('Lỗi khi đăng xuất:', err);
@@ -103,9 +113,11 @@ export class LogoutComponent implements OnInit, OnDestroy {
             'Cảnh báo',
           );
 
-          setTimeout(() => {
-            this.router.navigate(['/login']);
-          }, 500);
+          socialSignOut.finally(() => {
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+            }, 500);
+          });
         },
       });
   }

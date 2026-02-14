@@ -47,7 +47,7 @@ public class PasswordResetService {
                 .map(String::toLowerCase)
                 .orElse("");
 
-        Optional<Users> userOptional = usersRepository.findByEmailIgnoreCase(normalizedEmail);
+        Optional<Users> userOptional = usersRepository.findFirstByEmailIgnoreCaseOrderByUserIdAsc(normalizedEmail);
 
         // Luôn trả về thành công để tránh lộ thông tin email tồn tại hay không
         if (userOptional.isEmpty()) {

@@ -57,6 +57,35 @@ table th {
   background-color: #0b5ed7 !important;
 }
 
+/* Page toolbar */
+.page-toolbar {
+  display: flex;
+  align-items: center;
+}
+.page-toolbar .btn {
+  padding: 0.35rem 0.6rem;
+}
+
+/* Table tweaks */
+.table-sm td,
+.table-sm th {
+  padding: 0.45rem 0.6rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 768px) {
+  .portrait-container {
+    width: 48px;
+    height: 48px;
+  }
+  .page-toolbar {
+    gap: 0.4rem;
+  }
+  .book-count-badge {
+    font-size: 0.75rem;
+  }
+}
+
 /* Merge Checkbox */
 .merge-checkbox {
   cursor: pointer;

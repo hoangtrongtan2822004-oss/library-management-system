@@ -28,4 +28,5 @@ export interface Book {
   coverUrl?: string;
   description?: string;
   isWishlisted?: boolean;
+  shelfCode?: string;
 }

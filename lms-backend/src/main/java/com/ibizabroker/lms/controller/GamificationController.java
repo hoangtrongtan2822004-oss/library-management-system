@@ -127,6 +127,52 @@ public class GamificationController {
         return ResponseEntity.ok(Map.of("message", "Đã trao " + points + " điểm cho user " + userId));
     }
 
+    @GetMapping("/admin/gamification/challenges")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<ReadingChallenge>> getChallengesForAdmin() {
+        // Return active challenges for admin management view. Adjust to include inactive if needed.
+        return ResponseEntity.ok(gamificationService.getActiveChallenges());
+    }
+
+    @GetMapping("/admin/gamification/rewards")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<Reward>> getAllRewardsForAdmin() {
+        return ResponseEntity.ok(gamificationService.getAllRewards());
+    }
+
+    @PostMapping("/admin/gamification/rewards")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Reward> createReward(@RequestBody Reward reward) {
+        return ResponseEntity.ok(gamificationService.createReward(reward));
+    }
+
+    @PutMapping("/admin/gamification/rewards/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Reward> updateReward(
+            @PathVariable Long id,
+            @RequestBody Reward reward) {
+        return ResponseEntity.ok(gamificationService.updateReward(id, reward));
+    }
+
+    @DeleteMapping("/admin/gamification/rewards/{id}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Void> deleteReward(@PathVariable Long id) {
+        gamificationService.deleteReward(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping("/admin/gamification/rewards/{id}/stock")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<Reward> updateRewardStock(
+            @PathVariable Long id,
+            @RequestBody Map<String, Integer> payload) {
+        Integer stock = payload.get("stock");
+        if (stock == null || stock < 0) {
+            return ResponseEntity.badRequest().build();
+        }
+        return ResponseEntity.ok(gamificationService.updateRewardStock(id, stock));
+    }
+
     // ============ NEW GAMIFICATION FEATURES ============
 
     /**

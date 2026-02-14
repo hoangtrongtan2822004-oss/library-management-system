@@ -215,7 +215,8 @@ h2 {
 
 .card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3),
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.3),
     0 2px 4px -1px rgba(0, 0, 0, 0.2);
 }
 
@@ -223,4 +224,45 @@ h2 {
 .btn-danger:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Accessibility helpers */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+:where(button, a, [role="button"]) :focus-visible,
+:where(button, a, [role="button"]):focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 3px;
+  box-shadow: 0 0 0 3px rgba(96, 165, 250, 0.12);
+}
+
+/* Focus styles for sortable column headers and action toolbar */
+.sortable[role="button"]:focus-visible,
+.action-toolbar :focus-visible,
+.card .btn:focus-visible {
+  outline: 3px solid #60a5fa;
+  outline-offset: 2px;
+}
+
+/* Make visually-hidden content visible when focused (for skip links) */
+.visually-hidden:focus,
+.sr-only:focus {
+  position: static !important;
+  width: auto !important;
+  height: auto !important;
+  margin: 0 !important;
+  clip: auto !important;
+  overflow: visible !important;
+  white-space: normal !important;
 }

@@ -1,10 +1,21 @@
-<div class="container mt-5">
+<main
+  id="wishlist-main"
+  class="container mt-5"
+  role="main"
+  aria-labelledby="wishlist-title"
+>
+  <h1 id="wishlist-title" class="visually-hidden">Danh Sách Yêu Thích</h1>
   <div class="d-flex align-items-center justify-content-between mb-4">
     <div class="d-flex align-items-center">
       <h2 class="text-danger fw-bold mb-0">
-        <i class="fa-solid fa-heart me-2"></i>Danh Sách Yêu Thích
+        <i class="fa-solid fa-heart me-2" aria-hidden="true"></i>Danh Sách Yêu
+        Thích
       </h2>
-      <span class="badge bg-secondary ms-3 fs-6" *ngIf="!isLoading">
+      <span
+        class="badge bg-secondary ms-3 fs-6"
+        *ngIf="!isLoading"
+        aria-live="polite"
+      >
         {{ wishlistItems.length }} cuốn sách
       </span>
     </div>
@@ -12,20 +23,25 @@
     <!-- Sorting Dropdown -->
     <div class="dropdown" *ngIf="!isLoading && wishlistItems.length > 0">
       <button
+        id="wishlist-sort-btn"
         class="btn btn-outline-secondary dropdown-toggle"
         type="button"
         data-bs-toggle="dropdown"
+        aria-haspopup="true"
+        aria-expanded="false"
       >
-        <i class="fa-solid fa-sort me-1"></i>Sắp xếp
+        <i class="fa-solid fa-sort me-1" aria-hidden="true"></i>Sắp xếp
       </button>
-      <ul class="dropdown-menu">
+      <ul class="dropdown-menu" aria-labelledby="wishlist-sort-btn">
         <li>
           <a
             class="dropdown-item"
             (click)="loadWishlist('recent')"
             [class.active]="currentSort === 'recent'"
+            role="menuitem"
+            aria-label="Sắp xếp mới nhất"
           >
-            <i class="fa-solid fa-clock me-2"></i>Mới nhất
+            <i class="fa-solid fa-clock me-2" aria-hidden="true"></i>Mới nhất
           </a>
         </li>
         <li>
@@ -33,8 +49,11 @@
             class="dropdown-item"
             (click)="loadWishlist('name')"
             [class.active]="currentSort === 'name'"
+            role="menuitem"
+            aria-label="Sắp xếp theo tên"
           >
-            <i class="fa-solid fa-arrow-down-a-z me-2"></i>Tên sách A-Z
+            <i class="fa-solid fa-arrow-down-a-z me-2" aria-hidden="true"></i
+            >Tên sách A-Z
           </a>
         </li>
       </ul>
@@ -57,16 +76,18 @@
   <!-- Empty State -->
   <div
     *ngIf="!isLoading && wishlistItems.length === 0"
-    class="text-center py-5 bg-light rounded border"
+    class="empty-state shadow-sm"
   >
-    <i class="fa-regular fa-heart fa-4x text-muted mb-3"></i>
-    <h4 class="text-muted">Danh sách yêu thích đang trống</h4>
-    <p class="mb-4">
+    <div class="display-5 mb-3">💖</div>
+    <h4 class="fw-semibold">Danh sách yêu thích đang trống</h4>
+    <p class="mb-3 text-muted">
       Hãy thêm những cuốn sách bạn quan tâm vào đây để xem lại sau.
     </p>
-    <a routerLink="/borrow-book" class="btn btn-primary">
-      <i class="fa-solid fa-search me-2"></i>Tìm Sách Ngay
-    </a>
+    <div class="empty-action">
+      <a routerLink="/borrow-book" class="btn btn-primary">
+        <i class="fa-solid fa-search me-2"></i>Tìm Sách Ngay
+      </a>
+    </div>
   </div>
 
   <!-- Wishlist Items -->
@@ -74,7 +95,10 @@
     <div class="col-md-3 col-sm-6" *ngFor="let item of wishlistItems">
       <div class="card h-100 shadow-sm border-0 hover-card">
         <div class="position-relative">
-          <a [routerLink]="['/books', item.bookId]">
+          <a
+            [routerLink]="['/books', item.bookId]"
+            [attr.aria-label]="'Xem chi tiết ' + item.bookName"
+          >
             <img
               [src]="item.coverUrl || 'assets/images/placeholder.png'"
               class="card-img-top"
@@ -85,18 +109,22 @@
 
           <!-- Availability Badge -->
           <span
-            [class]="getAvailabilityClass(item.availableCopies)"
-            class="position-absolute top-0 start-0 m-2"
+            [class]="
+              'position-absolute top-0 start-0 m-2 ' +
+              getAvailabilityClass(item.availableCopies)
+            "
           >
             {{ getAvailabilityText(item.availableCopies) }}
           </span>
 
           <button
+            type="button"
             class="btn btn-danger btn-sm position-absolute top-0 end-0 m-2 rounded-circle shadow"
             (click)="remove(item.bookId)"
             title="Bỏ thích"
+            [attr.aria-label]="'Bỏ thích ' + item.bookName"
           >
-            <i class="fa-solid fa-times"></i>
+            <i class="fa-solid fa-times" aria-hidden="true"></i>
           </button>
         </div>
 
@@ -105,6 +133,7 @@
             <a
               [routerLink]="['/books', item.bookId]"
               class="text-decoration-none text-dark fw-bold"
+              [attr.aria-label]="'Xem chi tiết ' + item.bookName"
             >
               {{ item.bookName }}
             </a>
@@ -131,10 +160,16 @@
                 Chưa có ghi chú
               </p>
               <button
+                type="button"
                 class="btn btn-link btn-sm p-0 text-decoration-none"
                 (click)="startEditNotes(item)"
+                [attr.aria-label]="
+                  item.notes
+                    ? 'Sửa ghi chú ' + item.bookName
+                    : 'Thêm ghi chú cho ' + item.bookName
+                "
               >
-                <i class="fa-solid fa-edit me-1"></i
+                <i class="fa-solid fa-edit me-1" aria-hidden="true"></i
                 >{{ item.notes ? "Sửa" : "Thêm ghi chú" }}
               </button>
             </div>
@@ -147,14 +182,18 @@
               ></textarea>
               <div class="d-flex gap-2">
                 <button
+                  type="button"
                   class="btn btn-success btn-sm"
                   (click)="saveNotes(item)"
+                  aria-label="Lưu ghi chú cho {{ item.bookName }}"
                 >
-                  <i class="fa-solid fa-check"></i> Lưu
+                  <i class="fa-solid fa-check" aria-hidden="true"></i> Lưu
                 </button>
                 <button
+                  type="button"
                   class="btn btn-secondary btn-sm"
                   (click)="cancelEditNotes(item.bookId)"
+                  aria-label="Hủy chỉnh sửa ghi chú"
                 >
                   Hủy
                 </button>
@@ -165,18 +204,25 @@
           <!-- Action Buttons -->
           <div class="d-flex gap-2 mt-auto">
             <button
+              type="button"
               class="btn btn-primary btn-sm grow"
               (click)="borrowBook(item)"
               [disabled]="item.availableCopies <= 0"
+              [attr.aria-label]="
+                item.availableCopies > 0
+                  ? 'Mượn ' + item.bookName
+                  : item.bookName + ' đã hết'
+              "
             >
-              <i class="fa-solid fa-book me-1"></i>
+              <i class="fa-solid fa-book me-1" aria-hidden="true"></i>
               {{ item.availableCopies > 0 ? "Mượn ngay" : "Đã hết" }}
             </button>
             <a
               [routerLink]="['/books', item.bookId]"
               class="btn btn-outline-secondary btn-sm"
+              [attr.aria-label]="'Xem chi tiết ' + item.bookName"
             >
-              <i class="fa-solid fa-info-circle"></i>
+              <i class="fa-solid fa-info-circle" aria-hidden="true"></i>
             </a>
           </div>
         </div>
@@ -188,4 +234,4 @@
       </div>
     </div>
   </div>
-</div>
+</main>

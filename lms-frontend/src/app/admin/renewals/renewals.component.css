@@ -99,3 +99,60 @@ tr.table-info {
     padding: 0.25rem 0.4rem;
   }
 }
+
+/* Page toolbar */
+.page-toolbar {
+  gap: 0.5rem;
+}
+
+/* Compact table */
+.table-sm td,
+.table-sm th {
+  padding: 0.35rem 0.5rem;
+}
+
+/* Mobile: render rows as cards for readability */
+@media (max-width: 767.98px) {
+  .table-responsive table thead {
+    display: none;
+  }
+
+  .table-responsive table tbody tr {
+    display: block;
+    border: 1px solid rgba(0, 0, 0, 0.06);
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  .table-responsive table tbody tr td {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border: none;
+  }
+
+  .table-responsive table tbody tr td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    margin-right: 6px;
+    color: #adb5bd;
+  }
+
+  .btn-group-vertical {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .btn-group-vertical .btn {
+    flex: 1 1 auto;
+    white-space: nowrap;
+  }
+
+  .reason-box {
+    max-width: 220px;
+  }
+}

@@ -1,36 +1,36 @@
 package com.ibizabroker.lms.controller;
 
+import com.ibizabroker.lms.dto.NotificationDto;
+import com.ibizabroker.lms.service.NotificationService;
+import java.util.List;
+import java.util.Map;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Notification Controller - Basic implementation
  */
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class NotificationController {
+
+    private final NotificationService notificationService;
 
     /**
      * Get user notifications
      */
     @GetMapping("/user/notifications")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<List<Map<String, Object>>> getNotifications(
+    public ResponseEntity<List<NotificationDto>> getNotifications(
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(defaultValue = "10") int limit) {
-        
-        // TODO: Implement real notification system with database
-        // For now, return empty list
-        List<Map<String, Object>> notifications = new ArrayList<>();
-        
+        List<NotificationDto> notifications = notificationService
+                .getUserNotifications(userDetails.getUsername(), limit);
         return ResponseEntity.ok(notifications);
     }
 
@@ -39,9 +39,9 @@ public class NotificationController {
      */
     @GetMapping("/user/notifications/unread-count")
     @PreAuthorize("hasRole('USER')")
-    public ResponseEntity<Map<String, Integer>> getUnreadCount(@AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: Implement real count from database
-        return ResponseEntity.ok(Map.of("count", 0));
+    public ResponseEntity<Map<String, Long>> getUnreadCount(@AuthenticationPrincipal UserDetails userDetails) {
+        long count = notificationService.getUnreadCount(userDetails.getUsername());
+        return ResponseEntity.ok(Map.of("count", count));
     }
 
     /**
@@ -52,8 +52,7 @@ public class NotificationController {
     public ResponseEntity<Map<String, String>> markAsRead(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable Long id) {
-        
-        // TODO: Implement mark as read
+        notificationService.markAsRead(id, userDetails.getUsername());
         return ResponseEntity.ok(Map.of("message", "Marked as read"));
     }
 
@@ -63,7 +62,7 @@ public class NotificationController {
     @PutMapping("/user/notifications/read-all")
     @PreAuthorize("hasRole('USER')")
     public ResponseEntity<Map<String, String>> markAllAsRead(@AuthenticationPrincipal UserDetails userDetails) {
-        // TODO: Implement mark all as read
+        notificationService.markAllAsRead(userDetails.getUsername());
         return ResponseEntity.ok(Map.of("message", "All marked as read"));
     }
 }

@@ -9,9 +9,17 @@ import {
 import { Router } from '@angular/router';
 import { UsersService } from '../services/users.service';
 import { HttpErrorResponse } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { ToastrService } from 'ngx-toastr';
 import { Observable, of, timer } from 'rxjs';
 import { map, catchError, switchMap } from 'rxjs/operators';
+import {
+  SocialAuthService,
+  GoogleLoginProvider,
+  SocialUser,
+} from '@abacritt/angularx-social-login';
+import { UserAuthService } from '../services/user-auth.service';
+import { environment } from 'src/environments/environment';
 
 @Component({
   selector: 'app-signup',
@@ -44,6 +52,9 @@ export class SignupComponent implements OnInit {
     private usersService: UsersService,
     private router: Router,
     private toastr: ToastrService,
+    private http: HttpClient,
+    private socialAuthService: SocialAuthService,
+    private userAuth: UserAuthService,
   ) {
     // Initialize Reactive Form
     this.signupForm = this.fb.group(
@@ -94,6 +105,12 @@ export class SignupComponent implements OnInit {
     // Watch password changes for strength meter
     this.signupForm.get('password')?.valueChanges.subscribe((password) => {
       this.updatePasswordStrength(password || '');
+    });
+
+    this.socialAuthService.authState.subscribe((user) => {
+      if (user) {
+        this.handleGoogleLogin(user);
+      }
     });
   }
 
@@ -304,6 +321,92 @@ export class SignupComponent implements OnInit {
         this.isLoading = false;
       },
     });
+  }
+
+  signUpWithGoogle(): void {
+    if (!environment.googleClientId) {
+      this.toastr.error('Chưa cấu hình Google Client ID.');
+      return;
+    }
+    this.isLoading = true;
+    this.socialAuthService
+      .signIn(GoogleLoginProvider.PROVIDER_ID)
+      .catch((err) => {
+        console.error('Google login failed:', err);
+        this.toastr.error('Đăng ký Google thất bại');
+        this.isLoading = false;
+      });
+  }
+
+  private safeDecodeJwt(jwt: string): any {
+    try {
+      const base64Url = jwt.split('.')[1];
+      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split('')
+          .map(function (c) {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+          })
+          .join(''),
+      );
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      console.error('Lỗi decode JWT:', e);
+      return {};
+    }
+  }
+
+  private handleGoogleLogin(socialUser: SocialUser): void {
+    const payload = {
+      email: socialUser.email,
+      name: socialUser.name,
+      googleId: socialUser.id,
+      picture: socialUser.photoUrl,
+    };
+
+    this.http
+      .post<any>(`${environment.apiBaseUrl}/auth/google`, payload)
+      .subscribe({
+        next: (res) => {
+          const token = res.token;
+          if (!token) {
+            this.toastr.error('Không nhận được token từ server.');
+            this.isLoading = false;
+            return;
+          }
+
+          this.userAuth.setToken(token);
+
+          const payloadJwt = this.safeDecodeJwt(token);
+          const name = res?.name ?? payloadJwt?.name ?? payloadJwt?.sub ?? '';
+          const id = Number(
+            res?.userId ?? payloadJwt?.userId ?? payloadJwt?.id ?? 0,
+          );
+          const rawRoles = res?.roles ?? payloadJwt?.roles ?? res?.role ?? [];
+          const roles = (Array.isArray(rawRoles) ? rawRoles : [rawRoles])
+            .map((r: any) =>
+              typeof r === 'string'
+                ? r.toUpperCase()
+                : r?.authority?.toUpperCase() || '',
+            )
+            .filter(Boolean)
+            .map((r: string) => (r.startsWith('ROLE_') ? r : `ROLE_${r}`));
+
+          if (name) this.userAuth.setName(name);
+          if (!Number.isNaN(id) && id > 0) this.userAuth.setUserId(id);
+          this.userAuth.setRoles(roles);
+
+          const isAdmin = roles.includes('ROLE_ADMIN');
+          this.router.navigateByUrl(isAdmin ? '/admin/dashboard' : '/');
+        },
+        error: (err) => {
+          console.error('Backend Google auth error:', err);
+          this.toastr.error(err.error?.error || 'Đăng ký Google thất bại');
+          this.isLoading = false;
+        },
+        complete: () => (this.isLoading = false),
+      });
   }
 
   public toggleShowPassword(): void {

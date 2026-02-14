@@ -1,9 +1,33 @@
 <div class="container py-4">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">🗂️ Quản lý Danh mục Pro</h2>
-    <a class="btn btn-outline-secondary" routerLink="/books"
-      ><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách sách</a
-    >
+    <div>
+      <h2 class="mb-0">🗂️ Quản lý Danh mục Pro</h2>
+      <p class="text-muted small mb-0">
+        Tạo, sắp xếp và quản lý danh mục sách. Hỗ trợ hierarchy, màu sắc và xóa
+        an toàn.
+      </p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <div class="page-toolbar d-flex gap-2 align-items-center">
+        <button
+          class="btn btn-outline-secondary btn-sm"
+          disabled
+          title="Import (coming soon)"
+        >
+          <i class="fa-solid fa-file-import me-1"></i> Import
+        </button>
+        <button
+          class="btn btn-outline-secondary btn-sm"
+          disabled
+          title="Export (coming soon)"
+        >
+          <i class="fa-solid fa-file-export me-1"></i> Export
+        </button>
+      </div>
+      <a class="btn btn-outline-secondary" routerLink="/books"
+        ><i class="fa-solid fa-arrow-left"></i> Quay lại danh sách sách</a
+      >
+    </div>
   </div>
 
   <!-- Migration Modal (Safe Delete) -->
@@ -121,141 +145,146 @@
 
   <div *ngIf="isLoading" class="text-muted">Đang tải...</div>
 
-  <table class="table table-hover" *ngIf="!isLoading">
-    <thead>
-      <tr>
-        <th style="width: 80px">ID</th>
-        <th style="width: 60px">Icon</th>
-        <th>Tên (Tree View)</th>
-        <th style="width: 100px">Số sách</th>
-        <th style="width: 120px">Màu & Preview</th>
-        <th style="width: 150px">Danh mục cha</th>
-        <th style="width: 280px">Hành động</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr *ngFor="let c of buildTreeData()" [class]="getIndentClass(c)">
-        <td>{{ c.id }}</td>
-        <td class="text-center">
-          <ng-container
-            *ngIf="!editing || editing.id !== c.id; else editIconTpl"
-          >
-            <i
-              [class]="c.iconClass || 'fa-solid fa-book'"
-              [style.color]="c.color || '#6c757d'"
-              class="fs-5"
-            ></i>
-          </ng-container>
-          <ng-template #editIconTpl>
-            <select
-              class="form-select form-select-sm"
-              [(ngModel)]="editing!.iconClass"
+  <div *ngIf="!isLoading" class="table-responsive">
+    <table class="table table-hover table-sm" *ngIf="!isLoading">
+      <thead>
+        <tr>
+          <th style="width: 80px">ID</th>
+          <th style="width: 60px">Icon</th>
+          <th>Tên (Tree View)</th>
+          <th style="width: 100px">Số sách</th>
+          <th style="width: 120px">Màu & Preview</th>
+          <th style="width: 150px">Danh mục cha</th>
+          <th style="width: 280px">Hành động</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of buildTreeData()" [class]="getIndentClass(c)">
+          <td>{{ c.id }}</td>
+          <td class="text-center">
+            <ng-container
+              *ngIf="!editing || editing.id !== c.id; else editIconTpl"
             >
-              <option value="fa-solid fa-book">📚</option>
-              <option value="fa-solid fa-laptop-code">💻</option>
-              <option value="fa-solid fa-flask">🧪</option>
-              <option value="fa-solid fa-palette">🎨</option>
-              <option value="fa-solid fa-briefcase">💼</option>
-              <option value="fa-solid fa-heart">❤️</option>
-              <option value="fa-solid fa-ghost">👻</option>
-              <option value="fa-solid fa-star">⭐</option>
-            </select>
-          </ng-template>
-        </td>
-        <td>
-          <ng-container
-            *ngIf="!editing || editing.id !== c.id; else editNameTpl"
-          >
-            <span *ngIf="c.parentId" class="tree-indent">└─</span>
-            {{ c.name }}
-          </ng-container>
-          <ng-template #editNameTpl>
-            <input
-              class="form-control form-control-sm"
-              [(ngModel)]="editing!.name"
-            />
-          </ng-template>
-        </td>
-        <td class="text-center">
-          <span
-            class="badge"
-            [class.bg-success]="(c.bookCount || 0) > 0"
-            [class.bg-secondary]="(c.bookCount || 0) === 0"
-            [title]="(c.bookCount || 0) + ' cuốn sách'"
-          >
-            {{ c.bookCount || 0 }} <i class="fa-solid fa-book-open ms-1"></i>
-          </span>
-        </td>
-        <td>
-          <ng-container
-            *ngIf="!editing || editing.id !== c.id; else editColorTpl"
-          >
-            <span class="badge" [style.backgroundColor]="c.color || '#6c757d'">
-              <i [class]="c.iconClass || 'fa-solid fa-book'"></i> {{ c.name }}
-            </span>
-          </ng-container>
-          <ng-template #editColorTpl>
-            <input
-              type="color"
-              class="form-control form-control-color"
-              [(ngModel)]="editing!.color"
-            />
-          </ng-template>
-        </td>
-        <td>
-          <ng-container
-            *ngIf="!editing || editing.id !== c.id; else editParentTpl"
-          >
-            <span *ngIf="c.parentId" class="text-muted small">
-              {{ getParentName(c.parentId) }}
-            </span>
-            <span *ngIf="!c.parentId" class="badge bg-info">Root</span>
-          </ng-container>
-          <ng-template #editParentTpl>
-            <select
-              class="form-select form-select-sm"
-              [(ngModel)]="editing!.parentId"
+              <i
+                [class]="c.iconClass || 'fa-solid fa-book'"
+                [style.color]="c.color || '#6c757d'"
+                class="fs-5"
+              ></i>
+            </ng-container>
+            <ng-template #editIconTpl>
+              <select
+                class="form-select form-select-sm"
+                [(ngModel)]="editing!.iconClass"
+              >
+                <option value="fa-solid fa-book">📚</option>
+                <option value="fa-solid fa-laptop-code">💻</option>
+                <option value="fa-solid fa-flask">🧪</option>
+                <option value="fa-solid fa-palette">🎨</option>
+                <option value="fa-solid fa-briefcase">💼</option>
+                <option value="fa-solid fa-heart">❤️</option>
+                <option value="fa-solid fa-ghost">👻</option>
+                <option value="fa-solid fa-star">⭐</option>
+              </select>
+            </ng-template>
+          </td>
+          <td>
+            <ng-container
+              *ngIf="!editing || editing.id !== c.id; else editNameTpl"
             >
-              <option [value]="null">-- Root --</option>
-              <option *ngFor="let p of getParentCategories()" [value]="p.id">
-                {{ p.name }}
-              </option>
-            </select>
-          </ng-template>
-        </td>
-        <td>
-          <ng-container
-            *ngIf="!editing || editing.id !== c.id; else editingBtns"
-          >
-            <div class="btn-group btn-group-sm">
-              <button
-                class="btn btn-primary"
-                (click)="startEdit(c)"
-                [disabled]="isDeleting"
+              <span *ngIf="c.parentId" class="tree-indent">└─</span>
+              {{ c.name }}
+            </ng-container>
+            <ng-template #editNameTpl>
+              <input
+                class="form-control form-control-sm"
+                [(ngModel)]="editing!.name"
+              />
+            </ng-template>
+          </td>
+          <td class="text-center">
+            <span
+              class="badge"
+              [class.bg-success]="(c.bookCount || 0) > 0"
+              [class.bg-secondary]="(c.bookCount || 0) === 0"
+              [title]="(c.bookCount || 0) + ' cuốn sách'"
+            >
+              {{ c.bookCount || 0 }} <i class="fa-solid fa-book-open ms-1"></i>
+            </span>
+          </td>
+          <td>
+            <ng-container
+              *ngIf="!editing || editing.id !== c.id; else editColorTpl"
+            >
+              <span
+                class="badge"
+                [style.backgroundColor]="c.color || '#6c757d'"
               >
-                <i class="fa-solid fa-pen"></i> Sửa
-              </button>
-              <button
-                class="btn btn-danger"
-                (click)="promptDelete(c)"
-                [disabled]="isDeleting"
+                <i [class]="c.iconClass || 'fa-solid fa-book'"></i> {{ c.name }}
+              </span>
+            </ng-container>
+            <ng-template #editColorTpl>
+              <input
+                type="color"
+                class="form-control form-control-color"
+                [(ngModel)]="editing!.color"
+              />
+            </ng-template>
+          </td>
+          <td>
+            <ng-container
+              *ngIf="!editing || editing.id !== c.id; else editParentTpl"
+            >
+              <span *ngIf="c.parentId" class="text-muted small">
+                {{ getParentName(c.parentId) }}
+              </span>
+              <span *ngIf="!c.parentId" class="badge bg-info">Root</span>
+            </ng-container>
+            <ng-template #editParentTpl>
+              <select
+                class="form-select form-select-sm"
+                [(ngModel)]="editing!.parentId"
               >
-                <i class="fa-solid fa-shield-halved"></i> Xóa an toàn
-              </button>
-            </div>
-          </ng-container>
-          <ng-template #editingBtns>
-            <div class="btn-group btn-group-sm">
-              <button class="btn btn-success" (click)="saveEdit()">
-                <i class="fa-solid fa-check"></i> Lưu
-              </button>
-              <button class="btn btn-secondary" (click)="cancelEdit()">
-                <i class="fa-solid fa-xmark"></i> Huỷ
-              </button>
-            </div>
-          </ng-template>
-        </td>
-      </tr>
-    </tbody>
-  </table>
+                <option [value]="null">-- Root --</option>
+                <option *ngFor="let p of getParentCategories()" [value]="p.id">
+                  {{ p.name }}
+                </option>
+              </select>
+            </ng-template>
+          </td>
+          <td>
+            <ng-container
+              *ngIf="!editing || editing.id !== c.id; else editingBtns"
+            >
+              <div class="btn-group btn-group-sm">
+                <button
+                  class="btn btn-primary"
+                  (click)="startEdit(c)"
+                  [disabled]="isDeleting"
+                >
+                  <i class="fa-solid fa-pen"></i> Sửa
+                </button>
+                <button
+                  class="btn btn-danger"
+                  (click)="promptDelete(c)"
+                  [disabled]="isDeleting"
+                >
+                  <i class="fa-solid fa-shield-halved"></i> Xóa an toàn
+                </button>
+              </div>
+            </ng-container>
+            <ng-template #editingBtns>
+              <div class="btn-group btn-group-sm">
+                <button class="btn btn-success" (click)="saveEdit()">
+                  <i class="fa-solid fa-check"></i> Lưu
+                </button>
+                <button class="btn btn-secondary" (click)="cancelEdit()">
+                  <i class="fa-solid fa-xmark"></i> Huỷ
+                </button>
+              </div>
+            </ng-template>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
 </div>

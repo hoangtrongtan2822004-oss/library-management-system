@@ -334,3 +334,28 @@ input[type="number"]::-webkit-outer-spin-button {
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
+
+/* Visually hidden (screen-reader only) */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Make the upload label have an accessible focus state */
+label[for="coverUpload"],
+.btn[aria-controls="coverUpload"] {
+  cursor: pointer;
+}
+
+label[for="coverUpload"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  border-radius: 6px;
+}

@@ -1,0 +1,139 @@
+<div class="container mt-4">
+  <div class="card bg-dark text-white border-secondary shadow">
+    <div
+      class="card-header d-flex flex-wrap gap-2 align-items-center justify-content-between"
+    >
+      <div class="d-flex align-items-center gap-3">
+        <h4 class="mb-0">
+          <i class="fa-solid fa-clipboard-list me-2"></i>Audit Logs
+        </h4>
+        <span class="badge badge-total"
+          >Total: {{ logsPage?.totalElements || 0 }}</span
+        >
+      </div>
+      <div class="d-flex gap-2 align-items-center">
+        <button class="btn btn-sm btn-outline-light" (click)="resetFilters()">
+          <i class="fa-solid fa-rotate-left"></i> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="card-body border-bottom border-secondary">
+      <div class="row g-2 audit-filters filters-row">
+        <div class="col-md-3">
+          <label class="form-label small">Actor</label>
+          <input
+            class="form-control form-control-sm bg-dark text-white"
+            [(ngModel)]="actor"
+          />
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small">Action</label>
+          <input
+            class="form-control form-control-sm bg-dark text-white"
+            [(ngModel)]="action"
+          />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small">Status</label>
+          <select
+            class="form-select form-select-sm bg-dark text-white"
+            [(ngModel)]="status"
+          >
+            <option value="">All</option>
+            <option value="SUCCESS">SUCCESS</option>
+            <option value="FAIL">FAIL</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small">From</label>
+          <input
+            type="date"
+            class="form-control form-control-sm bg-dark text-white"
+            [(ngModel)]="from"
+          />
+        </div>
+        <div class="col-md-2">
+          <label class="form-label small">To</label>
+          <input
+            type="date"
+            class="form-control form-control-sm bg-dark text-white"
+            [(ngModel)]="to"
+          />
+        </div>
+      </div>
+      <div class="d-flex justify-content-end mt-3">
+        <button class="btn btn-primary btn-sm" (click)="applyFilters()">
+          <i class="fa-solid fa-filter"></i> Apply
+        </button>
+      </div>
+    </div>
+
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-dark table-striped table-hover mb-0">
+          <thead>
+            <tr>
+              <th>Time</th>
+              <th>Actor</th>
+              <th>Message</th>
+              <th>Path</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngIf="isLoading">
+              <td colspan="5" class="text-center text-muted">Loading...</td>
+            </tr>
+            <tr *ngFor="let log of logsPage?.content">
+              <td>{{ log.createdAt || "-" }}</td>
+              <td>
+                <div class="fw-semibold">{{ log.actor || "-" }}</div>
+                <div class="small text-muted">{{ log.actorRoles || "" }}</div>
+              </td>
+              <td>
+                <div class="fw-semibold">{{ buildMessage(log) }}</div>
+                <div class="small text-muted">
+                  {{ log.httpMethod }} {{ log.resource }}
+                </div>
+              </td>
+              <td class="small text-muted">{{ log.path }}</td>
+              <td>
+                <span [class]="getStatusClass(log.status)">{{
+                  log.status
+                }}</span>
+              </td>
+            </tr>
+            <tr
+              *ngIf="!isLoading && (!logsPage || logsPage.content.length === 0)"
+            >
+              <td colspan="5" class="text-center text-muted">No logs found.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card-footer d-flex justify-content-between align-items-center">
+      <span class="small text-muted">
+        Page {{ page + 1 }} / {{ logsPage?.totalPages || 1 }}
+      </span>
+      <div class="btn-group">
+        <button
+          class="btn btn-sm btn-outline-light"
+          (click)="prevPage()"
+          [disabled]="page === 0"
+        >
+          Prev
+        </button>
+        <button
+          class="btn btn-sm btn-outline-light"
+          (click)="nextPage()"
+          [disabled]="!logsPage || page + 1 >= logsPage.totalPages"
+        >
+          Next
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

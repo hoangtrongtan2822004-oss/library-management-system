@@ -38,5 +38,7 @@ public interface UsersRepository extends JpaRepository<Users, Integer> {
 
     boolean existsByUsernameIgnoreCase(String username);
 
-       Optional<Users> findByEmailIgnoreCase(String email);
+       Optional<Users> findFirstByEmailIgnoreCaseOrderByUserIdAsc(String email);
+
+       Optional<Users> findByGoogleId(String googleId);
 }

@@ -214,10 +214,14 @@ export class HomeComponent implements OnInit, OnDestroy {
     const userId = this.userAuthService.getUserId();
 
     if (userId) {
-      // TODO: Enable AI recommendations when Gemini API key is configured
-      // For now, use fallback recommendations
-      console.info('AI recommendations disabled, using fallback');
-      this.recommendedBooks$ = this.getFallbackRecommendations();
+      this.recommendedBooks$ = this.booksService.getRecommendations(6).pipe(
+        switchMap((books) =>
+          books && books.length > 0
+            ? of(books)
+            : this.getFallbackRecommendations(),
+        ),
+        catchError(() => this.getFallbackRecommendations()),
+      );
 
       /* ✨ AI-POWERED VERSION (requires GEMINI_API_KEY):
       const apiUrl = this.apiService.getBaseUrl();

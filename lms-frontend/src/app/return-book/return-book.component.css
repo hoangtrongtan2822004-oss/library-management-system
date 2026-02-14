@@ -375,6 +375,7 @@
   display: flex;
   padding: 0.75rem 0;
   border-bottom: 1px solid #f3f4f6;
+  color: #1f2937;
 }
 
 .info-item:last-child {
@@ -488,6 +489,59 @@
   transition: all 0.3s ease;
   background: white;
   text-align: center;
+  color: #1f2937;
+}
+
+.condition-card .form-check {
+  margin: 0;
+}
+
+.condition-card .form-check-label {
+  color: #1f2937;
+  display: block;
+  cursor: pointer;
+}
+
+.condition-card .form-check-label strong {
+  color: #111827;
+}
+
+.condition-card .form-check-label small {
+  color: #6b7280 !important;
+}
+
+.condition-content {
+  text-align: left;
+}
+
+.condition-title-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 0.2rem;
+  color: #111827;
+}
+
+.condition-example {
+  color: #4b5563 !important;
+}
+
+.condition-recommendation {
+  color: #1d4ed8 !important;
+  font-weight: 600;
+}
+
+.condition-when-to-use {
+  color: #7c2d12 !important;
+  font-weight: 600;
+}
+
+.final-confirm-modal .modal-body p {
+  color: #1f2937;
+}
+
+.final-confirm-modal .modal-title {
+  color: #92400e;
+  font-weight: 700;
 }
 
 .condition-card:hover {
@@ -561,6 +615,27 @@
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.fine-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 0;
+  color: #1f2937;
+}
+
+.fine-item span {
+  color: #374151;
+}
+
+.fine-item strong {
+  color: #dc2626;
+}
+
+.fine-total {
+  padding-top: 0.25rem;
 }
 
 .fine-breakdown table {
@@ -770,4 +845,28 @@
   .table tbody tr:hover {
     background-color: transparent !important;
   }
+}
+
+/* Accessibility focus helpers */
+.sr-only,
+.visually-hidden {
+  position: absolute !important;
+  height: 1px;
+  width: 1px;
+  overflow: hidden;
+  clip: rect(1px, 1px, 1px, 1px);
+  white-space: nowrap;
+}
+
+/* Focus-visible ring for keyboard users */
+button:focus,
+input:focus,
+.condition-card:focus {
+  outline: 3px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+}
+
+/* Make condition cards keyboard-focusable */
+.condition-card {
+  /* tabindex must be set in HTML, not CSS */
 }

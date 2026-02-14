@@ -437,3 +437,14 @@
 html {
   scroll-behavior: smooth;
 }
+
+/* Accessibility focus styles */
+.rule-header:focus,
+.faq-header:focus {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+.rule-header {
+  cursor: pointer;
+}

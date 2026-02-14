@@ -44,6 +44,7 @@ public class BookUpdateDto {
     private String isbn;
     
     private String coverUrl;
+    private String shelfCode;
     private Set<Integer> authorIds;
     private Set<Integer> categoryIds;
 }

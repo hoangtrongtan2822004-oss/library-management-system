@@ -3,6 +3,7 @@ package com.ibizabroker.lms.service;
 import com.ibizabroker.lms.dao.AuthorRepository;
 import com.ibizabroker.lms.dao.BooksRepository;
 import com.ibizabroker.lms.dao.CategoryRepository;
+import com.ibizabroker.lms.dao.LoanRepository;
 import com.ibizabroker.lms.dto.BookCreateDto;
 import com.ibizabroker.lms.dto.BookUpdateDto;
 import com.ibizabroker.lms.entity.Author;
@@ -29,6 +30,7 @@ public class BookService {
     private final BooksRepository booksRepository;
     private final AuthorRepository authorRepository;
     private final CategoryRepository categoryRepository;
+    private final LoanRepository loanRepository;
 
     /**
      * ⚠️ DEPRECATED: Use getAllBooks(Pageable) instead
@@ -82,6 +84,13 @@ public class BookService {
     }
     
     @Transactional(readOnly = true)
+    public List<Books> getBooksByIds(List<Integer> ids) {
+        if (ids == null || ids.isEmpty()) return List.of();
+        // JpaRepository provides findAllById which accepts Iterable<Integer>
+        return booksRepository.findAllById(ids).stream().toList();
+    }
+    
+    @Transactional(readOnly = true)
     public List<Author> getAllAuthors() {
         return authorRepository.findAll();
     }
@@ -106,6 +115,7 @@ public class BookService {
         book.setPublishedYear(dto.getPublishedYear());
         book.setIsbn(dto.getIsbn());
         book.setCoverUrl(dto.getCoverUrl());
+        book.setShelfCode(dto.getShelfCode());
 
         Set<Author> authors = authorRepository.findByIdIn(dto.getAuthorIds());
         if(authors.size() != dto.getAuthorIds().size()) {
@@ -139,6 +149,7 @@ public class BookService {
         if (dto.getPublishedYear() != null) book.setPublishedYear(dto.getPublishedYear());
         if (dto.getIsbn() != null) book.setIsbn(dto.getIsbn());
         if (dto.getCoverUrl() != null) book.setCoverUrl(dto.getCoverUrl());
+        if (dto.getShelfCode() != null) book.setShelfCode(dto.getShelfCode());
 
         if (dto.getAuthorIds() != null && !dto.getAuthorIds().isEmpty()) {
             Set<Author> authors = authorRepository.findByIdIn(dto.getAuthorIds());
@@ -186,5 +197,54 @@ public class BookService {
     @Cacheable(value = "featured-books", key = "'top-10'")
     public List<Books> getFeaturedBooks() {
         return booksRepository.findNewestBooks(PageRequest.of(0, 10));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Books> getSimilarBooks(Integer bookId, int limit) {
+        Books book = getBookById(bookId);
+        List<Integer> categoryIds = book.getCategories().stream()
+                .map(Category::getId)
+                .toList();
+
+        if (categoryIds.isEmpty()) {
+            return getNewestBooks(PageRequest.of(0, limit));
+        }
+
+        return booksRepository.findSimilarBooks(bookId, categoryIds, PageRequest.of(0, limit));
+    }
+
+    @Transactional(readOnly = true)
+    public List<Books> getRecommendationsForUser(Integer userId, int limit) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId is required");
+        }
+
+        List<Integer> topCategoryIds = loanRepository.findTopCategoryIdsByMemberId(
+                userId,
+                PageRequest.of(0, 3));
+
+        if (topCategoryIds == null || topCategoryIds.isEmpty()) {
+            return getNewestBooks(PageRequest.of(0, limit));
+        }
+
+        List<Integer> excludeBookIds = loanRepository.findDistinctBookIdsByMemberId(userId);
+        List<Books> candidates;
+
+        if (excludeBookIds == null || excludeBookIds.isEmpty()) {
+            candidates = booksRepository.findByCategoryIds(
+                    topCategoryIds,
+                    PageRequest.of(0, limit));
+        } else {
+            candidates = booksRepository.findByCategoryIdsExcludingBookIds(
+                    topCategoryIds,
+                    excludeBookIds,
+                    PageRequest.of(0, limit));
+        }
+
+        if (candidates == null || candidates.isEmpty()) {
+            return getNewestBooks(PageRequest.of(0, limit));
+        }
+
+        return candidates;
     }
 }

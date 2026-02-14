@@ -3,6 +3,8 @@ package com.ibizabroker.lms.controller;
 import com.ibizabroker.lms.dto.ApiResponse;
 import com.ibizabroker.lms.exceptions.*;
 import jakarta.persistence.OptimisticLockException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -36,6 +38,8 @@ import java.util.stream.Collectors;
  */
 @RestControllerAdvice
 public class ApiExceptionHandler {
+
+        private static final Logger logger = LoggerFactory.getLogger(ApiExceptionHandler.class);
 
     /**
      * 🏗️ Handle BaseException - All custom exceptions
@@ -165,8 +169,7 @@ public class ApiExceptionHandler {
      */
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiResponse<Object>> handleGenericException(Exception ex) {
-        // TODO: Replace printStackTrace with proper logging (Log4j, SLF4J)
-        ex.printStackTrace();
+                logger.error("Unhandled exception", ex);
         
         ApiResponse<Object> response = ApiResponse.builder()
                 .success(false)

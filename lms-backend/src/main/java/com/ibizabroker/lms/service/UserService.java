@@ -103,8 +103,15 @@ public class UserService {
         dto.setUserId(user.getUserId());
         dto.setName(user.getName());
         dto.setUsername(user.getUsername());
+        dto.setActive(user.getActive());
         dto.setRoles(user.getRoles().stream().map(Role::getRoleName).collect(Collectors.toList()));
         return dto;
+    }
+
+    public Users updateUserStatus(Integer id, Boolean active) {
+        Users user = getUserById(id);
+        user.setActive(active);
+        return usersRepository.save(user);
     }
 
     private Set<Role> mapRoles(Set<String> roleNames) {

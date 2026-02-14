@@ -99,3 +99,85 @@
   transform: scale(1.05);
   transition: transform 0.2s ease;
 }
+
+/* Import-export UI enhancements */
+:root {
+  --ie-accent: #0d6efd;
+  --ie-muted: #6c757d;
+}
+
+.drop-zone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.file-info {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 110, 253, 0.03),
+    rgba(13, 110, 253, 0.01)
+  );
+  border: 1px solid rgba(13, 110, 253, 0.06);
+}
+
+.file-meta {
+  font-size: 0.9rem;
+  color: var(--ie-muted);
+}
+.file-meta strong {
+  color: #0b5ed7;
+}
+
+.mapping-badge {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  background: rgba(13, 110, 253, 0.12);
+  color: #054aa6;
+  font-weight: 600;
+  font-size: 0.85rem;
+}
+
+.progress-upload {
+  height: 10px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.06);
+}
+.progress-upload > .bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--ie-accent), #2a6df4);
+  transition: width 0.25s ease;
+}
+
+/* Preview table tweaks */
+.table-sm thead th {
+  position: sticky;
+  top: 0;
+  background: #fff;
+  z-index: 5;
+}
+.preview-controls {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+@media (max-width: 767.98px) {
+  .file-info {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .drop-zone {
+    padding: 2rem 1rem;
+  }
+}

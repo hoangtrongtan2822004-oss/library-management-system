@@ -1,6 +1,5 @@
 import { NgModule, NO_ERRORS_SCHEMA } from '@angular/core';
 import { ReactiveFormsModule } from '@angular/forms';
-
 import { BrowserModule } from '@angular/platform-browser';
 import { MarkdownModule } from 'ngx-markdown';
 import { SecurityContext } from '@angular/core';
@@ -48,11 +47,12 @@ import {
 } from '@angular/common';
 import { ToastrModule } from 'ngx-toastr';
 import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.component';
+import { AuditLogsComponent } from './admin/audit-logs/audit-logs.component';
+import { MemberCardsComponent } from './admin/member-cards/member-cards.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CreateUserComponent } from './create-user/create-user.component';
 import { ChatbotComponent } from './chatbot/chatbot.component';
-import { CreateLoanComponent } from './admin/create-loan/create-loan.component'; // Import
-// Import thư viện QR và Scanner
+import { CreateLoanComponent } from './admin/create-loan/create-loan.component';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
@@ -65,9 +65,12 @@ import { WishlistComponent } from './wishlist/wishlist.component';
 import {
   SocialLoginModule,
   GoogleLoginProvider,
+  SOCIAL_AUTH_CONFIG,
   SocialAuthServiceConfig,
+  GoogleSigninButtonModule,
 } from '@abacritt/angularx-social-login';
 import { SharedModule } from './shared/shared.module';
+import { environment } from '../environments/environment';
 
 @NgModule({
   declarations: [
@@ -93,6 +96,8 @@ import { SharedModule } from './shared/shared.module';
     ManageFinesComponent,
     ReportsComponent,
     ManageReviewsComponent,
+    AuditLogsComponent,
+    MemberCardsComponent,
     CreateUserComponent,
     CreateLoanComponent,
     ChatbotComponent,
@@ -120,10 +125,11 @@ import { SharedModule } from './shared/shared.module';
     QRCodeComponent,
     WishlistComponent,
     SharedModule,
+    SocialLoginModule,
+    GoogleSigninButtonModule,
     MarkdownModule.forRoot({
       sanitize: SecurityContext.HTML,
     }),
-    // SocialLoginModule, // Tạm tắt để fix lỗi
   ],
   providers: [
     AuthGuard,
@@ -144,29 +150,25 @@ import { SharedModule } from './shared/shared.module';
     },
     UsersService,
     BooksService,
-    // Tạm tắt Google Login để fix lỗi
-    // {
-    //   provide: 'SocialAuthServiceConfig',
-    //   useValue: {
-    //     autoLogin: false,
-    //     providers: [
-    //       {
-    //         id: GoogleLoginProvider.PROVIDER_ID,
-    //         provider: new GoogleLoginProvider(
-    //           '1086947846339-o9j7dfersslfn681jbdq6qelivervlft.apps.googleusercontent.com'
-    //         ),
-    //       },
-    //     ],
-    //     onError: (err: any) => {
-    //       console.error('Social auth error:', err);
-    //     },
-    //   } as SocialAuthServiceConfig,
-    // },
     UserAuthService,
     DatePipe,
     CurrencyPipe,
     UpperCasePipe,
     provideHttpClient(withInterceptorsFromDi()),
+    {
+      provide: SOCIAL_AUTH_CONFIG,
+      useValue: {
+        autoLogin: false,
+        providers: [
+          {
+            id: GoogleLoginProvider.PROVIDER_ID,
+            provider: new GoogleLoginProvider(environment.googleClientId, {
+              oneTapEnabled: false,
+            }),
+          },
+        ],
+      } as SocialAuthServiceConfig,
+    },
   ],
   schemas: [NO_ERRORS_SCHEMA],
   bootstrap: [AppComponent],

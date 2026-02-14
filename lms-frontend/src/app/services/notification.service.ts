@@ -8,7 +8,7 @@ export interface Notification {
   id: number;
   title: string;
   message: string;
-  type: 'info' | 'warning' | 'success' | 'error';
+  type: 'info' | 'warning' | 'success' | 'error' | 'urgent';
   isRead: boolean;
   createdAt: string;
   actionUrl?: string;
@@ -30,10 +30,24 @@ export class NotificationService {
   // Get user notifications
   getNotifications(limit: number = 10): Observable<Notification[]> {
     return this.http
-      .get<Notification[]>(`${this.apiUrl}/user/notifications`, {
+      .get<any[]>(`${this.apiUrl}/user/notifications`, {
         params: { limit: limit.toString() },
       })
       .pipe(
+        map((items) =>
+          items.map(
+            (n) =>
+              ({
+                id: n.notificationId ?? n.id,
+                title: n.title,
+                message: n.message,
+                type: (n.type || 'INFO').toString().toLowerCase(),
+                isRead: !!n.isRead,
+                createdAt: n.timestamp || n.createdAt,
+                actionUrl: n.actionUrl,
+              }) as Notification,
+          ),
+        ),
         catchError((err) => {
           console.warn('Failed to load notifications:', err);
           return of([]);
@@ -53,7 +67,7 @@ export class NotificationService {
 
   // Mark as read
   markAsRead(notificationId: number): Observable<void> {
-    return this.http.post<void>(
+    return this.http.put<void>(
       `${this.apiUrl}/user/notifications/${notificationId}/read`,
       {},
     );
@@ -61,7 +75,7 @@ export class NotificationService {
 
   // Mark all as read
   markAllAsRead(): Observable<void> {
-    return this.http.post<void>(
+    return this.http.put<void>(
       `${this.apiUrl}/user/notifications/read-all`,
       {},
     );

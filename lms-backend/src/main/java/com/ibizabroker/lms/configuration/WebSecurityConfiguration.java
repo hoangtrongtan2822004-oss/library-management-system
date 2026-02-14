@@ -31,6 +31,7 @@ import java.util.List;
 public class WebSecurityConfiguration {
 
     private final JwtRequestFilter jwtRequestFilter;
+    private final AdminAuditLogFilter adminAuditLogFilter;
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final UserDetailsService userDetailsService;
 
@@ -38,9 +39,11 @@ public class WebSecurityConfiguration {
     private String allowedOrigins;
 
     public WebSecurityConfiguration(JwtRequestFilter jwtRequestFilter,
+                                    AdminAuditLogFilter adminAuditLogFilter,
                                     JwtAuthenticationEntryPoint authenticationEntryPoint,
                                     UserDetailsService userDetailsService) {
         this.jwtRequestFilter = jwtRequestFilter;
+        this.adminAuditLogFilter = adminAuditLogFilter;
         this.authenticationEntryPoint = authenticationEntryPoint;
         this.userDetailsService = userDetailsService;
     }
@@ -127,7 +130,8 @@ public class WebSecurityConfiguration {
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
-            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class);
+            .addFilterBefore(jwtRequestFilter, UsernamePasswordAuthenticationFilter.class)
+            .addFilterAfter(adminAuditLogFilter, JwtRequestFilter.class);
 
         // 🔒 Security Headers: Chỉ cho phép H2 Console trong iframe (cùng origin), chặn Clickjacking
         http.headers(headers -> headers

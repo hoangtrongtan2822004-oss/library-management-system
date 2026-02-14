@@ -501,3 +501,205 @@
     max-width: 90%;
   }
 }
+
+/* Chatbot UI enhancements */
+.chat-fab {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 30px rgba(99, 102, 241, 0.18);
+}
+
+/* FAB wrapper + tooltip */
+.chat-fab-wrapper {
+  position: relative;
+  display: inline-block;
+}
+.fab-tooltip {
+  position: absolute;
+  right: 0;
+  top: -42px;
+  transform: translateY(6px);
+  background: rgba(15, 23, 42, 0.95);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease;
+  box-shadow: 0 6px 18px rgba(2, 6, 23, 0.4);
+  z-index: 1060;
+}
+.fab-tooltip::after {
+  content: "";
+  position: absolute;
+  right: 10px;
+  bottom: -6px;
+  border-width: 6px 6px 0 6px;
+  border-style: solid;
+  border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+}
+.chat-fab-wrapper:hover .fab-tooltip,
+.chat-fab-wrapper:focus-within .fab-tooltip {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hide tooltip on very small screens to avoid overlap */
+@media (max-width: 420px) {
+  .fab-tooltip {
+    display: none;
+  }
+}
+
+.chat-window {
+  width: 420px;
+  height: 580px;
+}
+
+.chat-header {
+  padding: 0.75rem 1rem;
+  gap: 0.5rem;
+}
+
+.header-title h5 {
+  color: #0f172a;
+  font-size: 1.05rem;
+}
+
+.header-actions .btn-action,
+.header-actions .btn-close {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 8px;
+  padding: 0.35rem 0.55rem;
+}
+
+.chat-body {
+  background: linear-gradient(180deg, #ffffff, #fbfdff);
+}
+
+/* Bot message bubble: slightly rounded card with subtle shadow */
+.message.bot p {
+  background: linear-gradient(180deg, #f8fafc, #eef2ff);
+  border: 1px solid rgba(99, 102, 241, 0.08);
+  color: #0f172a;
+  box-shadow: 0 6px 18px rgba(99, 102, 241, 0.06);
+}
+
+.message.user p {
+  background: linear-gradient(135deg, #6d28d9, #7c3aed);
+  color: #fff;
+  box-shadow: 0 6px 18px rgba(124, 58, 237, 0.12);
+}
+
+.feedback-btn {
+  min-width: 40px;
+  min-height: 32px;
+  border-radius: 8px;
+}
+
+.chip {
+  background: #eef2ff;
+  border-color: rgba(99, 102, 241, 0.12);
+  color: #3730a3;
+}
+
+.chip:hover {
+  transform: translateY(-2px);
+}
+
+/* Book card refinement inside messages */
+.book-card {
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+}
+.book-card-image {
+  width: 88px;
+  height: 120px;
+}
+.book-card-info .book-title {
+  font-size: 0.98rem;
+}
+.book-card-actions .btn-borrow {
+  background: linear-gradient(135deg, #7c3aed, #4f46e5);
+}
+
+/* Typing indicator visibility tweak */
+.typing-indicator span {
+  background-color: #4f46e5;
+}
+
+/* Footer: input rounded and elevated */
+.chat-footer {
+  padding: 0.6rem;
+  border-top: none;
+  background: linear-gradient(180deg, #ffffff, #f7fbff);
+}
+.chat-footer input {
+  border-radius: 999px;
+  padding-left: 1rem;
+}
+
+/* Mobile: full width FAB spacing */
+@media (max-width: 480px) {
+  .chat-fab {
+    right: 16px;
+    bottom: 16px;
+    width: 56px;
+    height: 56px;
+  }
+  .chat-window {
+    right: 8px;
+    bottom: 80px;
+    width: 92vw;
+    height: 70vh;
+  }
+}
+
+/* Subtle FAB pulse for discoverability */
+.chat-fab.pulse {
+  animation: chatbot-fab-pulse 2s ease-in-out;
+}
+
+@keyframes chatbot-fab-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.35);
+  }
+  50% {
+    transform: scale(1.06);
+    box-shadow: 0 10px 30px 6px rgba(102, 126, 234, 0.18);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(102, 126, 234, 0);
+  }
+}
+
+/* Shortcut hint bubble (created dynamically) */
+.chatbot-shortcut-hint {
+  position: fixed;
+  right: 20px;
+  bottom: 84px;
+  background: rgba(17, 24, 39, 0.9);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  z-index: 9999;
+  font-size: 0.95rem;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  opacity: 1;
+  transition:
+    opacity 0.6s ease,
+    transform 0.3s ease;
+  pointer-events: none;
+}
+
+.chatbot-shortcut-hint.fade-out {
+  opacity: 0;
+  transform: translateY(6px);
+}

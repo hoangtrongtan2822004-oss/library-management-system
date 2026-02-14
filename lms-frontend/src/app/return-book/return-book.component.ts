@@ -5,15 +5,21 @@ import { BorrowService } from '../services/borrow.service';
 import { UserAuthService } from '../services/user-auth.service';
 import { LoanDetails } from '../services/admin.service';
 import { ToastrService } from 'ngx-toastr';
+import { BooksService } from '../services/books.service';
 
 interface BookCondition {
   value: string;
   label: string;
   damageFee: number;
   description: string;
+  icon: string;
+  examples: string;
+  recommendation: string;
+  whenToUse: string;
 }
 
 interface ReturnPreview extends LoanDetails {
+  bookCoverUrl?: string;
   daysOverdue: number;
   overdueFine: number;
   damageFee: number;
@@ -34,6 +40,7 @@ export class ReturnBookComponent implements OnInit {
 
   // Preview Modal
   showPreviewModal = false;
+  showFinalConfirmModal = false;
   returnPreview: ReturnPreview | null = null;
 
   // Book Condition
@@ -44,24 +51,40 @@ export class ReturnBookComponent implements OnInit {
       label: 'Bình thường',
       damageFee: 0,
       description: 'Sách nguyên vẹn, không hư hỏng',
+      icon: 'fa-circle-check',
+      examples: 'Không rách, không bẩn, không ghi chú lên sách',
+      recommendation: 'Xử lý: Không thu phí phạt hư hỏng',
+      whenToUse: 'Chọn khi sách còn nguyên trạng như lúc mượn',
     },
     {
       value: 'SLIGHTLY_DAMAGED',
       label: 'Hư hỏng nhẹ',
       damageFee: 50000,
       description: 'Rách nhẹ, gấp góc trang',
+      icon: 'fa-triangle-exclamation',
+      examples: 'Nhàu bìa, gấp góc, rách mép nhỏ, bẩn nhẹ',
+      recommendation: 'Xử lý: Thu phí bảo trì, vẫn có thể cho mượn lại',
+      whenToUse: 'Chọn khi chỉ ảnh hưởng nhẹ, vẫn đọc bình thường',
     },
     {
       value: 'DAMAGED',
       label: 'Hư hỏng nặng',
       damageFee: 100000,
       description: 'Rách nhiều trang, bẩn nặng',
+      icon: 'fa-circle-xmark',
+      examples: 'Rách nhiều trang, bung gáy, ẩm mốc, mất trang',
+      recommendation: 'Xử lý: Thu phí cao, cân nhắc loại khỏi lưu thông',
+      whenToUse: 'Chọn khi sách bị hư hại rõ, khó tiếp tục cho mượn',
     },
     {
       value: 'LOST',
       label: 'Mất sách',
       damageFee: 200000,
       description: 'Không tìm thấy sách (đền 200% giá trị)',
+      icon: 'fa-book',
+      examples: 'Không hoàn trả được bản sách đã mượn',
+      recommendation: 'Xử lý: Đền bù theo chính sách thư viện',
+      whenToUse: 'Chọn khi người mượn không thể nộp lại bản sách',
     },
   ];
 
@@ -86,6 +109,7 @@ export class ReturnBookComponent implements OnInit {
 
   constructor(
     private borrowService: BorrowService,
+    private booksService: BooksService,
     private userAuthService: UserAuthService,
     private router: Router,
     private toastr: ToastrService,
@@ -162,7 +186,8 @@ export class ReturnBookComponent implements OnInit {
   // Calculate fine for a loan
   calculateFine(loan: LoanDetails): ReturnPreview {
     const now = new Date();
-    const dueDate = loan.returnDate ? new Date(loan.returnDate) : now;
+    const dueDateValue = this.getDueDateValue(loan);
+    const dueDate = dueDateValue ? new Date(dueDateValue) : now;
     const daysOverdue = Math.max(
       0,
       Math.ceil((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24)),
@@ -190,12 +215,49 @@ export class ReturnBookComponent implements OnInit {
     this.finePaymentMethod = 'CASH';
     this.returnPreview = this.calculateFine(loan);
     this.showPreviewModal = true;
+
+    if (loan.bookId) {
+      this.booksService.getBookById(loan.bookId).subscribe({
+        next: (book) => {
+          if (
+            !this.returnPreview ||
+            this.returnPreview.loanId !== loan.loanId
+          ) {
+            return;
+          }
+
+          this.returnPreview = {
+            ...this.returnPreview,
+            bookName: this.returnPreview.bookName || book.name,
+            bookCoverUrl: book.coverUrl || this.returnPreview.bookCoverUrl,
+          } as ReturnPreview;
+        },
+        error: () => {
+          // Keep fallback image and existing data when detail API fails
+        },
+      });
+    }
   }
 
   closePreviewModal(): void {
     this.showPreviewModal = false;
+    this.showFinalConfirmModal = false;
     this.returnPreview = null;
     this.selectedCondition = 'NORMAL';
+  }
+
+  requestReturnConfirmation(): void {
+    if (!this.returnPreview || !this.returnPreview.loanId) {
+      this.toastr.error('Không tìm thấy thông tin phiếu mượn');
+      return;
+    }
+
+    this.showFinalConfirmModal = true;
+    this.toastr.info('Vui lòng xác nhận lần cuối để hoàn tất trả sách');
+  }
+
+  closeFinalConfirmModal(): void {
+    this.showFinalConfirmModal = false;
   }
 
   onConditionChange(): void {
@@ -217,6 +279,13 @@ export class ReturnBookComponent implements OnInit {
       default:
         return 'badge-secondary';
     }
+  }
+
+  getConditionLabel(value: string): string {
+    return (
+      this.bookConditions.find((condition) => condition.value === value)
+        ?.label || 'Không xác định'
+    );
   }
 
   // Multi-select
@@ -284,24 +353,31 @@ export class ReturnBookComponent implements OnInit {
     }
 
     const preview = this.returnPreview;
-    this.closePreviewModal();
+    const confirmedCondition = this.selectedCondition;
+    const confirmedPaymentMethod = this.finePaymentMethod;
+    this.showFinalConfirmModal = false;
+    this.showPreviewModal = false;
+    this.returnPreview = null;
+    this.selectedCondition = 'NORMAL';
+
+    this.toastr.info('Đang xử lý trả sách...');
     this.loading.add(preview.loanId);
 
     // Build payload with condition and fine info
     const payload: any = {
       loanId: preview.loanId,
-      condition: this.selectedCondition,
+      condition: confirmedCondition,
       overdueFine: preview.overdueFine,
       damageFee: preview.damageFee,
       totalFine: preview.totalFine,
-      finePaymentMethod: this.finePaymentMethod,
+      finePaymentMethod: confirmedPaymentMethod,
     };
 
     this.borrowService.returnLoan(preview.loanId).subscribe({
       next: () => {
         if (preview.totalFine > 0) {
           const fineMsg =
-            this.finePaymentMethod === 'CASH'
+            confirmedPaymentMethod === 'CASH'
               ? `Đã thu ${preview.totalFine.toLocaleString('vi-VN')}đ tiền phạt`
               : `Ghi nợ ${preview.totalFine.toLocaleString('vi-VN')}đ vào tài khoản`;
           this.toastr.success(`Trả sách thành công! ${fineMsg}`);
@@ -324,6 +400,31 @@ export class ReturnBookComponent implements OnInit {
   private clearMessages(): void {
     this.errorMessage = '';
     this.successMessage = '';
+  }
+
+  getBorrowerDisplay(loan: LoanDetails | ReturnPreview): string {
+    const anyLoan = loan as any;
+    return (
+      anyLoan.borrowerName ||
+      anyLoan.borrowerUsername ||
+      anyLoan.userName ||
+      'Chưa có thông tin'
+    );
+  }
+
+  getDueDateValue(loan: LoanDetails | ReturnPreview): string | undefined {
+    const anyLoan = loan as any;
+    return anyLoan.dueDate || anyLoan.returnDate;
+  }
+
+  getBookCoverUrl(loan: LoanDetails | ReturnPreview): string {
+    const anyLoan = loan as any;
+    return (
+      anyLoan.bookCoverUrl ||
+      anyLoan.coverUrl ||
+      anyLoan.bookImageUrl ||
+      'assets/images/placeholder.png'
+    );
   }
 
   formatCurrency(amount: number): string {

@@ -42,6 +42,7 @@ export class UpdateBookComponent implements OnInit {
       name: ['', [Validators.required, Validators.minLength(1)]],
       author: ['', [Validators.required, Validators.minLength(2)]],
       isbn: ['', [Validators.pattern(/^[0-9]{10}$|^[0-9]{13}$/)]],
+      shelfCode: [''],
       publishedYear: [
         null,
         [Validators.min(1000), Validators.max(this.currentYear)],
@@ -89,6 +90,7 @@ export class UpdateBookComponent implements OnInit {
           name: bookData.name || bookData.bookName || '',
           author: bookData.author || bookData.bookAuthor || '',
           isbn: bookData.isbn || '',
+          shelfCode: bookData.shelfCode || '',
           publishedYear: bookData.publishedYear || null,
           pageCount: bookData.pageCount || null,
           description: bookData.description || '',
@@ -240,6 +242,7 @@ export class UpdateBookComponent implements OnInit {
       author: formValue.author,
       bookAuthor: formValue.author, // alias
       isbn: formValue.isbn || null,
+      shelfCode: formValue.shelfCode || null,
       publishedYear: formValue.publishedYear || null,
       pageCount: formValue.pageCount || null,
       description: formValue.description || '',

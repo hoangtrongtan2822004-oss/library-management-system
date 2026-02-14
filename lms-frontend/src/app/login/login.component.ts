@@ -31,19 +31,18 @@ export class LoginComponent implements OnInit {
     private userAuth: UserAuthService,
     private router: Router,
     private route: ActivatedRoute,
-    // private socialAuthService: SocialAuthService, // Tạm tắt
+    private socialAuthService: SocialAuthService,
     private http: HttpClient,
     private gamificationService: GamificationService,
     private inactivityService: InactivityService,
   ) {}
 
   ngOnInit(): void {
-    // Tạm tắt Google Login
-    // this.socialAuthService.authState.subscribe((user) => {
-    //   if (user) {
-    //     this.handleGoogleLogin(user);
-    //   }
-    // });
+    this.socialAuthService.authState.subscribe((user) => {
+      if (user) {
+        this.handleGoogleLogin(user);
+      }
+    });
   }
 
   // Hàm fallback nếu không cài thư viện jwt-decode
@@ -150,16 +149,19 @@ export class LoginComponent implements OnInit {
 
   // Google Social Login (Tạm tắt)
   signInWithGoogle(): void {
-    this.error = 'Tính năng đăng nhập Google đang được bảo trì';
-    // this.loading = true;
-    // this.error = '';
-    // this.socialAuthService
-    //   .signIn(GoogleLoginProvider.PROVIDER_ID)
-    //   .catch((err) => {
-    //     console.error('Google login failed:', err);
-    //     this.error = 'Đăng nhập Google thất bại';
-    //     this.loading = false;
-    //   });
+    if (!environment.googleClientId) {
+      this.error = 'Chưa cấu hình Google Client ID.';
+      return;
+    }
+    this.loading = true;
+    this.error = '';
+    this.socialAuthService
+      .signIn(GoogleLoginProvider.PROVIDER_ID)
+      .catch((err) => {
+        console.error('Google login failed:', err);
+        this.error = 'Đăng nhập Google thất bại';
+        this.loading = false;
+      });
   }
 
   private handleGoogleLogin(socialUser: SocialUser): void {
@@ -184,11 +186,36 @@ export class LoginComponent implements OnInit {
 
           // Lưu token và thông tin user
           this.userAuth.setToken(token);
-          this.userAuth.setName(res.name);
-          this.userAuth.setRoles([res.role]);
+          const payload = this.safeDecodeJwt(token);
+          const name = res?.name ?? payload?.name ?? payload?.sub ?? '';
+          const id = Number(res?.userId ?? payload?.userId ?? payload?.id ?? 0);
+
+          const rawRoles = res?.roles ?? payload?.roles ?? res?.role ?? [];
+          const roles = (Array.isArray(rawRoles) ? rawRoles : [rawRoles])
+            .map((r: any) =>
+              typeof r === 'string'
+                ? r.toUpperCase()
+                : r?.authority?.toUpperCase() || '',
+            )
+            .filter(Boolean)
+            .map((r: string) => (r.startsWith('ROLE_') ? r : `ROLE_${r}`));
+
+          if (name) this.userAuth.setName(name);
+          if (!Number.isNaN(id) && id > 0) this.userAuth.setUserId(id);
+          this.userAuth.setRoles(roles);
 
           const returnUrl = this.route.snapshot.queryParamMap.get('returnUrl');
-          const isAdmin = res.role === 'ROLE_ADMIN';
+          const isAdmin = roles.includes('ROLE_ADMIN');
+
+          if (!isAdmin) {
+            this.gamificationService.updateQuestProgress('login').subscribe({
+              next: () => console.log('Login quest tracked'),
+              error: (err) =>
+                console.error('Failed to track login quest:', err),
+            });
+          }
+
+          this.inactivityService.startMonitoring();
 
           this.router.navigateByUrl(
             returnUrl || (isAdmin ? '/admin/dashboard' : '/'),

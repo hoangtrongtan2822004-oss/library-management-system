@@ -46,6 +46,19 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
     default List<Loan> findByBookId(Integer bookId) {
         return findByBook_Id(bookId);
     }
+
+       @Query("SELECT DISTINCT l.book.id FROM Loan l WHERE l.member.userId = :memberId")
+       List<Integer> findDistinctBookIdsByMemberId(@Param("memberId") Integer memberId);
+
+       @Query("SELECT c.id FROM Loan l " +
+                 "JOIN l.book b " +
+                 "JOIN b.categories c " +
+                 "WHERE l.member.userId = :memberId " +
+                 "GROUP BY c.id " +
+                 "ORDER BY COUNT(l.id) DESC")
+       List<Integer> findTopCategoryIdsByMemberId(
+              @Param("memberId") Integer memberId,
+              Pageable pageable);
     long countByStatus(LoanStatus status);
     List<Loan> findTop5ByOrderByLoanDateDesc();
     List<Loan> findByStatus(LoanStatus status);
@@ -98,6 +111,17 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
            "FROM Loan l JOIN l.book b JOIN l.member u " +
            "WHERE l.fineStatus = 'UNPAID' ORDER BY l.returnDate DESC")
     List<FineDetailsDto> findUnpaidFineDetails();
+
+    @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
+           "WHERE l.fineStatus = 'PAID' ORDER BY l.returnDate DESC")
+    List<FineDetailsDto> findPaidFineDetails();
+
+    @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
+           "FROM Loan l JOIN l.book b JOIN l.member u " +
+           "WHERE l.fineStatus = 'PAID' AND l.returnDate BETWEEN :start AND :end " +
+           "ORDER BY l.returnDate DESC")
+    List<FineDetailsDto> findPaidFineDetailsByDateRange(@Param("start") java.time.LocalDate start, @Param("end") java.time.LocalDate end);
 
     @Query("SELECT new com.ibizabroker.lms.dto.FineDetailsDto(l.id, b.name, u.name, l.dueDate, l.returnDate, l.fineAmount) " +
            "FROM Loan l JOIN l.book b JOIN l.member u " +

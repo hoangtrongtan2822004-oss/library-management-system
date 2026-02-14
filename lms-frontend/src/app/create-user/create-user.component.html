@@ -1,12 +1,25 @@
-<div class="container col-md-8 offset-md-2 mt-5">
+<div class="container col-md-8 offset-md-2 mt-5 create-user-card">
   <div class="header-section">
     <h3 class="text-center">Tạo Người Dùng Mới</h3>
-    <button class="btn btn-outline-info btn-sm" (click)="goToBulkImport()">
-      <i class="fas fa-file-excel"></i> Import hàng loạt từ Excel
-    </button>
+    <div class="header-actions">
+      <button
+        class="btn btn-outline-info btn-sm"
+        type="button"
+        (click)="goToBulkImport()"
+        title="Import hàng loạt từ Excel"
+      >
+        <i class="fas fa-file-excel"></i>
+        <span class="d-none d-sm-inline">Import hàng loạt từ Excel</span>
+      </button>
+    </div>
   </div>
 
-  <form (ngSubmit)="onSubmit()" #userForm="ngForm">
+  <form
+    (ngSubmit)="onSubmit()"
+    #userForm="ngForm"
+    role="form"
+    aria-describedby="create-user-help"
+  >
     <!-- Avatar Upload -->
     <div class="avatar-section mb-4">
       <label class="form-label">Ảnh đại diện (không bắt buộc)</label>
@@ -17,6 +30,8 @@
             type="button"
             class="btn-remove-avatar"
             (click)="removeAvatar()"
+            aria-label="Xóa ảnh đại diện"
+            title="Xóa ảnh đại diện"
           >
             <i class="fas fa-times"></i>
           </button>
@@ -33,10 +48,20 @@
           accept="image/*"
           (change)="onAvatarSelected($event)"
           hidden
+          aria-hidden="false"
         />
-        <label for="avatarInput" class="btn btn-secondary btn-sm mt-2">
-          <i class="fas fa-upload"></i> Chọn ảnh (Max 2MB)
+        <label
+          for="avatarInput"
+          class="btn btn-secondary btn-sm mt-2"
+          role="button"
+          aria-label="Chọn ảnh đại diện"
+        >
+          <i class="fas fa-upload"></i>
+          <span class="d-none d-sm-inline">Chọn ảnh (Max 2MB)</span>
         </label>
+        <small class="form-text text-muted"
+          >Kích thước tối đa 2MB. JPG, PNG được hỗ trợ.</small
+        >
       </div>
     </div>
 

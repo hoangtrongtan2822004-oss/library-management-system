@@ -326,4 +326,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
   public closeMobileMenu(): void {
     this.isMobileMenuOpen = false;
   }
+
+  public goToRegister(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/register']);
+  }
+
+  public goToLogin(): void {
+    this.closeMobileMenu();
+    this.router.navigate(['/login']);
+  }
 }

@@ -41,6 +41,14 @@ export class ImportExportComponent {
   showBooksMapping = false;
   showUsersMapping = false;
 
+  // UI helpers
+  booksMappedCount = 0;
+  booksAutoDetected = 0;
+  usersMappedCount = 0;
+  usersAutoDetected = 0;
+  uploadProgress = 0; // percent
+  private uploadProgressInterval: any;
+
   // Expected fields
   expectedBooksFields = [
     'name',
@@ -147,6 +155,14 @@ export class ImportExportComponent {
 
     if (type === 'books') this.booksMapping = mapping;
     else this.usersMapping = mapping;
+    // tracking
+    if (type === 'books') {
+      this.booksMappedCount = Object.keys(mapping).length;
+      this.booksAutoDetected = this.booksMappedCount;
+    } else {
+      this.usersMappedCount = Object.keys(mapping).length;
+      this.usersAutoDetected = this.usersMappedCount;
+    }
   }
 
   async importBooks() {
@@ -155,6 +171,7 @@ export class ImportExportComponent {
       return;
     }
     this.isUploadingBooks = true;
+    this.startFakeProgress();
     this.booksService.importBooks(this.booksFile).subscribe({
       next: (summary) => {
         this.booksSummary = summary;
@@ -163,8 +180,18 @@ export class ImportExportComponent {
         );
         this.booksFile = undefined;
       },
-      error: () => this.toastr.error('Nhập sách thất bại'),
-      complete: () => (this.isUploadingBooks = false),
+      error: () => {
+        this.toastr.error('Nhập sách thất bại');
+        this.isUploadingBooks = false;
+        this.stopFakeProgress();
+        this.uploadProgress = 0;
+      },
+      complete: () => {
+        this.isUploadingBooks = false;
+        this.stopFakeProgress();
+        this.uploadProgress = 100;
+        setTimeout(() => (this.uploadProgress = 0), 600);
+      },
     });
   }
 
@@ -174,6 +201,7 @@ export class ImportExportComponent {
       return;
     }
     this.isUploadingUsers = true;
+    this.startFakeProgress();
     this.booksService.importUsers(this.usersFile).subscribe({
       next: (summary) => {
         this.usersSummary = summary;
@@ -182,9 +210,86 @@ export class ImportExportComponent {
         );
         this.usersFile = undefined;
       },
-      error: () => this.toastr.error('Nhập người dùng thất bại'),
-      complete: () => (this.isUploadingUsers = false),
+      error: () => {
+        this.toastr.error('Nhập người dùng thất bại');
+        this.isUploadingUsers = false;
+        this.stopFakeProgress();
+        this.uploadProgress = 0;
+      },
+      complete: () => {
+        this.isUploadingUsers = false;
+        this.stopFakeProgress();
+        this.uploadProgress = 100;
+        setTimeout(() => (this.uploadProgress = 0), 600);
+      },
     });
+  }
+
+  /**
+   * Try to auto-detect column mapping for a given type.
+   * Minimal fuzzy logic: exact (case-ins), contains, startsWith.
+   */
+  autoMap(type: 'books' | 'users') {
+    const columns = type === 'books' ? this.booksColumns : this.usersColumns;
+    const expected =
+      type === 'books' ? this.expectedBooksFields : this.expectedUsersFields;
+    const mapping: { [key: string]: string } = {};
+
+    expected.forEach((exp) => {
+      // exact
+      let found = columns.find(
+        (c) => c && c.toLowerCase() === exp.toLowerCase(),
+      );
+      if (!found) {
+        // contains
+        found = columns.find(
+          (c) => c && c.toLowerCase().includes(exp.toLowerCase()),
+        );
+      }
+      if (!found) {
+        // startsWith
+        found = columns.find(
+          (c) => c && c.toLowerCase().startsWith(exp.toLowerCase().slice(0, 3)),
+        );
+      }
+      if (found) mapping[exp] = found;
+    });
+
+    if (type === 'books') {
+      this.booksMapping = mapping;
+      this.booksMappedCount = Object.keys(mapping).length;
+      this.booksAutoDetected = this.booksMappedCount;
+      this.toastr.success(
+        `Auto-map phát hiện ${this.booksMappedCount} trường cho sách`,
+      );
+    } else {
+      this.usersMapping = mapping;
+      this.usersMappedCount = Object.keys(mapping).length;
+      this.usersAutoDetected = this.usersMappedCount;
+      this.toastr.success(
+        `Auto-map phát hiện ${this.usersMappedCount} trường cho người dùng`,
+      );
+    }
+  }
+
+  private startFakeProgress() {
+    this.uploadProgress = 4;
+    if (this.uploadProgressInterval) clearInterval(this.uploadProgressInterval);
+    this.uploadProgressInterval = setInterval(() => {
+      if (this.uploadProgress < 88) {
+        this.uploadProgress = Math.min(
+          88,
+          this.uploadProgress + Math.round(Math.random() * 8),
+        );
+      }
+    }, 350);
+  }
+
+  private stopFakeProgress() {
+    if (this.uploadProgressInterval) {
+      clearInterval(this.uploadProgressInterval);
+      this.uploadProgressInterval = undefined;
+    }
   }
 
   async exportBooks() {

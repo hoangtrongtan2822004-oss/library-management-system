@@ -31,6 +31,14 @@ export interface ImportSummary {
   errors: string[];
 }
 
+export interface IsbnLookupResult {
+  title?: string;
+  authors?: string[];
+  publishedYear?: number;
+  coverUrl?: string;
+  isbn?: string;
+}
+
 export interface Page<T> {
   content: T[];
   totalPages: number;
@@ -128,6 +136,36 @@ export class BooksService {
       );
   }
 
+  /**
+   * Get similar books by book id (Public API)
+   */
+  public getSimilarBooks(bookId: number, size: number = 6): Observable<Book[]> {
+    const params = new HttpParams().set('size', size.toString());
+
+    return this.http
+      .get<ApiResponse<Book[]>>(
+        this.apiService.buildUrl(`/public/books/${bookId}/similar`),
+        {
+          params,
+          context: new HttpContext().set(IS_PUBLIC_API, true),
+        },
+      )
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * Get personalized recommendations for current user
+   */
+  public getRecommendations(size: number = 6): Observable<Book[]> {
+    const params = new HttpParams().set('size', size.toString());
+
+    return this.http
+      .get<
+        ApiResponse<Book[]>
+      >(this.apiService.buildUrl('/user/books/recommendations'), { params })
+      .pipe(map((response) => response.data));
+  }
+
   // --- ADMIN METHODS ---
 
   public createBook(
@@ -150,15 +188,19 @@ export class BooksService {
   }
 
   public getAllAuthors(): Observable<Author[]> {
-    return this.http.get<Author[]>(
-      this.apiService.buildUrl('/admin/books/authors'),
-    );
+    return this.http
+      .get<
+        ApiResponse<Author[]>
+      >(this.apiService.buildUrl('/admin/books/authors'))
+      .pipe(map((resp) => resp.data));
   }
 
   public getAllCategories(): Observable<Category[]> {
-    return this.http.get<Category[]>(
-      this.apiService.buildUrl('/admin/books/categories'),
-    );
+    return this.http
+      .get<
+        ApiResponse<Category[]>
+      >(this.apiService.buildUrl('/admin/books/categories'))
+      .pipe(map((resp) => resp.data));
   }
 
   public createCategory(name: string): Observable<Category> {
@@ -254,6 +296,34 @@ export class BooksService {
     return this.http.post<void>(
       this.apiService.buildUrl(`/admin/books/authors/${mainAuthorId}/merge`),
       { secondaryAuthorId },
+    );
+  }
+
+  /**
+   * Lookup book metadata by ISBN using Google Books API as a fallback.
+   * Returns a light-weight object with title/authors/publishedYear/coverUrl/isbn
+   */
+  public lookupByIsbn(isbn: string): Observable<IsbnLookupResult> {
+    const q = encodeURIComponent(`isbn:${isbn}`);
+    const url = `https://www.googleapis.com/books/v1/volumes?q=${q}`;
+    return this.http.get<any>(url).pipe(
+      map((resp) => {
+        if (!resp || !resp.items || resp.items.length === 0)
+          return {} as IsbnLookupResult;
+        const info = resp.items[0].volumeInfo || {};
+        const publishedYear = info.publishedDate
+          ? Number(String(info.publishedDate).slice(0, 4))
+          : undefined;
+        const coverUrl =
+          info.imageLinks?.thumbnail || info.imageLinks?.smallThumbnail;
+        return {
+          title: info.title,
+          authors: info.authors || [],
+          publishedYear,
+          coverUrl,
+          isbn,
+        } as IsbnLookupResult;
+      }),
     );
   }
 

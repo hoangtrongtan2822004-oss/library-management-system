@@ -1,8 +1,16 @@
-<div class="container py-5">
+<main
+  id="rules-main"
+  class="container py-5"
+  role="main"
+  aria-labelledby="rules-title"
+>
   <!-- Header Section -->
   <div class="rules-header text-center mb-5">
-    <h1 class="display-4 fw-bold mb-3">
-      <i class="fa-solid fa-book-open-reader me-3 text-primary"></i>
+    <h1 id="rules-title" class="display-4 fw-bold mb-3">
+      <i
+        class="fa-solid fa-book-open-reader me-3 text-primary"
+        aria-hidden="true"
+      ></i>
       Nội Quy Thư Viện
     </h1>
     <p class="lead text-muted">Trường THCS Phương Tú</p>
@@ -72,12 +80,19 @@
           <!-- Rule Header -->
           <div
             class="card-header rule-header"
+            tabindex="0"
+            role="button"
+            [attr.id]="'ruleHeader' + rule.id"
+            [attr.aria-expanded]="rule.expanded"
+            [attr.aria-controls]="'rule' + rule.id"
             [class.bg-primary]="rule.color === 'primary'"
             [class.bg-danger]="rule.color === 'danger'"
             [class.bg-info]="rule.color === 'info'"
             [class.bg-warning]="rule.color === 'warning'"
             [class.bg-success]="rule.color === 'success'"
             (click)="toggleRule(rule)"
+            (keydown.enter)="toggleRule(rule)"
+            (keydown.space)="toggleRule(rule)"
             [attr.data-bs-toggle]="'collapse'"
             [attr.data-bs-target]="'#rule' + rule.id"
           >
@@ -101,6 +116,8 @@
             class="collapse"
             [class.show]="rule.expanded"
             [attr.data-bs-parent]="'#rulesAccordion'"
+            role="region"
+            [attr.aria-labelledby]="'ruleHeader' + rule.id"
           >
             <div class="card-body">
               <div
@@ -141,7 +158,16 @@
           *ngFor="let faq of faqs; let i = index"
           class="card mb-3 shadow-sm faq-card"
         >
-          <div class="card-header faq-header" (click)="toggleFAQ(faq)">
+          <div
+            class="card-header faq-header"
+            tabindex="0"
+            role="button"
+            [attr.id]="'faqHeader' + i"
+            [attr.aria-expanded]="faq.expanded"
+            (click)="toggleFAQ(faq)"
+            (keydown.enter)="toggleFAQ(faq)"
+            (keydown.space)="toggleFAQ(faq)"
+          >
             <div class="d-flex align-items-start justify-content-between">
               <div class="d-flex align-items-start grow">
                 <i class="fa-solid fa-q me-3 text-info mt-1"></i>
@@ -154,7 +180,12 @@
             </div>
           </div>
 
-          <div class="collapse" [class.show]="faq.expanded">
+          <div
+            class="collapse"
+            [class.show]="faq.expanded"
+            role="region"
+            [attr.aria-labelledby]="'faqHeader' + i"
+          >
             <div class="card-body bg-light">
               <div class="d-flex align-items-start">
                 <i class="fa-solid fa-a me-3 text-success mt-1"></i>
@@ -232,12 +263,21 @@
                   type="submit"
                   class="btn btn-primary btn-lg px-5"
                   [disabled]="isSubmittingContact"
+                  aria-label="Gửi câu hỏi"
                 >
                   <span *ngIf="!isSubmittingContact">
-                    <i class="fa-solid fa-paper-plane me-2"></i>Gửi Câu Hỏi
+                    <i
+                      class="fa-solid fa-paper-plane me-2"
+                      aria-hidden="true"
+                    ></i
+                    >Gửi Câu Hỏi
                   </span>
                   <span *ngIf="isSubmittingContact">
-                    <i class="fa-solid fa-spinner fa-spin me-2"></i>Đang gửi...
+                    <i
+                      class="fa-solid fa-spinner fa-spin me-2"
+                      aria-hidden="true"
+                    ></i
+                    >Đang gửi...
                   </span>
                 </button>
               </div>
@@ -266,4 +306,4 @@
       </div>
     </div>
   </div>
-</div>
+</main>

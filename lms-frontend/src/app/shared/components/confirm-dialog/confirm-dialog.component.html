@@ -3,17 +3,21 @@
   class="modal fade"
   [class.show]="show"
   [style.display]="show ? 'block' : 'none'"
-  tabindex="-1"
+  tabindex="0"
   role="dialog"
+  aria-modal="true"
+  [attr.aria-labelledby]="title ? 'confirmTitle' : null"
+  [attr.aria-describedby]="message ? 'confirmMessage' : null"
   (click)="onBackdropClick($event)"
+  (keydown.escape)="onCancel()"
   *ngIf="show"
 >
   <div class="modal-dialog modal-dialog-centered" role="document">
     <div class="modal-content">
       <!-- Header -->
       <div class="modal-header">
-        <h5 class="modal-title">
-          <i [class]="icon" class="me-2"></i>
+        <h5 id="confirmTitle" class="modal-title">
+          <i [class]="icon" class="me-2" aria-hidden="true"></i>
           {{ title }}
         </h5>
         <button
@@ -27,7 +31,7 @@
 
       <!-- Body -->
       <div class="modal-body">
-        <p class="mb-0">{{ message }}</p>
+        <p id="confirmMessage" class="mb-0">{{ message }}</p>
       </div>
 
       <!-- Footer -->
@@ -35,6 +39,7 @@
         <button
           type="button"
           class="btn btn-secondary"
+          [attr.aria-disabled]="loading ? 'true' : null"
           [disabled]="loading"
           (click)="onCancel()"
         >
@@ -43,6 +48,7 @@
         <button
           type="button"
           [class]="'btn ' + confirmClass"
+          [attr.aria-disabled]="loading ? 'true' : null"
           [disabled]="loading"
           (click)="onConfirm()"
         >
@@ -50,7 +56,8 @@
             *ngIf="loading"
             class="spinner-border spinner-border-sm me-2"
             role="status"
-            aria-hidden="true"
+            aria-live="polite"
+            aria-hidden="false"
           ></span>
           {{ confirmText }}
         </button>

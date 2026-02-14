@@ -1,16 +1,28 @@
 <div class="container-fluid">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">📋 Trung tâm điều hành Phiếu mượn</h1>
-    <button
-      class="btn btn-success"
-      (click)="exportToExcel()"
-      [disabled]="filteredLoans.length === 0"
-    >
-      <i class="fa-solid fa-file-excel me-2"></i> Xuất Excel
-    </button>
+    <div>
+      <h1 class="mb-0">📋 Trung tâm điều hành Phiếu mượn</h1>
+      <p class="text-muted small mb-0">
+        Quản lý, theo dõi và thao tác phiếu mượn — gia hạn, nhắc và đánh dấu
+        trả.
+      </p>
+    </div>
+    <div class="d-flex gap-2 align-items-center">
+      <div class="small text-muted me-2">
+        Tổng: <strong class="text-white">{{ allLoans.length }}</strong>
+      </div>
+      <button
+        class="btn btn-sm btn-success d-flex align-items-center"
+        (click)="exportToExcel()"
+        [disabled]="filteredLoans.length === 0"
+        title="Xuất danh sách đang lọc ra Excel"
+      >
+        <i class="fa-solid fa-file-excel me-1"></i>
+        <span class="d-none d-sm-inline">Xuất Excel</span>
+      </button>
+    </div>
   </div>
 
-  <!-- Status Filter Pills -->
   <div class="nav nav-pills mb-3">
     <button
       class="nav-link"
@@ -25,6 +37,7 @@
       (click)="applyFilter('ACTIVE')"
     >
       Đang Mượn
+      <span class="badge bg-info ms-1">{{ countByStatus("ACTIVE") }}</span>
     </button>
     <button
       class="nav-link"
@@ -32,6 +45,7 @@
       (click)="applyFilter('OVERDUE')"
     >
       Quá Hạn
+      <span class="badge bg-danger ms-1">{{ countByStatus("OVERDUE") }}</span>
     </button>
     <button
       class="nav-link"
@@ -39,6 +53,9 @@
       (click)="applyFilter('RETURNED')"
     >
       Đã Trả
+      <span class="badge bg-secondary ms-1">{{
+        countByStatus("RETURNED")
+      }}</span>
     </button>
   </div>
 
@@ -103,7 +120,9 @@
       <span class="visually-hidden">Loading...</span>
     </div>
   </div>
-  <div *ngIf="errorMessage" class="alert alert-danger">{{ errorMessage }}</div>
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
 
   <div *ngIf="!isLoading && !errorMessage" class="table-responsive">
     <table class="table table-hover align-middle">

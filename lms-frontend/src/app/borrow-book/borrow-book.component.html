@@ -306,7 +306,7 @@
   <div
     class="modal-dialog modal-dialog-centered modal-lg modal-dialog-scrollable"
   >
-    <div class="modal-content bg-dark text-light border-secondary">
+    <div class="modal-content borrow-modal-content border-secondary">
       <div class="modal-header border-secondary bg-warning">
         <h5 class="modal-title text-dark fw-bold">
           <i class="fa-solid fa-shopping-cart me-2"></i>Giỏ Sách ({{
@@ -321,7 +321,10 @@
       </div>
 
       <div class="modal-body p-4" style="max-height: 500px; overflow-y: auto">
-        <div *ngIf="cartItems.length === 0" class="text-center py-5 text-muted">
+        <div
+          *ngIf="cartItems.length === 0"
+          class="text-center py-5 borrow-empty-text"
+        >
           <i class="fa-solid fa-cart-shopping fa-3x mb-3 opacity-50"></i>
           <p>Giỏ sách trống. Thêm sách để mượn hàng loạt!</p>
         </div>
@@ -329,7 +332,7 @@
         <div class="list-group" *ngIf="cartItems.length > 0">
           <div
             *ngFor="let item of cartItems; let i = index"
-            class="list-group-item bg-secondary bg-opacity-10 border-secondary mb-2 rounded"
+            class="list-group-item borrow-cart-item border-secondary mb-2 rounded"
           >
             <div class="d-flex align-items-start">
               <span class="badge bg-primary me-3 mt-1">{{ i + 1 }}</span>
@@ -340,7 +343,7 @@
               />
               <div class="grow">
                 <h6 class="mb-1 fw-bold text-info">{{ item.book.name }}</h6>
-                <div class="small text-muted">
+                <div class="small borrow-item-meta">
                   <span
                     *ngIf="item.book.authors && item.book.authors.length > 0"
                   >
@@ -373,7 +376,7 @@
             >
             <input
               type="text"
-              class="form-control bg-dark text-light border-secondary"
+              class="form-control borrow-form-control"
               [(ngModel)]="borrowData.studentName"
               placeholder="Nhập họ tên..."
             />
@@ -384,7 +387,7 @@
             >
             <input
               type="text"
-              class="form-control bg-dark text-light border-secondary"
+              class="form-control borrow-form-control"
               [(ngModel)]="borrowData.studentClass"
               placeholder="Ví dụ: 9A1"
             />
@@ -392,7 +395,7 @@
           <div class="mb-3">
             <label class="form-label">Thời hạn</label>
             <select
-              class="form-select bg-dark text-light border-secondary"
+              class="form-select borrow-form-control"
               [(ngModel)]="borrowData.loanDays"
             >
               <option [ngValue]="7">7 ngày</option>

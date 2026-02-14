@@ -213,6 +213,46 @@
   cursor: not-allowed;
 }
 
+.google-signin-wrapper {
+  display: flex;
+  justify-content: center;
+}
+
 .text-muted {
   color: #9ca3af !important;
+}
+
+/* --- Additions for upgraded login UI --- */
+.auth-logo {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.auth-logo svg {
+  width: 56px;
+  height: 56px;
+  display: block;
+  filter: drop-shadow(0 8px 20px rgba(6, 182, 212, 0.12));
+  border-radius: 8px;
+}
+.small-note {
+  font-size: 0.9rem;
+  text-align: center;
+  margin-top: 10px;
+}
+.google-btn {
+  width: 100%;
+  max-width: 360px;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(6, 182, 212, 0.06);
+}
+
+@media (max-width: 420px) {
+  .auth-card {
+    padding: 20px;
+  }
+  .google-btn {
+    max-width: 100%;
+  }
 }

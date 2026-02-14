@@ -96,3 +96,73 @@ tr.table-info {
     font-size: 14px;
   }
 }
+
+/* Page toolbar (small enhancements) */
+.page-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+/* Mobile: make table rows look like cards */
+@media (max-width: 767.98px) {
+  .table-responsive table thead {
+    display: none;
+  }
+
+  .table-responsive table tbody tr {
+    display: block;
+    border: 1px solid #e9ecef;
+    border-radius: 8px;
+    padding: 10px;
+    margin-bottom: 12px;
+    background: #fff;
+  }
+
+  .table-responsive table tbody tr td {
+    display: flex;
+    justify-content: space-between;
+    padding: 6px 8px;
+    border: none;
+  }
+
+  .table-responsive table tbody tr td[data-label]::before {
+    content: attr(data-label) ": ";
+    font-weight: 600;
+    color: #495057;
+    margin-right: 6px;
+  }
+
+  .table-responsive .btn-group-vertical {
+    display: flex;
+    flex-direction: row;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .table-responsive .btn-group-vertical .btn {
+    flex: 1 1 auto;
+    white-space: nowrap;
+    padding: 6px 8px;
+    font-size: 0.85rem;
+  }
+
+  .book-thumbnail {
+    width: 48px;
+    height: 48px;
+    margin-right: 8px;
+  }
+}
+
+/* Desktop hover for rows */
+.table-hover tbody tr:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(16, 24, 40, 0.06);
+}
+
+/* Tighter comment wrapper on desktop */
+.comment-wrapper p {
+  max-width: 560px;
+}

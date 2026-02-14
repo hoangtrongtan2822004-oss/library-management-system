@@ -1,8 +1,16 @@
-<div class="container py-5">
+<main
+  id="return-main"
+  class="container py-5"
+  role="main"
+  aria-labelledby="return-book-title"
+>
   <!-- Header -->
   <div class="page-header mb-5">
-    <h1 class="display-5 fw-bold">
-      <i class="fa-solid fa-hand-holding-heart me-3 text-primary"></i>
+    <h1 id="return-book-title" class="display-5 fw-bold">
+      <i
+        class="fa-solid fa-hand-holding-heart me-3 text-primary"
+        aria-hidden="true"
+      ></i>
       Trả Sách
     </h1>
     <p class="lead text-muted">
@@ -51,6 +59,7 @@
             <!-- Search Input -->
             <div class="col-md-9">
               <input
+                id="return-search-input"
                 type="text"
                 class="form-control form-control-lg"
                 [(ngModel)]="searchQuery"
@@ -60,21 +69,33 @@
                     ? 'Nhập ID phiếu mượn (VD: 123)'
                     : 'Nhập tên người dùng (VD: Nguyễn Văn A)'
                 "
+                aria-label="Tìm kiếm phiếu mượn hoặc người dùng"
+                aria-controls="loan-results-table"
               />
             </div>
 
             <!-- Search Button -->
             <div class="col-md-3">
               <button
+                type="button"
                 class="btn btn-primary btn-lg w-100"
                 (click)="searchLoan()"
                 [disabled]="isSearching"
+                aria-label="Tìm kiếm"
               >
                 <span *ngIf="!isSearching">
-                  <i class="fa-solid fa-magnifying-glass me-2"></i>Tìm kiếm
+                  <i
+                    class="fa-solid fa-magnifying-glass me-2"
+                    aria-hidden="true"
+                  ></i
+                  >Tìm kiếm
                 </span>
                 <span *ngIf="isSearching">
-                  <i class="fa-solid fa-spinner fa-spin me-2"></i>Đang tìm...
+                  <i
+                    class="fa-solid fa-spinner fa-spin me-2"
+                    aria-hidden="true"
+                  ></i
+                  >Đang tìm...
                 </span>
               </button>
             </div>
@@ -112,10 +133,15 @@
         </div>
         <div class="card-body p-0">
           <div class="table-responsive">
-            <table class="table table-hover mb-0">
+            <table
+              id="loan-results-table"
+              class="table table-hover mb-0"
+              role="table"
+              aria-labelledby="return-results-title"
+            >
               <thead class="table-light">
                 <tr>
-                  <th width="50">
+                  <th scope="col" width="50">
                     <input
                       type="checkbox"
                       class="form-check-input"
@@ -124,12 +150,12 @@
                       "
                     />
                   </th>
-                  <th>Tên Sách</th>
-                  <th>Người Mượn</th>
-                  <th>Ngày Mượn</th>
-                  <th>Hạn Trả</th>
-                  <th>Trạng Thái</th>
-                  <th width="150">Thao Tác</th>
+                  <th scope="col">Tên Sách</th>
+                  <th scope="col">Người Mượn</th>
+                  <th scope="col">Ngày Mượn</th>
+                  <th scope="col">Hạn Trả</th>
+                  <th scope="col">Trạng Thái</th>
+                  <th scope="col" width="150">Thao Tác</th>
                 </tr>
               </thead>
               <tbody>
@@ -143,14 +169,17 @@
                       class="form-check-input"
                       [checked]="selectedLoans.has(loan.loanId!)"
                       (change)="toggleLoanSelection(loan.loanId!)"
+                      [attr.aria-label]="
+                        'Chọn phiếu mượn ' + (loan.loanId || '')
+                      "
                     />
                   </td>
                   <td>
                     <strong>{{ loan.bookName }}</strong>
                   </td>
-                  <td>{{ loan.borrowerName || loan.borrowerUsername }}</td>
+                  <td>{{ getBorrowerDisplay(loan) }}</td>
                   <td>{{ loan.loanDate | date: "dd/MM/yyyy" }}</td>
-                  <td>{{ loan.returnDate | date: "dd/MM/yyyy" }}</td>
+                  <td>{{ getDueDateValue(loan) | date: "dd/MM/yyyy" }}</td>
                   <td>
                     <span
                       class="badge"
@@ -163,10 +192,15 @@
                   </td>
                   <td>
                     <button
+                      type="button"
                       class="btn btn-sm btn-primary"
                       (click)="openPreviewModal(loan)"
+                      [attr.aria-label]="
+                        'Xem trước phiếu mượn ' + (loan.loanId || '')
+                      "
                     >
-                      <i class="fa-solid fa-eye me-1"></i>Xem trước
+                      <i class="fa-solid fa-eye me-1" aria-hidden="true"></i>Xem
+                      trước
                     </button>
                   </td>
                 </tr>
@@ -176,11 +210,17 @@
         </div>
         <div class="card-footer bg-light">
           <button
+            type="button"
             class="btn btn-success btn-lg w-100"
             (click)="returnMultiple()"
             [disabled]="selectedLoans.size === 0"
+            [attr.aria-disabled]="selectedLoans.size === 0 ? 'true' : null"
+            [attr.aria-label]="'Trả ' + selectedLoans.size + ' cuốn đã chọn'"
           >
-            <i class="fa-solid fa-hand-holding-heart me-2"></i>
+            <i
+              class="fa-solid fa-hand-holding-heart me-2"
+              aria-hidden="true"
+            ></i>
             Trả {{ selectedLoans.size }} Cuốn Đã Chọn
           </button>
         </div>
@@ -200,7 +240,7 @@
       </div>
     </div>
   </div>
-</div>
+</main>
 
 <!-- Preview Modal -->
 <div
@@ -208,18 +248,22 @@
   tabindex="-1"
   [ngStyle]="{ display: showPreviewModal ? 'block' : 'none' }"
   *ngIf="showPreviewModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="preview-modal-title"
 >
   <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title">
-          <i class="fa-solid fa-file-invoice me-2"></i>
+        <h5 id="preview-modal-title" class="modal-title">
+          <i class="fa-solid fa-file-invoice me-2" aria-hidden="true"></i>
           Xác Nhận Trả Sách
         </h5>
         <button
           type="button"
           class="btn-close btn-close-white"
           (click)="closePreviewModal()"
+          aria-label="Đóng xem trước"
         ></button>
       </div>
 
@@ -229,15 +273,10 @@
           <div class="col-md-4 text-center">
             <div class="book-cover-preview">
               <img
-                [src]="
-                  returnPreview.bookCoverUrl ||
-                  'assets/books/default-book-cover.jpg'
-                "
+                [src]="getBookCoverUrl(returnPreview)"
                 alt="Book Cover"
                 class="img-fluid rounded shadow"
-                (error)="
-                  $event.target.src = 'assets/books/default-book-cover.jpg'
-                "
+                (error)="$event.target.src = 'assets/images/placeholder.png'"
               />
             </div>
           </div>
@@ -248,9 +287,7 @@
               <div class="info-item">
                 <i class="fa-solid fa-user text-muted me-2"></i>
                 <strong>Người mượn:</strong>
-                {{
-                  returnPreview.borrowerName || returnPreview.borrowerUsername
-                }}
+                {{ getBorrowerDisplay(returnPreview) }}
               </div>
               <div class="info-item">
                 <i class="fa-solid fa-calendar-day text-muted me-2"></i>
@@ -260,7 +297,7 @@
               <div class="info-item">
                 <i class="fa-solid fa-calendar-check text-muted me-2"></i>
                 <strong>Hạn trả:</strong>
-                {{ returnPreview.returnDate | date: "dd/MM/yyyy" }}
+                {{ getDueDateValue(returnPreview) | date: "dd/MM/yyyy" }}
               </div>
             </div>
 
@@ -292,6 +329,7 @@
             <div *ngFor="let condition of bookConditions" class="col-md-6">
               <div
                 class="condition-card"
+                tabindex="0"
                 [class.selected]="selectedCondition === condition.value"
                 (click)="
                   selectedCondition = condition.value; onConditionChange()
@@ -311,25 +349,56 @@
                     class="form-check-label w-100"
                     [for]="'condition-' + condition.value"
                   >
-                    <div
-                      class="d-flex justify-content-between align-items-start"
-                    >
-                      <div>
-                        <strong>{{ condition.label }}</strong>
-                        <small class="d-block text-muted">{{
-                          condition.description
-                        }}</small>
-                      </div>
-                      <span
-                        class="badge"
-                        [ngClass]="getConditionBadgeClass(condition.value)"
+                    <div class="condition-content">
+                      <div
+                        class="d-flex justify-content-between align-items-start"
                       >
-                        {{
-                          condition.damageFee === 0
-                            ? "Miễn phí"
-                            : formatCurrency(condition.damageFee)
-                        }}
-                      </span>
+                        <div>
+                          <div class="condition-title-row">
+                            <i
+                              class="fa-solid me-2"
+                              [ngClass]="condition.icon"
+                              aria-hidden="true"
+                            ></i>
+                            <strong>{{ condition.label }}</strong>
+                          </div>
+                          <small class="d-block text-muted">{{
+                            condition.description
+                          }}</small>
+                        </div>
+                        <span
+                          class="badge"
+                          [ngClass]="getConditionBadgeClass(condition.value)"
+                        >
+                          {{
+                            condition.damageFee === 0
+                              ? "Miễn phí"
+                              : formatCurrency(condition.damageFee)
+                          }}
+                        </span>
+                      </div>
+
+                      <small class="d-block mt-2 condition-example">
+                        <i
+                          class="fa-solid fa-list-check me-1"
+                          aria-hidden="true"
+                        ></i>
+                        {{ condition.examples }}
+                      </small>
+                      <small class="d-block mt-1 condition-recommendation">
+                        <i
+                          class="fa-solid fa-circle-info me-1"
+                          aria-hidden="true"
+                        ></i>
+                        {{ condition.recommendation }}
+                      </small>
+                      <small class="d-block mt-1 condition-when-to-use">
+                        <i
+                          class="fa-solid fa-bullseye me-1"
+                          aria-hidden="true"
+                        ></i>
+                        {{ condition.whenToUse }}
+                      </small>
                     </div>
                   </label>
                 </div>
@@ -419,9 +488,65 @@
         <button
           type="button"
           class="btn btn-success btn-lg"
-          (click)="confirmReturn()"
+          (click)="requestReturnConfirmation()"
         >
           <i class="fa-solid fa-check-circle me-2"></i>Xác Nhận Trả Sách
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Final Confirm Modal -->
+<div
+  class="modal fade show d-block"
+  *ngIf="showFinalConfirmModal && returnPreview"
+  tabindex="-1"
+  style="z-index: 1065"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="final-confirm-title"
+>
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content final-confirm-modal">
+      <div class="modal-header bg-warning-subtle">
+        <h5 id="final-confirm-title" class="modal-title">
+          <i class="fa-solid fa-circle-exclamation me-2"></i>
+          Xác Nhận Trả Sách Lần Cuối
+        </h5>
+        <button
+          type="button"
+          class="btn-close"
+          (click)="closeFinalConfirmModal()"
+          aria-label="Đóng xác nhận cuối"
+        ></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">
+          Bạn sắp xác nhận trả sách:
+          <strong>{{ returnPreview.bookName }}</strong>
+        </p>
+        <p class="mb-2">
+          Tình trạng đã chọn:
+          <strong>{{ getConditionLabel(selectedCondition) }}</strong>
+        </p>
+        <p class="mb-0">
+          Tổng phí cần xử lý:
+          <strong class="text-danger">{{
+            formatCurrency(returnPreview.totalFine)
+          }}</strong>
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button
+          type="button"
+          class="btn btn-secondary"
+          (click)="closeFinalConfirmModal()"
+        >
+          Quay lại chỉnh sửa
+        </button>
+        <button type="button" class="btn btn-success" (click)="confirmReturn()">
+          Đồng ý trả sách
         </button>
       </div>
     </div>
@@ -433,4 +558,12 @@
   class="modal-backdrop fade show"
   *ngIf="showPreviewModal"
   (click)="closePreviewModal()"
+></div>
+
+<!-- Final Confirm Backdrop -->
+<div
+  class="modal-backdrop fade show"
+  *ngIf="showFinalConfirmModal"
+  style="z-index: 1060"
+  (click)="closeFinalConfirmModal()"
 ></div>

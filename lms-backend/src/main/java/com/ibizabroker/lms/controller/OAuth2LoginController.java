@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Optional;
 import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -41,7 +42,7 @@ public class OAuth2LoginController {
      * Frontend sẽ gọi Google OAuth trực tiếp, sau đó gửi idToken lên đây
      */
     @PostMapping("/google")
-    public ResponseEntity<Map<String, String>> googleLogin(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<Map<String, Object>> googleLogin(@RequestBody Map<String, String> payload) {
         String email = payload.get("email");
         String name = payload.get("name");
         String googleId = payload.get("googleId");
@@ -51,33 +52,76 @@ public class OAuth2LoginController {
             return ResponseEntity.badRequest().body(Map.of("error", "Email không hợp lệ"));
         }
 
-        // Tìm hoặc tạo user
-        Users user = usersRepository.findByUsername(email).orElseGet(() -> {
+        String normalizedEmail = email.trim().toLowerCase();
+        String normalizedGoogleId = googleId != null ? googleId.trim() : null;
+
+        Optional<Users> googleMatchedUser = hasText(normalizedGoogleId)
+                ? usersRepository.findByGoogleId(normalizedGoogleId)
+                : Optional.empty();
+
+        Optional<Users> emailMatchedUser = usersRepository.findFirstByEmailIgnoreCaseOrderByUserIdAsc(normalizedEmail)
+                .or(() -> usersRepository.findByUsernameWithRolesIgnoreCase(normalizedEmail));
+
+        // Ưu tiên user đã map với googleId để tránh vi phạm unique key
+        Users user = googleMatchedUser.orElseGet(() -> emailMatchedUser.orElseGet(() -> {
             Users newUser = new Users();
-            newUser.setUsername(email);
-            newUser.setEmail(email);
-            newUser.setName(name != null ? name : email);
-            
+            newUser.setUsername(generateUniqueUsername(normalizedEmail));
+            newUser.setEmail(normalizedEmail);
+            newUser.setName(name != null && !name.isBlank() ? name : normalizedEmail);
+
             // Set random password (user không cần biết, chỉ dùng OAuth)
             newUser.setPassword(passwordEncoder.encode(UUID.randomUUID().toString()));
-            
+
             // Default role USER - lấy từ database
             Role userRole = roleRepository.findByRoleName("ROLE_USER")
                     .orElseThrow(() -> new RuntimeException("Role ROLE_USER không tồn tại trong database"));
             newUser.addRole(userRole);
-            
-            // Lưu Google ID và avatar
-            newUser.setGoogleId(googleId);
-            newUser.setAvatar(picture);
-            
-            return usersRepository.save(newUser);
-        });
 
-        // Nếu user đã tồn tại, cập nhật Google info
-        if (user.getGoogleId() == null || !user.getGoogleId().equals(googleId)) {
-            user.setGoogleId(googleId);
+            if (hasText(normalizedGoogleId)) {
+                newUser.setGoogleId(normalizedGoogleId);
+            }
+            newUser.setAvatar(picture);
+
+            return usersRepository.save(newUser);
+        }));
+
+        // Nếu email match là user khác với googleId match thì dùng googleId match làm bản ghi chuẩn
+        if (hasText(normalizedGoogleId)) {
+            Optional<Users> existingGoogleOwner = usersRepository.findByGoogleId(normalizedGoogleId);
+            if (existingGoogleOwner.isPresent() && !existingGoogleOwner.get().getUserId().equals(user.getUserId())) {
+                user = existingGoogleOwner.get();
+            }
+        }
+
+        // Cập nhật thông tin hồ sơ, nhưng tránh chạm unique key
+        boolean changed = false;
+        if (hasText(normalizedGoogleId) && (user.getGoogleId() == null || !normalizedGoogleId.equals(user.getGoogleId()))) {
+            user.setGoogleId(normalizedGoogleId);
+            changed = true;
+        }
+
+        if (picture != null && !picture.isBlank() && !picture.equals(user.getAvatar())) {
             user.setAvatar(picture);
-            usersRepository.save(user);
+            changed = true;
+        }
+
+        if ((user.getEmail() == null || user.getEmail().isBlank())) {
+            user.setEmail(normalizedEmail);
+            changed = true;
+        }
+
+        if ((user.getUsername() == null || user.getUsername().isBlank())) {
+            user.setUsername(generateUniqueUsername(normalizedEmail));
+            changed = true;
+        }
+
+        if ((user.getName() == null || user.getName().isBlank()) && name != null && !name.isBlank()) {
+            user.setName(name);
+            changed = true;
+        }
+
+        if (changed) {
+            user = usersRepository.save(user);
         }
 
         // Generate JWT với proper UserDetails và claims
@@ -99,11 +143,30 @@ public class OAuth2LoginController {
         
         String token = jwtUtil.generateToken(userDetails, claims);
 
-        return ResponseEntity.ok(Map.of(
-            "token", token,
-            "username", user.getUsername(),
-            "name", user.getName(),
-            "role", roles.isEmpty() ? "ROLE_USER" : roles.get(0)
-        ));
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("username", user.getUsername());
+        response.put("name", user.getName());
+        response.put("userId", user.getUserId());
+        response.put("role", roles.isEmpty() ? "ROLE_USER" : roles.get(0));
+        response.put("roles", roles);
+
+        return ResponseEntity.ok(response);
+    }
+
+    private boolean hasText(String value) {
+        return value != null && !value.isBlank();
+    }
+
+    private String generateUniqueUsername(String baseUsername) {
+        String candidate = baseUsername;
+        int suffix = 1;
+
+        while (usersRepository.existsByUsernameIgnoreCase(candidate)) {
+            candidate = baseUsername + "_g" + suffix;
+            suffix++;
+        }
+
+        return candidate;
     }
 }

@@ -231,4 +231,9 @@ export class LoanManagementComponent implements OnInit {
     if (this.sortBy !== column) return 'fa-sort';
     return this.sortDirection === 'asc' ? 'fa-sort-up' : 'fa-sort-down';
   }
+
+  countByStatus(status: string): number {
+    if (!this.filteredLoans) return 0;
+    return this.filteredLoans.filter((l) => l.status === status).length;
+  }
 }

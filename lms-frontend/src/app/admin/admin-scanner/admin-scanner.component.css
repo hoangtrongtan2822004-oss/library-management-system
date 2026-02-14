@@ -15,30 +15,37 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  border: 50px solid rgba(0, 0, 0, 0.3); /* Tạo hiệu ứng khung tối xung quanh */
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.55), rgba(0, 0, 0, 0.45));
+  box-shadow: inset 0 0 0 48px rgba(0, 0, 0, 0.35);
+  border-radius: 10px;
 }
 
 /* Hiệu ứng vạch quét chạy lên xuống */
 .scan-line {
-  width: 80%;
-  height: 2px;
-  background: #00ff00;
-  box-shadow: 0 0 10px #00ff00;
-  animation: scan 2s infinite linear;
+  width: 85%;
+  height: 4px;
+  background: linear-gradient(
+    90deg,
+    rgba(0, 255, 150, 0.95),
+    rgba(0, 200, 255, 0.9)
+  );
+  box-shadow: 0 0 18px rgba(0, 200, 180, 0.6);
+  animation: scan 2.4s infinite ease-in-out;
+  border-radius: 2px;
 }
 
 @keyframes scan {
   0% {
-    transform: translateY(-150px);
-    opacity: 0.5;
+    transform: translateY(-140px);
+    opacity: 0.45;
   }
   50% {
-    transform: translateY(150px);
+    transform: translateY(140px);
     opacity: 1;
   }
   100% {
-    transform: translateY(-150px);
-    opacity: 0.5;
+    transform: translateY(-140px);
+    opacity: 0.45;
   }
 }
 
@@ -64,6 +71,72 @@
 
 .camera-permission-panel button.btn i {
   margin-right: 6px;
+}
+
+/* Toolbar improvements */
+.card-header .scanner-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.card-header .scanner-toolbar select.form-select {
+  min-width: 200px;
+}
+.card-header .scanner-toolbar .btn {
+  white-space: nowrap;
+}
+
+/* Book found card */
+.book-found-card {
+  max-width: 720px;
+  margin: 0 auto;
+  gap: 1rem;
+}
+.book-found-card h5 {
+  color: #cfe9ff;
+}
+.book-found-card .grow {
+  flex: 1;
+}
+
+/* Panels at bottom (inventory / loan) */
+.inventory-panel,
+.loan-cart-panel {
+  backdrop-filter: blur(4px);
+}
+.inventory-panel .list-group-item,
+.loan-cart-panel .list-group-item {
+  transition: background 0.12s ease;
+}
+.inventory-panel .list-group-item:hover,
+.loan-cart-panel .list-group-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* Responsive tweaks */
+@media (max-width: 768px) {
+  .scan-line {
+    width: 95%;
+  }
+  .card-header .scanner-toolbar select.form-select {
+    min-width: 140px;
+  }
+  .book-found-card {
+    flex-direction: column;
+    align-items: center;
+  }
+  .book-found-card img {
+    width: 120px;
+    height: 180px;
+  }
+}
+
+/* Small padding fix for permission panel on small screens */
+@media (max-width: 767.98px) {
+  .camera-permission-panel {
+    padding: 1.25rem;
+  }
 }
 
 /* Make permission controls centered on small devices */

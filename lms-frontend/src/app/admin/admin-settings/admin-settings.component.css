@@ -1,2 +1,113 @@
-h2 { font-weight: 700; }
-.card { margin-top: 1rem; }
+:root {
+  --bg-dark: #0b0d12;
+  --muted: #9aa1aa;
+  --panel: #111214;
+  --accent: #0d6efd;
+}
+
+h2 {
+  font-weight: 700;
+  margin-bottom: 0.25rem;
+}
+.card {
+  margin-top: 1rem;
+  border-radius: 8px;
+}
+
+/* Sidebar */
+.card .list-group-item {
+  cursor: pointer;
+  transition:
+    background 0.12s ease,
+    color 0.12s ease;
+}
+.card .list-group-item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+.card .list-group-item.active {
+  background: linear-gradient(
+    90deg,
+    rgba(13, 110, 253, 0.12),
+    rgba(13, 110, 253, 0.06)
+  );
+  border-left: 3px solid rgba(13, 110, 253, 0.85);
+  color: #fff;
+}
+
+/* Search box in sidebar */
+.sidebar-search {
+  padding: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+}
+.sidebar-search .form-control {
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #fff;
+}
+
+/* Setting items */
+.setting-item {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.01), transparent);
+}
+.setting-item label {
+  font-size: 0.95rem;
+}
+.setting-item code {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+
+.form-control.bg-dark {
+  background: transparent !important;
+  border: 1px solid rgba(255, 255, 255, 0.06) !important;
+  color: #fff !important;
+}
+
+.form-check .badge {
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+/* Save button alignment */
+.setting-item .btn-primary {
+  min-width: 110px;
+}
+
+/* Audit row */
+.setting-item .border-top {
+  border-color: rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Modal tweaks */
+.modal-content.border-warning {
+  border-width: 1.5px;
+}
+.modal-content.bg-dark {
+  background: linear-gradient(
+    180deg,
+    rgba(17, 18, 20, 0.98),
+    rgba(10, 11, 12, 0.98)
+  );
+}
+
+/* Responsive: stack sidebar on small screens */
+@media (max-width: 767.98px) {
+  .card .list-group {
+    display: flex;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding: 0.5rem;
+  }
+  .card .list-group-item {
+    flex: 0 0 auto;
+  }
+  .sidebar-search {
+    padding: 0.5rem;
+  }
+}
+
+/* Small spacing helpers */
+.small-muted {
+  color: var(--muted);
+  font-size: 0.9rem;
+}

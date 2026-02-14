@@ -85,3 +85,95 @@
     padding: 0.25rem 0.5rem;
   }
 }
+
+:root {
+  --primary: #0d6efd;
+  --muted: #6c757d;
+  --card-bg: #ffffff;
+  --surface: #f8f9fa;
+}
+
+/* Header */
+.admin-news-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 1rem;
+}
+.admin-news-header h2 {
+  margin: 0;
+  font-size: 1.45rem;
+}
+.admin-news-subtitle {
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+/* Create card: two-column layout on wide screens */
+.create-grid {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.preview-box {
+  background: var(--surface);
+  border-radius: 8px;
+  padding: 0.75rem;
+  text-align: center;
+  min-height: 240px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.preview-box img {
+  max-height: 180px;
+  width: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.image-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Sticky action bar at bottom for mobile */
+.create-actions {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-start;
+}
+
+/* List item tweaks */
+.list-group-item .news-content {
+  max-height: 140px;
+  overflow: hidden;
+}
+
+/* Buttons */
+.btn-primary {
+  background: linear-gradient(90deg, var(--primary), #2a6df4);
+  border: none;
+}
+
+/* Drag hint for image input */
+.image-drop-hint {
+  border: 1px dashed #d6d9de;
+  padding: 0.75rem;
+  border-radius: 6px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+@media (max-width: 992px) {
+  .create-grid {
+    grid-template-columns: 1fr;
+  }
+  .preview-box {
+    order: 2;
+  }
+}

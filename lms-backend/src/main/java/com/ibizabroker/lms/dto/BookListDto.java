@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.Hibernate;
 
 import java.time.LocalDate;
 import java.util.Set;
@@ -73,6 +74,11 @@ public class BookListDto {
      * ISBN (Frontend tìm: book.isbn)
      */
     private String isbn;
+
+    /**
+     * Mã kệ sách (Frontend tìm: book.shelfCode)
+     */
+    private String shelfCode;
     
     /**
      * Ngày thêm vào thư viện
@@ -125,6 +131,7 @@ public class BookListDto {
                 .numberOfCopiesAvailable(book.getNumberOfCopiesAvailable()) // Frontend: book.numberOfCopiesAvailable
                 .publishedYear(book.getPublishedYear()) // Frontend: book.publishedYear
                 .isbn(book.getIsbn()) // Frontend: book.isbn
+                .shelfCode(book.getShelfCode()) // Frontend: book.shelfCode
                 
                 // Map Authors sang DTO con (Frontend: book.authors)
                 .authors(book.getAuthors() != null ? 
@@ -146,7 +153,7 @@ public class BookListDto {
     }
 
     private static Double computeAverageRating(com.ibizabroker.lms.entity.Books book) {
-        if (book.getReviews() == null) return null;
+        if (book.getReviews() == null || !Hibernate.isInitialized(book.getReviews())) return null;
         java.util.OptionalDouble avg = book.getReviews().stream()
             .filter(r -> r.isApproved())
             .mapToInt(r -> r.getRating())
@@ -155,7 +162,7 @@ public class BookListDto {
     }
 
     private static Integer computeReviewCount(com.ibizabroker.lms.entity.Books book) {
-        if (book.getReviews() == null) return 0;
+        if (book.getReviews() == null || !Hibernate.isInitialized(book.getReviews())) return 0;
         return (int) book.getReviews().stream().filter(r -> r.isApproved()).count();
     }
 }

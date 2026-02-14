@@ -19,6 +19,16 @@
   vertical-align: middle;
 }
 
+/* Focus ring for accessibility */
+.modal:focus {
+  outline: 3px solid rgba(59, 130, 246, 0.35);
+  outline-offset: 2px;
+}
+
+.modal-content:focus {
+  outline: none;
+}
+
 /* Loading state */
 button:disabled {
   cursor: not-allowed;

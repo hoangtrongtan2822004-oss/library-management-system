@@ -1,4 +1,9 @@
-<div class="container py-4">
+<main
+  id="update-book-main"
+  class="container py-4"
+  role="main"
+  aria-labelledby="update-book-title"
+>
   <!-- Breadcrumb -->
   <nav aria-label="breadcrumb" class="mb-4">
     <ol class="breadcrumb">
@@ -16,6 +21,8 @@
       </li>
     </ol>
   </nav>
+
+  <h1 id="update-book-title" class="visually-hidden">Chỉnh sửa sách</h1>
 
   <!-- Loading Spinner -->
   <div *ngIf="isLoading" class="text-center py-5">
@@ -41,7 +48,7 @@
           </h5>
         </div>
         <div class="card-body">
-          <form [formGroup]="bookForm" (ngSubmit)="onSubmit()">
+          <form [formGroup]="bookForm" (ngSubmit)="onSubmit()" novalidate>
             <div class="row g-3">
               <!-- Book Name -->
               <div class="col-md-12">
@@ -55,11 +62,19 @@
                   class="form-control"
                   formControlName="name"
                   [class.is-invalid]="hasError('name')"
+                  [attr.aria-invalid]="hasError('name') ? 'true' : 'false'"
+                  [attr.aria-describedby]="
+                    hasError('name') ? 'nameError' : null
+                  "
                   placeholder="Nhập tên sách"
                 />
-                <div *ngIf="hasError('name')" class="invalid-feedback">
-                  <i class="fa-solid fa-circle-exclamation me-1"></i
-                  >{{ getErrorMessage("name") }}
+                <div
+                  *ngIf="hasError('name')"
+                  id="nameError"
+                  class="invalid-feedback"
+                >
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  {{ getErrorMessage("name") }}
                 </div>
               </div>
 
@@ -75,11 +90,19 @@
                   class="form-control"
                   formControlName="author"
                   [class.is-invalid]="hasError('author')"
+                  [attr.aria-invalid]="hasError('author') ? 'true' : 'false'"
+                  [attr.aria-describedby]="
+                    hasError('author') ? 'authorError' : null
+                  "
                   placeholder="Nhập tên tác giả"
                 />
-                <div *ngIf="hasError('author')" class="invalid-feedback">
-                  <i class="fa-solid fa-circle-exclamation me-1"></i
-                  >{{ getErrorMessage("author") }}
+                <div
+                  *ngIf="hasError('author')"
+                  id="authorError"
+                  class="invalid-feedback"
+                >
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  {{ getErrorMessage("author") }}
                 </div>
               </div>
 
@@ -94,12 +117,35 @@
                   class="form-control"
                   formControlName="isbn"
                   [class.is-invalid]="hasError('isbn')"
+                  [attr.aria-invalid]="hasError('isbn') ? 'true' : 'false'"
+                  [attr.aria-describedby]="
+                    hasError('isbn') ? 'isbnError' : null
+                  "
                   placeholder="10 hoặc 13 chữ số"
                 />
-                <div *ngIf="hasError('isbn')" class="invalid-feedback">
-                  <i class="fa-solid fa-circle-exclamation me-1"></i
-                  >{{ getErrorMessage("isbn") }}
+                <div
+                  *ngIf="hasError('isbn')"
+                  id="isbnError"
+                  class="invalid-feedback"
+                >
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  {{ getErrorMessage("isbn") }}
                 </div>
+              </div>
+
+              <!-- Shelf Code -->
+              <div class="col-md-6">
+                <label for="shelfCode" class="form-label">
+                  <i class="fa-solid fa-location-dot me-2 text-primary"></i>Mã
+                  kệ
+                </label>
+                <input
+                  type="text"
+                  id="shelfCode"
+                  class="form-control"
+                  formControlName="shelfCode"
+                  placeholder="VD: A1-01"
+                />
               </div>
 
               <!-- Categories (Multi-select) -->
@@ -115,18 +161,25 @@
                   multiple
                   size="4"
                   [class.is-invalid]="hasError('categoryIds')"
+                  [attr.aria-describedby]="
+                    hasError('categoryIds') ? 'categoryIdsError' : null
+                  "
                 >
                   <option *ngFor="let cat of categories" [value]="cat.id">
                     {{ cat.name }}
                   </option>
                 </select>
-                <div class="form-text">
+                <div class="form-text" id="categoryHelp">
                   <i class="fa-solid fa-info-circle me-1"></i>Giữ Ctrl để chọn
                   nhiều danh mục
                 </div>
-                <div *ngIf="hasError('categoryIds')" class="invalid-feedback">
-                  <i class="fa-solid fa-circle-exclamation me-1"></i
-                  >{{ getErrorMessage("categoryIds") }}
+                <div
+                  *ngIf="hasError('categoryIds')"
+                  id="categoryIdsError"
+                  class="invalid-feedback"
+                >
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  {{ getErrorMessage("categoryIds") }}
                 </div>
               </div>
 
@@ -156,13 +209,23 @@
                   class="form-control"
                   formControlName="publishedYear"
                   [class.is-invalid]="hasError('publishedYear')"
+                  [attr.aria-invalid]="
+                    hasError('publishedYear') ? 'true' : 'false'
+                  "
+                  [attr.aria-describedby]="
+                    hasError('publishedYear') ? 'publishedYearError' : null
+                  "
                   placeholder="VD: 2024"
                   min="1000"
                   [max]="currentYear"
                 />
-                <div *ngIf="hasError('publishedYear')" class="invalid-feedback">
-                  <i class="fa-solid fa-circle-exclamation me-1"></i
-                  >{{ getErrorMessage("publishedYear") }}
+                <div
+                  *ngIf="hasError('publishedYear')"
+                  id="publishedYearError"
+                  class="invalid-feedback"
+                >
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  {{ getErrorMessage("publishedYear") }}
                 </div>
               </div>
 
@@ -177,12 +240,20 @@
                   class="form-control"
                   formControlName="pageCount"
                   [class.is-invalid]="hasError('pageCount')"
+                  [attr.aria-invalid]="hasError('pageCount') ? 'true' : 'false'"
+                  [attr.aria-describedby]="
+                    hasError('pageCount') ? 'pageCountError' : null
+                  "
                   placeholder="VD: 350"
                   min="1"
                 />
-                <div *ngIf="hasError('pageCount')" class="invalid-feedback">
-                  <i class="fa-solid fa-circle-exclamation me-1"></i
-                  >{{ getErrorMessage("pageCount") }}
+                <div
+                  *ngIf="hasError('pageCount')"
+                  id="pageCountError"
+                  class="invalid-feedback"
+                >
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  {{ getErrorMessage("pageCount") }}
                 </div>
               </div>
 
@@ -198,12 +269,22 @@
                   class="form-control"
                   formControlName="totalCopies"
                   [class.is-invalid]="hasError('totalCopies')"
+                  [attr.aria-invalid]="
+                    hasError('totalCopies') ? 'true' : 'false'
+                  "
+                  [attr.aria-describedby]="
+                    hasError('totalCopies') ? 'totalCopiesError' : null
+                  "
                   placeholder="0"
                   min="0"
                 />
-                <div *ngIf="hasError('totalCopies')" class="invalid-feedback">
-                  <i class="fa-solid fa-circle-exclamation me-1"></i
-                  >{{ getErrorMessage("totalCopies") }}
+                <div
+                  *ngIf="hasError('totalCopies')"
+                  id="totalCopiesError"
+                  class="invalid-feedback"
+                >
+                  <i class="fa-solid fa-circle-exclamation me-1"></i>
+                  {{ getErrorMessage("totalCopies") }}
                 </div>
               </div>
 
@@ -283,15 +364,25 @@
               [src]="coverPreview"
               alt="Book Cover"
               class="cover-preview"
+              loading="lazy"
               (error)="coverPreview = defaultCover"
             />
           </div>
 
           <div class="mb-3">
-            <label for="coverUpload" class="btn btn-outline-primary btn-sm">
+            <label
+              for="coverUpload"
+              class="btn btn-outline-primary btn-sm"
+              tabindex="0"
+              role="button"
+              (keydown.enter)="coverUploadInput.click()"
+              (keydown.space)="coverUploadInput.click()"
+              aria-controls="coverUpload"
+            >
               <i class="fa-solid fa-upload me-2"></i>Upload Ảnh Mới
             </label>
             <input
+              #coverUploadInput
               type="file"
               id="coverUpload"
               class="d-none"
@@ -342,4 +433,4 @@
       </div>
     </div>
   </div>
-</div>
+</main>

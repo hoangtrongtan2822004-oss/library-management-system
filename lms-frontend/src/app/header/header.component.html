@@ -1,4 +1,11 @@
-<nav class="navbar navbar-expand-lg navbar-dark site-header">
+<a class="skip-link sr-only sr-only-focusable" href="#main-content"
+  >Bỏ qua điều hướng</a
+>
+<nav
+  class="navbar navbar-expand-lg navbar-dark site-header"
+  role="navigation"
+  aria-label="Main Navigation"
+>
   <div class="container-fluid">
     <!-- Logo -->
     <a
@@ -130,13 +137,19 @@
     </div>
 
     <!-- Global Search Bar (Desktop/Tablet) -->
-    <div class="global-search-container d-none d-lg-block">
+    <div
+      class="global-search-container d-none d-lg-block"
+      role="search"
+      aria-label="Tìm kiếm sách"
+    >
       <div class="search-wrapper">
         <i class="fa-solid fa-search search-icon"></i>
         <input
           type="text"
           class="form-control global-search-input"
           placeholder="Tìm sách..."
+          id="globalSearchInput"
+          aria-label="Tìm sách"
           [(ngModel)]="globalSearchTerm"
           (input)="onGlobalSearch(globalSearchTerm)"
           (keyup.enter)="performFullSearch()"
@@ -150,6 +163,10 @@
             class="search-result-item"
             *ngFor="let book of searchResults"
             (click)="selectSearchResult(book)"
+            tabindex="0"
+            (keydown.enter)="selectSearchResult(book)"
+            role="button"
+            aria-label="{{ book.name }}"
           >
             <img
               [src]="book.coverUrl || 'assets/default-book-cover.png'"
@@ -178,13 +195,20 @@
           class="btn btn-icon"
           (click)="toggleLanguageDropdown()"
           aria-label="Chuyển ngôn ngữ"
+          aria-haspopup="true"
+          [attr.aria-expanded]="showLanguageDropdown ? 'true' : 'false'"
+          aria-controls="languageDropdown"
         >
           <span class="flag-emoji">{{
             currentLanguage === "vi" ? "🇻🇳" : "🇺🇸"
           }}</span>
           <i class="fa-solid fa-chevron-down ms-1"></i>
         </button>
-        <div class="language-dropdown" *ngIf="showLanguageDropdown">
+        <div
+          class="language-dropdown"
+          *ngIf="showLanguageDropdown"
+          id="languageDropdown"
+        >
           <div class="dropdown-item" (click)="switchLanguage('vi')">
             <span class="flag-emoji">🇻🇳</span> Tiếng Việt
             <i
@@ -235,6 +259,9 @@
             class="btn btn-icon"
             (click)="toggleNotificationDropdown()"
             aria-label="Thông báo"
+            aria-haspopup="true"
+            [attr.aria-expanded]="showNotificationDropdown ? 'true' : 'false'"
+            aria-controls="notificationDropdown"
           >
             <i class="fa-solid fa-bell"></i>
             <span class="badge-count pulse" *ngIf="unreadNotificationCount > 0">
@@ -243,7 +270,11 @@
           </button>
 
           <!-- Notification Dropdown -->
-          <div class="notification-dropdown" *ngIf="showNotificationDropdown">
+          <div
+            class="notification-dropdown"
+            *ngIf="showNotificationDropdown"
+            id="notificationDropdown"
+          >
             <div class="notification-header">
               <h6>Thông báo</h6>
               <button
@@ -272,6 +303,7 @@
                         notification.type === 'warning',
                       'fa-check-circle': notification.type === 'success',
                       'fa-times-circle': notification.type === 'error',
+                      'fa-bullhorn': notification.type === 'urgent',
                     }"
                   ></i>
                 </div>
@@ -340,6 +372,16 @@
                 <i class="fa-solid fa-chart-pie"></i> Bảng Điều Khiển
               </a>
             </li>
+            <li *ngIf="isAdmin()">
+              <a class="dropdown-item" routerLink="/admin/audit-logs">
+                <i class="fa-solid fa-clipboard-check"></i> Nhật Ký Hệ Thống
+              </a>
+            </li>
+            <li *ngIf="isAdmin()">
+              <a class="dropdown-item" routerLink="/admin/member-cards">
+                <i class="fa-solid fa-id-card"></i> Thẻ Thành Viên
+              </a>
+            </li>
             <!-- Admin dashboard link removed for admins -->
             <li *ngIf="isUser()">
               <a class="dropdown-item" routerLink="/my-account">
@@ -349,11 +391,6 @@
             <li *ngIf="isUser()">
               <a class="dropdown-item" routerLink="/gamification">
                 <i class="fa-solid fa-trophy text-warning"></i> Điểm Thưởng
-              </a>
-            </li>
-            <li *ngIf="isUser()">
-              <a class="dropdown-item" routerLink="/wishlist">
-                <i class="fa-solid fa-heart text-danger"></i> Yêu Thích
               </a>
             </li>
             <li><hr class="dropdown-divider" /></li>
@@ -383,6 +420,8 @@
       type="button"
       (click)="toggleMobileMenu()"
       aria-label="Toggle navigation"
+      aria-controls="mobileMenuSidebar"
+      [attr.aria-expanded]="isMobileMenuOpen ? 'true' : 'false'"
     >
       <i
         class="fa-solid"
@@ -400,7 +439,12 @@
 ></div>
 
 <!-- Mobile Menu Sidebar -->
-<div class="mobile-menu-sidebar" [class.open]="isMobileMenuOpen">
+<div
+  id="mobileMenuSidebar"
+  class="mobile-menu-sidebar"
+  [class.open]="isMobileMenuOpen"
+  [attr.aria-hidden]="!isMobileMenuOpen"
+>
   <div class="mobile-menu-header">
     <ng-container *ngIf="isLoggedIn()">
       <div class="mobile-user-profile">

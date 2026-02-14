@@ -295,3 +295,34 @@
 .d-none {
   display: none !important;
 }
+
+/* Accessibility helpers */
+.visually-hidden,
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Focus visible helper */
+*:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Make upload label keyboard-accessible focus style */
+label[for="avatarUpload"],
+.btn[aria-controls="avatarUpload"] {
+  cursor: pointer;
+}
+
+label[for="avatarUpload"]:focus-visible {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+  border-radius: 6px;
+}

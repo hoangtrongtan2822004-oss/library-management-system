@@ -12,212 +12,352 @@
     </div>
     <hr />
 
-    <form (ngSubmit)="saveBook(bookForm)" #bookForm="ngForm">
-      <!-- ISBN với Auto-fill Button -->
-      <div class="mb-3">
-        <label for="isbn" class="form-label">
-          ISBN
-          <small class="text-muted">(Mã quốc tế)</small>
-        </label>
-        <div class="isbn-input-group">
-          <input
-            type="text"
-            class="form-control"
-            id="isbn"
-            name="isbn"
-            [(ngModel)]="book.isbn"
-            placeholder="9780132350884"
-            [disabled]="fetchingIsbn"
-          />
-          <button
-            type="button"
-            class="btn btn-magic"
-            (click)="fetchBookDataByISBN()"
-            [disabled]="fetchingIsbn || !book.isbn"
-            title="Tự động lấy thông tin sách từ Google Books"
-          >
-            <i
-              class="fas"
-              [ngClass]="fetchingIsbn ? 'fa-spinner fa-spin' : 'fa-magic'"
-            ></i>
-            {{ fetchingIsbn ? "Đang tải..." : "Lấy dữ liệu" }}
-          </button>
-        </div>
-        <small class="form-text text-muted">
-          💡 <strong>Mẹo:</strong> Nhập ISBN và bấm "Lấy dữ liệu" để tự động
-          điền thông tin sách!
-        </small>
-      </div>
-
-      <div class="mb-3">
-        <label for="name" class="form-label"
-          >Tên Sách <span class="required">*</span></label
-        >
-        <input
-          type="text"
-          class="form-control"
-          id="name"
-          name="name"
-          [(ngModel)]="book.name"
-          required
-          #name="ngModel"
-        />
-        <div
-          *ngIf="name.invalid && (name.dirty || name.touched)"
-          class="text-danger mt-1"
-        >
-          Tên sách là bắt buộc.
-        </div>
-      </div>
-
-      <!-- Author với Autocomplete Search -->
-      <div class="mb-3">
-        <label for="authorIds" class="form-label"
-          >Tác Giả <span class="required">*</span></label
-        >
-
-        <!-- Search/Filter Input -->
-        <div class="author-search-box mb-2">
-          <i class="fas fa-search search-icon"></i>
-          <input
-            type="text"
-            class="form-control"
-            placeholder="🔍 Tìm tác giả..."
-            [(ngModel)]="authorSearchQuery"
-            (ngModelChange)="filterAuthors($event)"
-            name="authorSearch"
-          />
-        </div>
-
-        <select
-          multiple
-          class="form-select author-select"
-          id="authorIds"
-          name="authorIds"
-          [(ngModel)]="book.authorIds"
-          required
-          #authorIds="ngModel"
-          [size]="5"
-        >
-          <option *ngFor="let author of filteredAuthors" [ngValue]="author.id">
-            {{ author.name }}
-          </option>
-          <option *ngIf="filteredAuthors.length === 0" disabled>
-            Không tìm thấy tác giả phù hợp
-          </option>
-        </select>
-        <div
-          *ngIf="authorIds.invalid && (authorIds.dirty || authorIds.touched)"
-          class="text-danger mt-1"
-        >
-          Vui lòng chọn ít nhất 1 tác giả.
-        </div>
-        <div class="mt-2 d-flex gap-2">
-          <button
-            type="button"
-            class="btn btn-outline-primary btn-sm"
-            (click)="openAddAuthor()"
-          >
-            <i class="fas fa-plus"></i> Thêm tác giả
-          </button>
-          <small class="text-muted align-self-center">
-            <i class="fas fa-info-circle"></i> Giữ Ctrl để chọn nhiều tác giả
-          </small>
-        </div>
-      </div>
-      <!-- Add Author Modal -->
-      <div class="modal-backdrop" *ngIf="showAddAuthorModal"></div>
-      <div
-        class="modal"
-        tabindex="-1"
-        *ngIf="showAddAuthorModal"
-        style="display: block"
-      >
-        <div class="modal-dialog">
-          <div class="modal-content">
-            <div class="modal-header">
-              <h5 class="modal-title">Thêm Tác Giả</h5>
-              <button
-                type="button"
-                class="btn-close"
-                (click)="closeAddAuthor()"
-              ></button>
-            </div>
-            <div class="modal-body">
-              <label for="newAuthorName" class="form-label">Tên tác giả</label>
+    <form
+      (ngSubmit)="saveBook(bookForm)"
+      #bookForm="ngForm"
+      aria-describedby="create-book-help"
+    >
+      <div class="create-grid">
+        <div class="form-col">
+          <!-- ISBN với Auto-fill Button -->
+          <div class="mb-3">
+            <label for="isbn" class="form-label">
+              ISBN <small class="text-muted">(Mã quốc tế)</small>
+            </label>
+            <div class="isbn-input-group">
               <input
-                id="newAuthorName"
                 type="text"
                 class="form-control"
-                [(ngModel)]="newAuthorName"
-                name="newAuthorName"
+                id="isbn"
+                name="isbn"
+                [(ngModel)]="book.isbn"
+                placeholder="9780132350884"
+                [disabled]="fetchingIsbn"
+                aria-label="ISBN"
               />
-              <div *ngIf="errorMessage" class="alert alert-danger mt-2">
-                {{ errorMessage }}
+              <button
+                type="button"
+                class="btn btn-magic"
+                (click)="fetchBookDataByISBN()"
+                [disabled]="fetchingIsbn || !book.isbn"
+                title="Tự động lấy thông tin sách từ Google Books"
+              >
+                <i
+                  class="fas"
+                  [ngClass]="fetchingIsbn ? 'fa-spinner fa-spin' : 'fa-magic'"
+                ></i>
+                <span class="d-none d-sm-inline">{{
+                  fetchingIsbn ? "Đang tải..." : "Lấy dữ liệu"
+                }}</span>
+              </button>
+            </div>
+            <small id="create-book-help" class="form-text text-muted"
+              >💡 <strong>Mẹo:</strong> Nhập ISBN và bấm "Lấy dữ liệu" để tự
+              động điền thông tin sách!</small
+            >
+          </div>
+
+          <div class="mb-3">
+            <label for="name" class="form-label"
+              >Tên Sách <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="name"
+              name="name"
+              [(ngModel)]="book.name"
+              required
+              #name="ngModel"
+            />
+            <div
+              *ngIf="name.invalid && (name.dirty || name.touched)"
+              class="text-danger mt-1"
+            >
+              Tên sách là bắt buộc.
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="shelfCode" class="form-label">Mã kệ</label>
+            <input
+              type="text"
+              class="form-control"
+              id="shelfCode"
+              name="shelfCode"
+              [(ngModel)]="book.shelfCode"
+              placeholder="VD: A1-01"
+            />
+            <small class="form-text text-muted"
+              >Dùng cho kiểm kê để xác định sách đúng kệ.</small
+            >
+          </div>
+
+          <!-- Author với Autocomplete Search -->
+          <div class="mb-3">
+            <label for="authorIds" class="form-label"
+              >Tác Giả <span class="required">*</span></label
+            >
+            <div class="author-search-box mb-2">
+              <i class="fas fa-search search-icon"></i>
+              <input
+                type="text"
+                class="form-control"
+                placeholder="🔍 Tìm tác giả..."
+                [(ngModel)]="authorSearchQuery"
+                (ngModelChange)="filterAuthors($event)"
+                name="authorSearch"
+              />
+            </div>
+
+            <select
+              multiple
+              class="form-select author-select"
+              id="authorIds"
+              name="authorIds"
+              [(ngModel)]="book.authorIds"
+              required
+              #authorIds="ngModel"
+              [size]="5"
+            >
+              <option
+                *ngFor="let author of filteredAuthors"
+                [ngValue]="author.id"
+              >
+                {{ author.name }}
+              </option>
+              <option *ngIf="filteredAuthors.length === 0" disabled>
+                Không tìm thấy tác giả phù hợp
+              </option>
+            </select>
+            <div
+              *ngIf="
+                authorIds.invalid && (authorIds.dirty || authorIds.touched)
+              "
+              class="text-danger mt-1"
+            >
+              Vui lòng chọn ít nhất 1 tác giả.
+            </div>
+            <div class="mt-2 d-flex gap-2">
+              <button
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                (click)="openAddAuthor()"
+              >
+                <i class="fas fa-plus"></i> Thêm tác giả
+              </button>
+              <small class="text-muted align-self-center"
+                ><i class="fas fa-info-circle"></i> Giữ Ctrl để chọn nhiều tác
+                giả</small
+              >
+            </div>
+          </div>
+          <!-- Add Author Modal -->
+          <div class="modal-backdrop" *ngIf="showAddAuthorModal"></div>
+          <div
+            class="modal"
+            tabindex="-1"
+            *ngIf="showAddAuthorModal"
+            style="display: block"
+          >
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title">Thêm Tác Giả</h5>
+                  <button
+                    type="button"
+                    class="btn-close"
+                    (click)="closeAddAuthor()"
+                  ></button>
+                </div>
+                <div class="modal-body">
+                  <label for="newAuthorName" class="form-label"
+                    >Tên tác giả</label
+                  >
+                  <input
+                    id="newAuthorName"
+                    type="text"
+                    class="form-control"
+                    [(ngModel)]="newAuthorName"
+                    name="newAuthorName"
+                  />
+                  <div *ngIf="errorMessage" class="alert alert-danger mt-2">
+                    {{ errorMessage }}
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button
+                    type="button"
+                    class="btn btn-secondary"
+                    (click)="closeAddAuthor()"
+                    [disabled]="savingAuthor"
+                  >
+                    Đóng
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary"
+                    (click)="saveNewAuthor()"
+                    [disabled]="savingAuthor"
+                  >
+                    <span
+                      *ngIf="savingAuthor"
+                      class="spinner-border spinner-border-sm"
+                    ></span>
+                    {{ savingAuthor ? "Đang lưu..." : "Lưu" }}
+                  </button>
+                </div>
               </div>
             </div>
-            <div class="modal-footer">
+          </div>
+
+          <div class="mb-3">
+            <label for="categoryIds" class="form-label">Thể Loại</label>
+            <select
+              multiple
+              class="form-select"
+              id="categoryIds"
+              name="categoryIds"
+              [(ngModel)]="book.categoryIds"
+              required
+              #categoryIds="ngModel"
+              [size]="5"
+            >
+              <option
+                *ngFor="let category of allCategories"
+                [ngValue]="category.id"
+              >
+                {{ category.name }}
+              </option>
+            </select>
+            <div
+              *ngIf="
+                categoryIds.invalid &&
+                (categoryIds.dirty || categoryIds.touched)
+              "
+              class="text-danger mt-1"
+            >
+              Vui lòng chọn ít nhất 1 thể loại.
+            </div>
+            <div class="mt-2 d-flex gap-2">
               <button
                 type="button"
-                class="btn btn-secondary"
-                (click)="closeAddAuthor()"
-                [disabled]="savingAuthor"
+                class="btn btn-outline-primary btn-sm"
+                (click)="openAddCategory()"
               >
-                Đóng
-              </button>
-              <button
-                type="button"
-                class="btn btn-primary"
-                (click)="saveNewAuthor()"
-                [disabled]="savingAuthor"
-              >
-                <span
-                  *ngIf="savingAuthor"
-                  class="spinner-border spinner-border-sm"
-                ></span>
-                {{ savingAuthor ? "Đang lưu..." : "Lưu" }}
+                + Thêm thể loại
               </button>
             </div>
           </div>
-        </div>
-      </div>
 
-      <div class="mb-3">
-        <label for="categoryIds" class="form-label">Thể Loại</label>
-        <select
-          multiple
-          class="form-select"
-          id="categoryIds"
-          name="categoryIds"
-          [(ngModel)]="book.categoryIds"
-          required
-          #categoryIds="ngModel"
-          [size]="5"
-        >
-          <option
-            *ngFor="let category of allCategories"
-            [ngValue]="category.id"
-          >
-            {{ category.name }}
-          </option>
-        </select>
-        <div
-          *ngIf="
-            categoryIds.invalid && (categoryIds.dirty || categoryIds.touched)
-          "
-          class="text-danger mt-1"
-        >
-          Vui lòng chọn ít nhất 1 thể loại.
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <label for="numberOfCopiesAvailable" class="form-label"
+                >Số Lượng Bản Sao</label
+              >
+              <input
+                type="number"
+                class="form-control"
+                id="numberOfCopiesAvailable"
+                name="numberOfCopiesAvailable"
+                [(ngModel)]="book.numberOfCopiesAvailable"
+                required
+                min="0"
+                #noOfCopies="ngModel"
+              />
+              <div
+                *ngIf="
+                  noOfCopies.invalid && (noOfCopies.dirty || noOfCopies.touched)
+                "
+                class="text-danger mt-1"
+              >
+                Vui lòng nhập số lượng bản sao hợp lệ.
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <label for="publishedYear" class="form-label">Năm Xuất Bản</label>
+              <input
+                type="number"
+                class="form-control"
+                id="publishedYear"
+                name="publishedYear"
+                [(ngModel)]="book.publishedYear"
+              />
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="coverUrl" class="form-label">Ảnh Bìa (Cover URL)</label>
+            <div class="cover-input-section d-flex gap-2">
+              <input
+                type="url"
+                class="form-control"
+                id="coverUrl"
+                name="coverUrl"
+                [(ngModel)]="book.coverUrl"
+                placeholder="https://example.com/cover.jpg"
+                (ngModelChange)="coverPreviewError = false"
+                aria-describedby="cover-preview-desc"
+              />
+              <button
+                type="button"
+                class="btn btn-outline-secondary btn-sm"
+                (click)="coverPreviewError = false"
+                title="Tải lại xem trước"
+              >
+                <i class="fas fa-redo"></i>
+              </button>
+            </div>
+            <div id="cover-preview-desc" class="form-text text-muted">
+              Xem trước ảnh bìa sẽ hiển thị ở bên phải trên màn hình lớn.
+            </div>
+          </div>
         </div>
-        <div class="mt-2 d-flex gap-2">
-          <button
-            type="button"
-            class="btn btn-outline-primary btn-sm"
-            (click)="openAddCategory()"
-          >
-            + Thêm thể loại
-          </button>
-        </div>
+
+        <!-- preview column -->
+        <aside class="preview-col" aria-hidden="false">
+          <div class="preview-panel">
+            <div class="preview-label">
+              <i class="fas fa-eye"></i> Xem trước ảnh bìa
+            </div>
+            <div class="cover-preview-box">
+              <img
+                *ngIf="book.coverUrl && !coverPreviewError"
+                [src]="book.coverUrl"
+                alt="Book cover preview"
+                class="cover-preview-image"
+                (error)="onCoverError()"
+              />
+              <div
+                *ngIf="!book.coverUrl || coverPreviewError"
+                class="cover-placeholder"
+              >
+                <i class="fas fa-book-open"></i>
+                <p class="mb-0">Không có ảnh. Sử dụng URL ảnh hoặc bỏ trống.</p>
+              </div>
+            </div>
+            <div class="meta-panel mt-3">
+              <h5 class="mb-1">Tóm tắt sách</h5>
+              <p class="small text-muted mb-2">Tên: {{ book.name || "—" }}</p>
+              <p class="small text-muted mb-2">
+                Tác giả:
+                {{
+                  book.authorIds?.length
+                    ? book.authorIds?.length + " đã chọn"
+                    : "—"
+                }}
+              </p>
+              <p class="small text-muted mb-0">
+                Thể loại:
+                {{
+                  book.categoryIds?.length
+                    ? book.categoryIds?.length + " đã chọn"
+                    : "—"
+                }}
+              </p>
+            </div>
+          </div>
+        </aside>
       </div>
       <!-- Add Category Modal -->
       <div class="modal-backdrop" *ngIf="showAddCategoryModal"></div>
@@ -348,16 +488,7 @@
         </div>
       </div>
 
-      <div class="mb-3">
-        <label for="isbn" class="form-label">ISBN</label>
-        <input
-          type="text"
-          class="form-control"
-          id="isbn"
-          name="isbn"
-          [(ngModel)]="book.isbn"
-        />
-      </div>
+      <!-- duplicate ISBN removed; primary ISBN input located above -->
 
       <div *ngIf="errorMessage" class="alert alert-danger">
         {{ errorMessage }}

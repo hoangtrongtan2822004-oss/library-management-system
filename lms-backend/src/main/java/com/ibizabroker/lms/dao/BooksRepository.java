@@ -142,6 +142,26 @@ public interface BooksRepository extends JpaRepository<Books, Integer>, JpaSpeci
         @Param("categoryIds") List<Integer> categoryIds,
         Pageable pageable);
 
+       @EntityGraph(attributePaths = {"authors", "categories"})
+       @Query("SELECT DISTINCT b FROM Books b " +
+                 "JOIN b.categories c " +
+                 "WHERE c.id IN :categoryIds " +
+                 "ORDER BY b.numberOfCopiesAvailable DESC, b.id DESC")
+       List<Books> findByCategoryIds(
+              @Param("categoryIds") List<Integer> categoryIds,
+              Pageable pageable);
+
+       @EntityGraph(attributePaths = {"authors", "categories"})
+       @Query("SELECT DISTINCT b FROM Books b " +
+                 "JOIN b.categories c " +
+                 "WHERE c.id IN :categoryIds " +
+                 "AND b.id NOT IN :excludeBookIds " +
+                 "ORDER BY b.numberOfCopiesAvailable DESC, b.id DESC")
+       List<Books> findByCategoryIdsExcludingBookIds(
+              @Param("categoryIds") List<Integer> categoryIds,
+              @Param("excludeBookIds") List<Integer> excludeBookIds,
+              Pageable pageable);
+
     // ====================================================================
     // 💡 SUGGESTIONS
     // ====================================================================
@@ -153,6 +173,10 @@ public interface BooksRepository extends JpaRepository<Books, Integer>, JpaSpeci
     List<String> findAuthorSuggestions(@Param("query") String query, Pageable pageable);
 
     Optional<Books> findByIsbnIgnoreCase(String isbn);
+
+       List<Books> findByShelfCodeIn(List<String> shelfCodes);
+
+       long countByShelfCodeIn(List<String> shelfCodes);
 
     // ====================================================================
     // 🚀 MYSQL NATIVE FULL-TEXT SEARCH

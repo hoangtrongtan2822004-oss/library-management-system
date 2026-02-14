@@ -76,18 +76,30 @@
       </div>
 
       <!-- Navigation Menu -->
-      <div class="list-group shadow-sm rounded-3 overflow-hidden border-0">
+      <div
+        class="list-group shadow-sm rounded-3 overflow-hidden border-0"
+        role="navigation"
+        aria-label="Account Navigation"
+      >
         <button
+          id="account-nav-PROFILE"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'PROFILE'"
           (click)="changeTab('PROFILE')"
+          aria-controls="tab-PROFILE"
+          [attr.aria-current]="currentTab === 'PROFILE' ? 'true' : null"
         >
           <i class="fa-solid fa-id-card me-3 width-20"></i> Hồ Sơ Cá Nhân
         </button>
         <button
+          id="account-nav-ACTIVE"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'ACTIVE'"
           (click)="changeTab('ACTIVE')"
+          aria-controls="tab-ACTIVE"
+          [attr.aria-current]="currentTab === 'ACTIVE' ? 'true' : null"
         >
           <i class="fa-solid fa-book-open-reader me-3 width-20"></i> Sách Đang
           Mượn
@@ -98,17 +110,25 @@
           >
         </button>
         <button
+          id="account-nav-HISTORY"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'HISTORY'"
           (click)="changeTab('HISTORY')"
+          aria-controls="tab-HISTORY"
+          [attr.aria-current]="currentTab === 'HISTORY' ? 'true' : null"
         >
           <i class="fa-solid fa-clock-rotate-left me-3 width-20"></i> Lịch Sử
           Trả
         </button>
         <button
+          id="account-nav-FINES"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'FINES'"
           (click)="changeTab('FINES')"
+          aria-controls="tab-FINES"
+          [attr.aria-current]="currentTab === 'FINES' ? 'true' : null"
         >
           <i class="fa-solid fa-file-invoice-dollar me-3 width-20"></i> Phí Phạt
           <span
@@ -118,9 +138,13 @@
           >
         </button>
         <button
+          id="account-nav-REVIEWS"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'REVIEWS'"
           (click)="changeTab('REVIEWS')"
+          aria-controls="tab-REVIEWS"
+          [attr.aria-current]="currentTab === 'REVIEWS' ? 'true' : null"
         >
           <i class="fa-solid fa-comments me-3 width-20"></i> Đánh Giá Của Tôi
           <span
@@ -130,16 +154,24 @@
           >
         </button>
         <button
+          id="account-nav-STATS"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'STATS'"
           (click)="changeTab('STATS')"
+          aria-controls="tab-STATS"
+          [attr.aria-current]="currentTab === 'STATS' ? 'true' : null"
         >
           <i class="fa-solid fa-chart-line me-3 width-20"></i> Thống Kê Đọc Sách
         </button>
         <button
+          id="account-nav-BADGES"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'BADGES'"
           (click)="changeTab('BADGES')"
+          aria-controls="tab-BADGES"
+          [attr.aria-current]="currentTab === 'BADGES' ? 'true' : null"
         >
           <i class="fa-solid fa-trophy me-3 width-20"></i> Huy Hiệu
           <span
@@ -149,9 +181,13 @@
           >
         </button>
         <button
+          id="account-nav-SETTINGS"
+          type="button"
           class="list-group-item list-group-item-action p-3 d-flex align-items-center"
           [class.active-menu]="currentTab === 'SETTINGS'"
           (click)="changeTab('SETTINGS')"
+          aria-controls="tab-SETTINGS"
+          [attr.aria-current]="currentTab === 'SETTINGS' ? 'true' : null"
         >
           <i class="fa-solid fa-gear me-3 width-20"></i> Cài Đặt
         </button>
@@ -161,7 +197,14 @@
     <!-- RIGHT CONTENT -->
     <div class="col-lg-8">
       <!-- 1. PROFILE TAB -->
-      <div *ngIf="currentTab === 'PROFILE'" class="animate-fade-in">
+      <div
+        id="tab-PROFILE"
+        role="region"
+        aria-labelledby="account-nav-PROFILE"
+        tabindex="0"
+        *ngIf="currentTab === 'PROFILE'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold">Tổng Quan</h3>
 
         <!-- Stats Row -->
@@ -224,7 +267,14 @@
       </div>
 
       <!-- 2. ACTIVE LOANS TAB -->
-      <div *ngIf="currentTab === 'ACTIVE'" class="animate-fade-in">
+      <div
+        id="tab-ACTIVE"
+        role="region"
+        aria-labelledby="account-nav-ACTIVE"
+        tabindex="0"
+        *ngIf="currentTab === 'ACTIVE'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold text-white">Sách Đang Mượn</h3>
 
         <div
@@ -272,9 +322,14 @@
               </ng-container>
             </div>
             <button
+              type="button"
               class="btn btn-outline-warning btn-sm"
               (click)="renewLoan(loan.loanId)"
               [disabled]="isPendingRenewal(loan.loanId)"
+              [attr.aria-disabled]="
+                isPendingRenewal(loan.loanId) ? 'true' : null
+              "
+              aria-label="Gia hạn mượn {{ loan.bookName }}"
             >
               <i class="fa-solid fa-rotate-right me-1"></i>
               {{ isPendingRenewal(loan.loanId) ? "Đang Chờ" : "Gia Hạn" }}
@@ -284,9 +339,28 @@
       </div>
 
       <!-- 3. HISTORY TAB -->
-      <div *ngIf="currentTab === 'HISTORY'" class="animate-fade-in">
+      <div
+        id="tab-HISTORY"
+        role="region"
+        aria-labelledby="account-nav-HISTORY"
+        tabindex="0"
+        *ngIf="currentTab === 'HISTORY'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold">Lịch Sử Trả Sách</h3>
-        <div class="table-responsive">
+        <div *ngIf="historyLoans.length === 0" class="empty-state">
+          <div class="display-6 mb-2">🗂️</div>
+          <p class="mb-1">Chưa có lịch sử trả sách.</p>
+          <small class="text-muted"
+            >Mượn một cuốn sách để bắt đầu hành trình đọc.</small
+          >
+          <div class="empty-action">
+            <a routerLink="/borrow-book" class="btn btn-outline-primary btn-sm">
+              Khám phá sách
+            </a>
+          </div>
+        </div>
+        <div class="table-responsive" *ngIf="historyLoans.length > 0">
           <table
             class="table table-dark table-hover border-secondary rounded overflow-hidden"
           >
@@ -305,16 +379,10 @@
                 <td>{{ loan.returnDate | date: "dd/MM/yyyy" }}</td>
                 <td><span class="badge bg-secondary">Đã Trả</span></td>
               </tr>
-              <tr *ngIf="historyLoans.length === 0">
-                <td colspan="4" class="text-center py-4">
-                  Chưa có lịch sử trả sách.
-                </td>
-              </tr>
             </tbody>
           </table>
           <div
             class="d-flex flex-wrap align-items-center justify-content-between px-3 py-3 border-top border-secondary"
-            *ngIf="historyLoans.length > 0"
           >
             <div class="d-flex align-items-center gap-2">
               <label class="form-label me-2 mb-0">Hiển thị</label>
@@ -330,16 +398,20 @@
             </div>
             <div class="d-flex align-items-center gap-2">
               <button
+                type="button"
                 class="btn btn-sm btn-outline-secondary"
                 (click)="prevHistoryPage()"
                 [disabled]="historyPage <= 1"
+                aria-label="Trang trước"
               >
                 Trước
               </button>
               <button
+                type="button"
                 class="btn btn-sm btn-outline-secondary"
                 (click)="nextHistoryPage()"
                 [disabled]="historyPage >= historyTotalPages"
+                aria-label="Trang tiếp"
               >
                 Tiếp
               </button>
@@ -353,7 +425,14 @@
       </div>
 
       <!-- 4. FINES TAB -->
-      <div *ngIf="currentTab === 'FINES'" class="animate-fade-in">
+      <div
+        id="tab-FINES"
+        role="region"
+        aria-labelledby="account-nav-FINES"
+        tabindex="0"
+        *ngIf="currentTab === 'FINES'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold">Danh Sách Phí Phạt</h3>
 
         <div
@@ -396,7 +475,14 @@
       </div>
 
       <!-- 5. MY REVIEWS TAB -->
-      <div *ngIf="currentTab === 'REVIEWS'" class="animate-fade-in">
+      <div
+        id="tab-REVIEWS"
+        role="region"
+        aria-labelledby="account-nav-REVIEWS"
+        tabindex="0"
+        *ngIf="currentTab === 'REVIEWS'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold">Đánh Giá Của Tôi</h3>
 
         <div
@@ -439,15 +525,19 @@
               </div>
               <div class="text-end">
                 <button
+                  type="button"
                   class="btn btn-sm btn-outline-primary me-2"
                   (click)="startEditReview(r)"
                   *ngIf="!editingReview || editingReview.id !== r.id"
+                  aria-label="Sửa đánh giá cho {{ r.bookName }}"
                 >
                   <i class="fa-solid fa-pen"></i> Sửa
                 </button>
                 <button
+                  type="button"
                   class="btn btn-sm btn-outline-danger"
                   (click)="deleteMyReview(r)"
+                  aria-label="Xóa đánh giá cho {{ r.bookName }}"
                 >
                   <i class="fa-solid fa-trash"></i> Xóa
                 </button>
@@ -477,16 +567,20 @@
               </div>
               <div class="mt-2">
                 <button
+                  type="button"
                   class="btn btn-sm btn-primary me-2"
                   [disabled]="savingReview"
                   (click)="saveMyReview()"
+                  aria-label="Lưu đánh giá"
                 >
                   <i class="fa-solid fa-save"></i>
                   {{ savingReview ? "Đang lưu..." : "Lưu" }}
                 </button>
                 <button
+                  type="button"
                   class="btn btn-sm btn-secondary"
                   (click)="cancelEditReview()"
+                  aria-label="Hủy chỉnh sửa đánh giá"
                 >
                   Hủy
                 </button>
@@ -497,7 +591,14 @@
       </div>
 
       <!-- 6. STATS TAB -->
-      <div *ngIf="currentTab === 'STATS'" class="animate-fade-in">
+      <div
+        id="tab-STATS"
+        role="region"
+        aria-labelledby="account-nav-STATS"
+        tabindex="0"
+        *ngIf="currentTab === 'STATS'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold">📊 Thống Kê Đọc Sách</h3>
 
         <!-- Stats Summary Cards -->
@@ -634,7 +735,14 @@
       </div>
 
       <!-- 7. BADGES TAB -->
-      <div *ngIf="currentTab === 'BADGES'" class="animate-fade-in">
+      <div
+        id="tab-BADGES"
+        role="region"
+        aria-labelledby="account-nav-BADGES"
+        tabindex="0"
+        *ngIf="currentTab === 'BADGES'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold">🏆 Bộ Sưu Tập Huy Hiệu</h3>
 
         <div class="row g-3 mb-4">
@@ -703,7 +811,14 @@
       </div>
 
       <!-- 8. SETTINGS TAB -->
-      <div *ngIf="currentTab === 'SETTINGS'" class="animate-fade-in">
+      <div
+        id="tab-SETTINGS"
+        role="region"
+        aria-labelledby="account-nav-SETTINGS"
+        tabindex="0"
+        *ngIf="currentTab === 'SETTINGS'"
+        class="animate-fade-in"
+      >
         <h3 class="mb-4 fw-bold">⚙️ Cài Đặt Tài Khoản</h3>
 
         <!-- Change Password -->

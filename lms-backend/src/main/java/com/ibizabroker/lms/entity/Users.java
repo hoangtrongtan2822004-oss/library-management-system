@@ -46,12 +46,18 @@ public class Users {
     @Column(name = "phone_number")
     private String phoneNumber;
 
+    @Column(name = "active")
+    private Boolean active = Boolean.TRUE;
+
     // ... Getter và Setter cho 2 trường này ...
     public String getStudentClass() { return studentClass; }
     public void setStudentClass(String studentClass) { this.studentClass = studentClass; }
 
     public String getPhoneNumber() { return phoneNumber; }
     public void setPhoneNumber(String phoneNumber) { this.phoneNumber = phoneNumber; }
+
+    public Boolean getActive() { return active; }
+    public void setActive(Boolean active) { this.active = active; }
 
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(

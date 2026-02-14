@@ -9,6 +9,48 @@
   z-index: 1050; /* <-- THAY ĐỔI DÒNG NÀY */
 }
 
+/* Skip link for keyboard users */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: auto;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
+.skip-link:focus,
+.sr-only-focusable:focus {
+  position: static;
+  width: auto;
+  height: auto;
+  margin: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg);
+  color: var(--text);
+  border-radius: var(--radius-sm);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  z-index: 1080;
+}
+
+/* Screen-reader only helper */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Focus-visible improvements for keyboard navigation */
+:where(.btn, .nav-link, .dropdown-item, .btn-icon, .navbar-toggler):focus {
+  outline: 3px solid rgba(88, 166, 255, 0.18);
+  outline-offset: 2px;
+}
+
 .navbar-brand {
   font-weight: 800;
   letter-spacing: 0.2px;
@@ -324,6 +366,10 @@
   cursor: pointer;
   transition: background-color 0.2s;
   border-bottom: 1px solid var(--border);
+}
+
+.search-result-item:focus {
+  background-color: rgba(88, 166, 255, 0.08);
 }
 
 .search-result-item:hover {

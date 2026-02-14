@@ -65,6 +65,9 @@ export class ChatbotComponent implements OnInit, OnDestroy {
   private destroy$ = new Subject<void>();
   private readonly STORAGE_KEY = 'chatbot_history';
   private readonly CONVERSATION_KEY = 'chatbot_conversation_id';
+  // timeouts for pulse/hint so we can clear them on destroy
+  private pulseTimeout: any = null;
+  private hintTimeout: any = null;
 
   constructor(
     private userAuthService: UserAuthService,
@@ -90,7 +93,66 @@ export class ChatbotComponent implements OnInit, OnDestroy {
         .getVoices()
         .find((v) => v.lang.startsWith('vi'));
     }
+
+    // Global keyboard shortcuts: Esc to close, Ctrl/Cmd+K to open & focus, Ctrl/Cmd+Enter to send
+    window.addEventListener('keydown', this.onGlobalKeyDown);
+
+    // Schedule subtle UI hints for discoverability (pulse FAB, show shortcut hint)
+    try {
+      this.pulseTimeout = setTimeout(() => {
+        if (!this.isOpen) this.pulseFab();
+      }, 6500);
+
+      this.hintTimeout = setTimeout(() => {
+        this.showShortcutHintIfNeeded();
+      }, 12000);
+    } catch (e) {
+      // ignore scheduling errors
+    }
   }
+
+  // Arrow-bound handler so `this` remains correct and can be removed by reference
+  private onGlobalKeyDown = (e: KeyboardEvent): void => {
+    try {
+      // Esc - close chat if open
+      if (e.key === 'Escape') {
+        if (this.isOpen) {
+          this.isOpen = false;
+          e.preventDefault();
+        }
+        return;
+      }
+
+      // Ctrl/Cmd + K - open chat and focus input
+      const isModK = (e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k';
+      if (isModK) {
+        this.isOpen = true;
+        setTimeout(() => {
+          const input: HTMLInputElement | null =
+            document.querySelector('.chat-footer input');
+          if (input) {
+            input.focus();
+            input.select();
+          }
+        }, 50);
+        e.preventDefault();
+        return;
+      }
+
+      // Ctrl/Cmd + Enter - send message when chat open and input focused
+      const isModEnter = (e.ctrlKey || e.metaKey) && e.key === 'Enter';
+      if (isModEnter && this.isOpen) {
+        // If there's a message, submit it
+        if (this.currentMessage && this.currentMessage.trim().length > 0) {
+          this.sendMessage();
+        }
+        e.preventDefault();
+      }
+    } catch (err) {
+      // swallow errors from global handler to avoid breaking page
+      console.error('Chat global key handler error', err);
+    }
+  };
 
   private initializeChatIfNeeded(): void {
     if (!this.hasInitializedChat && this.isUser) {
@@ -161,15 +223,47 @@ export class ChatbotComponent implements OnInit, OnDestroy {
     if (this.ttsSupported) {
       window.speechSynthesis.cancel();
     }
+
+    // Remove global keyboard listener
+    try {
+      window.removeEventListener('keydown', this.onGlobalKeyDown);
+    } catch (err) {}
+
+    // Clear any hint/pulse timers
+    try {
+      if (this.pulseTimeout) {
+        clearTimeout(this.pulseTimeout);
+        this.pulseTimeout = null;
+      }
+      if (this.hintTimeout) {
+        clearTimeout(this.hintTimeout);
+        this.hintTimeout = null;
+      }
+    } catch (e) {}
   }
 
   toggleChat(): void {
     this.isOpen = !this.isOpen;
+    // If opening the chat, clear any pending discovery hints
+    if (this.isOpen) {
+      try {
+        if (this.pulseTimeout) {
+          clearTimeout(this.pulseTimeout);
+          this.pulseTimeout = null;
+        }
+        if (this.hintTimeout) {
+          clearTimeout(this.hintTimeout);
+          this.hintTimeout = null;
+        }
+      } catch (e) {}
+    }
   }
 
   replayLastAnswer(): void {
     if (!this.ttsSupported) return;
-    const lastBot = [...this.messages].reverse().find((m) => m.author === 'bot');
+    const lastBot = [...this.messages]
+      .reverse()
+      .find((m) => m.author === 'bot');
     if (lastBot?.text) {
       this.speakBotMessage(lastBot.text);
     }
@@ -394,6 +488,75 @@ export class ChatbotComponent implements OnInit, OnDestroy {
     );
   }
 
+  // --- UI discoverability helpers ---
+  private clearHintAndPulseTimers(): void {
+    try {
+      if (this.pulseTimeout) {
+        clearTimeout(this.pulseTimeout);
+        this.pulseTimeout = null;
+      }
+      if (this.hintTimeout) {
+        clearTimeout(this.hintTimeout);
+        this.hintTimeout = null;
+      }
+    } catch (e) {}
+  }
+
+  private pulseFab(): void {
+    try {
+      const fab = document.querySelector('.chat-fab') as HTMLElement | null;
+      if (!fab) return;
+      // Add a temporary class that should be styled in CSS for a gentle pulse
+      fab.classList.add('pulse');
+      // Remove after animation completes (2s)
+      setTimeout(() => fab.classList.remove('pulse'), 2000);
+    } catch (e) {
+      // swallow DOM errors
+    }
+  }
+
+  private showShortcutHintIfNeeded(): void {
+    try {
+      // Don't show more than once per user
+      if (localStorage.getItem('chatbot_shortcut_hint_shown')) return;
+
+      const fab = document.querySelector('.chat-fab') as HTMLElement | null;
+      if (!fab) return;
+
+      const hint = document.createElement('div');
+      hint.className = 'chatbot-shortcut-hint';
+      hint.setAttribute('role', 'status');
+      hint.setAttribute('aria-live', 'polite');
+      hint.textContent = 'Nhấn Ctrl/Cmd+K để mở chat nhanh';
+      // Basic inline styling to ensure visibility without changing global CSS files
+      hint.style.position = 'fixed';
+      hint.style.right = '20px';
+      hint.style.bottom = '84px';
+      hint.style.background = 'rgba(17,24,39,0.9)';
+      hint.style.color = 'white';
+      hint.style.padding = '8px 12px';
+      hint.style.borderRadius = '8px';
+      hint.style.zIndex = '9999';
+      hint.style.fontSize = '0.95rem';
+      hint.style.boxShadow = '0 6px 20px rgba(0,0,0,0.2)';
+
+      document.body.appendChild(hint);
+
+      // Fade out and remove after 4.5s
+      setTimeout(() => {
+        try {
+          hint.style.transition = 'opacity 0.6s ease';
+          hint.style.opacity = '0';
+        } catch (e) {}
+      }, 3500);
+      setTimeout(() => hint.remove(), 4200);
+
+      localStorage.setItem('chatbot_shortcut_hint_shown', 'true');
+    } catch (e) {
+      // ignore
+    }
+  }
+
   // === Feedback ===
   sendFeedback(message: Message, isPositive: boolean): void {
     if (!message || message.feedbackSent || message.author !== 'bot') return;
@@ -403,18 +566,21 @@ export class ChatbotComponent implements OnInit, OnDestroy {
       helpful: isPositive,
     };
 
-    this.chatbotService.sendFeedback(payload).pipe(takeUntil(this.destroy$)).subscribe({
-      next: () => {
-        message.feedback = isPositive ? 'up' : 'down';
-        message.feedbackSent = true;
-        this.saveChatHistory();
-      },
-      error: () => {
-        message.feedback = isPositive ? 'up' : 'down';
-        message.feedbackSent = true;
-        this.saveChatHistory();
-      },
-    });
+    this.chatbotService
+      .sendFeedback(payload)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: () => {
+          message.feedback = isPositive ? 'up' : 'down';
+          message.feedbackSent = true;
+          this.saveChatHistory();
+        },
+        error: () => {
+          message.feedback = isPositive ? 'up' : 'down';
+          message.feedbackSent = true;
+          this.saveChatHistory();
+        },
+      });
   }
 
   // === Text-to-Speech ===

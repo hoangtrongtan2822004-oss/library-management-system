@@ -86,4 +86,18 @@ public class PublicBooksController {
                     .body(ApiResponse.error("Sách không tồn tại", 404));
         }
     }
+
+    @GetMapping("/{id}/similar")
+    @Operation(summary = "Sách tương tự", description = "Gợi ý sách tương tự dựa trên thể loại")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thành công")
+    public ResponseEntity<ApiResponse<List<BookListDto>>> getSimilarBooks(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "6") int size) {
+        List<Books> books = bookService.getSimilarBooks(id, size);
+        List<BookListDto> dtos = books.stream()
+                .map(BookListDto::fromEntity)
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(ApiResponse.success(dtos, "Lấy danh sách sách tương tự thành công"));
+    }
 }

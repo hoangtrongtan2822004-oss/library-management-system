@@ -1,7 +1,17 @@
 <div class="chatbot-container" *ngIf="isUser; else notLoggedIn">
-  <button class="chat-fab" (click)="toggleChat()" title="Toggle chat">
-    <i class="fas fa-robot"></i>
-  </button>
+  <div class="chat-fab-wrapper" tabindex="0">
+    <button
+      class="chat-fab"
+      (click)="toggleChat()"
+      title="Toggle chat"
+      aria-label="Toggle chat window"
+    >
+      <i class="fas fa-robot" aria-hidden="true"></i>
+    </button>
+    <span class="fab-tooltip" role="status" aria-hidden="true"
+      >Chat (Ctrl/Cmd+K)</span
+    >
+  </div>
 
   <div class="chat-window" [class.open]="isOpen">
     <div class="chat-header">
@@ -9,33 +19,46 @@
         <h5>Library Assistant 📚</h5>
         <small>Powered by AI & RAG</small>
       </div>
-      <div class="header-actions">
+      <div class="header-actions" role="toolbar" aria-label="Chat actions">
         <button
           class="btn-action"
           (click)="toggleTts()"
           [class.active]="ttsEnabled"
           [disabled]="!ttsSupported"
           title="Đọc trả lời (TTS)"
+          aria-label="Toggle text to speech"
         >
-          <i class="fas" [ngClass]="ttsEnabled ? 'fa-volume-up' : 'fa-volume-mute'"></i>
+          <i
+            class="fas"
+            [ngClass]="ttsEnabled ? 'fa-volume-up' : 'fa-volume-mute'"
+            aria-hidden="true"
+          ></i>
         </button>
         <button
           class="btn-action"
           (click)="replayLastAnswer()"
           [disabled]="!ttsSupported"
           title="Nghe lại trả lời cuối"
+          aria-label="Replay last answer"
         >
-          <i class="fas fa-rotate-right"></i>
+          <i class="fas fa-rotate-right" aria-hidden="true"></i>
         </button>
-        <button
-          class="btn-action"
-          (click)="clearChat()"
-          title="Clear chat"
-          *ngIf="messages.length > 1"
-        >
-          <i class="fas fa-trash-alt"></i>
-        </button>
-        <button class="btn-close" (click)="toggleChat()"></button>
+        <div class="header-ctrls d-flex align-items-center" aria-hidden="false">
+          <button
+            class="btn-action"
+            (click)="clearChat()"
+            title="Clear chat"
+            *ngIf="messages.length > 1"
+            aria-label="Clear chat history"
+          >
+            <i class="fas fa-trash-alt" aria-hidden="true"></i>
+          </button>
+          <button
+            class="btn-close ms-2"
+            (click)="toggleChat()"
+            aria-label="Close chat"
+          ></button>
+        </div>
       </div>
     </div>
 
@@ -56,6 +79,7 @@
                 (click)="sendFeedback(message, true)"
                 [disabled]="message.feedbackSent"
                 title="Hữu ích"
+                aria-label="Mark answer helpful"
               >
                 👍
               </button>
@@ -66,6 +90,7 @@
                 (click)="sendFeedback(message, false)"
                 [disabled]="message.feedbackSent"
                 title="Chưa ổn"
+                aria-label="Mark answer not helpful"
               >
                 👎
               </button>
@@ -120,11 +145,17 @@
           <span></span>
         </div>
       </div>
-      <div class="quick-replies" *ngIf="quickReplies.length && !isLoading">
+      <div
+        class="quick-replies"
+        *ngIf="quickReplies.length && !isLoading"
+        role="list"
+      >
         <button
           class="chip"
-          *ngFor="let chip of quickReplies | slice:0:5"
+          *ngFor="let chip of quickReplies | slice: 0 : 5"
           (click)="fillMessage(chip)"
+          aria-label="Quick reply: {{ chip }}"
+          role="listitem"
         >
           {{ chip }}
         </button>
@@ -132,7 +163,11 @@
     </div>
 
     <div class="chat-footer">
-      <form (ngSubmit)="sendMessage()">
+      <form
+        (ngSubmit)="sendMessage()"
+        role="form"
+        aria-label="Send message form"
+      >
         <input
           type="text"
           [(ngModel)]="currentMessage"
@@ -140,6 +175,7 @@
           placeholder="Hỏi về sách, tác giả, thể loại..."
           [disabled]="isLoading"
           autocomplete="off"
+          aria-label="Message input"
         />
         <button
           type="button"
@@ -149,14 +185,20 @@
           [disabled]="isLoading"
           *ngIf="voiceSupported"
           title="Nhập bằng giọng nói"
+          aria-label="Voice input toggle"
         >
           <i
             class="fas"
             [ngClass]="isListening ? 'fa-stop-circle' : 'fa-microphone'"
+            aria-hidden="true"
           ></i>
         </button>
-        <button type="submit" [disabled]="isLoading || !currentMessage.trim()">
-          <i class="fas fa-paper-plane"></i>
+        <button
+          type="submit"
+          [disabled]="isLoading || !currentMessage.trim()"
+          aria-label="Send message"
+        >
+          <i class="fas fa-paper-plane" aria-hidden="true"></i>
         </button>
       </form>
     </div>

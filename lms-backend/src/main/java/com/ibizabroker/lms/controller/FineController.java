@@ -11,6 +11,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @RequiredArgsConstructor
@@ -24,6 +27,24 @@ public class FineController {
     @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<List<FineDetailsDto>> getUnpaidFines() {
         return ResponseEntity.ok(loanRepository.findUnpaidFineDetails());
+    }
+
+    @GetMapping("/paid")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<List<FineDetailsDto>> getPaidFines(@RequestParam(required = false) String startDate,
+                                                            @RequestParam(required = false) String endDate) {
+        try {
+            if ((startDate == null || startDate.isBlank()) && (endDate == null || endDate.isBlank())) {
+                return ResponseEntity.ok(loanRepository.findPaidFineDetails());
+            }
+
+            LocalDate start = (startDate == null || startDate.isBlank()) ? LocalDate.now().minusMonths(1) : LocalDate.parse(startDate);
+            LocalDate end = (endDate == null || endDate.isBlank()) ? LocalDate.now() : LocalDate.parse(endDate);
+
+            return ResponseEntity.ok(loanRepository.findPaidFineDetailsByDateRange(start, end));
+        } catch (DateTimeParseException ex) {
+            return ResponseEntity.badRequest().build();
+        }
     }
 
     @PostMapping("/{loanId}/pay")

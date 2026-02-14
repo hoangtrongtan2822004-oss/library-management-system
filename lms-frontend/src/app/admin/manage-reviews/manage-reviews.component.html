@@ -86,7 +86,7 @@
             </td>
 
             <!-- THUMBNAIL -->
-            <td>
+            <td data-label="Ảnh">
               <img
                 [src]="review.bookCoverUrl || 'assets/books/placeholder.png'"
                 alt="Cover"
@@ -96,15 +96,15 @@
             </td>
 
             <!-- BOOK NAME -->
-            <td>
+            <td data-label="Sách">
               <strong>{{ review.bookName }}</strong>
             </td>
 
             <!-- USER -->
-            <td>{{ review.userName }}</td>
+            <td data-label="Người đánh giá">{{ review.userName }}</td>
 
             <!-- STAR RATING -->
-            <td>
+            <td data-label="Điểm">
               <span class="star-rating">
                 <i
                   *ngFor="let filled of getStarArray(review.rating)"
@@ -117,7 +117,7 @@
             </td>
 
             <!-- COMMENT (TRUNCATED) -->
-            <td>
+            <td data-label="Bình luận">
               <div class="comment-wrapper">
                 <p class="mb-1">{{ getTruncatedComment(review) }}</p>
                 <button
@@ -171,7 +171,7 @@
             </td>
 
             <!-- STATUS -->
-            <td>
+            <td data-label="Trạng thái">
               <span
                 class="badge"
                 [ngClass]="
@@ -183,7 +183,7 @@
             </td>
 
             <!-- ACTIONS -->
-            <td>
+            <td data-label="Hành động">
               <div class="btn-group-vertical btn-group-sm" role="group">
                 <button
                   *ngIf="!review.approved"

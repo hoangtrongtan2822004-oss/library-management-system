@@ -32,12 +32,22 @@
         <div class="card-header bg-gradient text-white">
           <h5 class="mb-0">📂 Danh mục</h5>
         </div>
+        <div class="sidebar-search">
+          <input
+            type="text"
+            class="form-control form-control-sm bg-dark text-white"
+            placeholder="Tìm danh mục..."
+            [(ngModel)]="categoryQuery"
+            (input)="filterCategories()"
+          />
+        </div>
         <div class="list-group list-group-flush">
           <button
             *ngFor="let category of categories"
             class="list-group-item list-group-item-action bg-dark text-light border-secondary"
             [class.active]="activeTab === category"
             (click)="activeTab = category"
+            [attr.aria-current]="activeTab === category ? 'true' : null"
           >
             <span class="me-2">{{ getCategoryIcon(category) }}</span>
             {{ getCategoryDisplayName(category) }}
@@ -59,6 +69,25 @@
           </h4>
         </div>
         <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div class="small-muted">
+              Hiển thị {{ group.settings.length }} cấu hình
+            </div>
+            <div>
+              <button
+                class="btn btn-sm btn-outline-secondary me-2"
+                (click)="refreshGroup()"
+              >
+                <i class="fa-solid fa-arrows-rotate"></i> Làm mới
+              </button>
+              <button
+                class="btn btn-sm btn-outline-light"
+                (click)="openCreateSettingModal()"
+              >
+                <i class="fa-solid fa-plus"></i> Tạo mới
+              </button>
+            </div>
+          </div>
           <div
             *ngIf="group.settings.length === 0"
             class="text-center text-muted py-5"

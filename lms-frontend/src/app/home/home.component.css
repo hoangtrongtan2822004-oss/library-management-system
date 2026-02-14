@@ -2,6 +2,11 @@
   display: block;
 }
 
+/* Main landmark spacing to align with header skip link */
+main#main-content {
+  padding-top: 1rem;
+}
+
 /* Base Styles for Sections */
 .section-wrap {
   width: 100%;
@@ -696,6 +701,22 @@ body.light-theme .suggestion-info small {
 
 .suggestion-item:hover {
   background: #2d333b;
+}
+
+.suggestion-item:focus {
+  outline: 3px solid rgba(88, 166, 255, 0.18);
+  background: rgba(88, 166, 255, 0.06);
+}
+
+.search-suggestions[role="listbox"] {
+  border-radius: 8px;
+}
+
+.cta-buttons a:focus,
+.book-card:focus,
+.chip:focus {
+  outline: 3px solid rgba(88, 166, 255, 0.18);
+  outline-offset: 2px;
 }
 
 .suggestion-item img {

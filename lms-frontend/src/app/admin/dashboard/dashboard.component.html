@@ -4,6 +4,9 @@
     <h2 class="fw-bold mb-0">
       <i class="fa-solid fa-chart-line"></i> Dashboard Thống Kê
     </h2>
+    <div class="text-muted small ms-3">
+      Tổng quan hoạt động hệ thống và các chỉ số chính
+    </div>
     <div class="d-flex gap-2">
       <select
         class="form-select form-select-sm w-auto"
@@ -18,21 +21,29 @@
   </div>
 
   <!-- QUICK ACTIONS BUTTONS -->
-  <div class="row g-2 mb-4">
-    <div class="col-auto">
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+    <div class="btn-group">
       <button class="btn btn-primary btn-sm" (click)="quickCreateLoan()">
-        <i class="fa-solid fa-plus-circle me-1"></i> Tạo phiếu mượn nhanh
+        <i class="fa-solid fa-plus-circle me-1"></i> Tạo phiếu
       </button>
-    </div>
-    <div class="col-auto">
       <button class="btn btn-success btn-sm" (click)="quickScanReturn()">
-        <i class="fa-solid fa-qrcode me-1"></i> Quét mã trả sách
+        <i class="fa-solid fa-qrcode me-1"></i> Trả nhanh
+      </button>
+      <button class="btn btn-info btn-sm" (click)="quickAddUser()">
+        <i class="fa-solid fa-user-plus me-1"></i> Thêm user
       </button>
     </div>
-    <div class="col-auto">
-      <button class="btn btn-info btn-sm" (click)="quickAddUser()">
-        <i class="fa-solid fa-user-plus me-1"></i> Thêm user mới
-      </button>
+
+    <div class="d-flex gap-2 align-items-center ms-3">
+      <span class="badge bg-secondary"
+        >Sách: {{ details?.stats?.totalBooks || 0 }}</span
+      >
+      <span class="badge bg-secondary"
+        >Người dùng: {{ details?.stats?.totalUsers || 0 }}</span
+      >
+      <span class="badge bg-warning text-dark"
+        >Đang mượn: {{ details?.stats?.activeLoans || 0 }}</span
+      >
     </div>
   </div>
 

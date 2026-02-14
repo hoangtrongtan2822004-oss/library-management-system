@@ -54,6 +54,19 @@
   font-size: 0.875rem;
 }
 
+/* Focus styles for keyboard users */
+.pagination .page-link:focus {
+  outline: 3px solid rgba(13, 110, 253, 0.25);
+  outline-offset: 2px;
+}
+
+/* Larger tap targets on mobile */
+@media (max-width: 480px) {
+  .pagination .page-link {
+    padding: 0.5rem 0.6rem;
+  }
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .pagination-container {

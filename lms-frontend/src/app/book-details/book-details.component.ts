@@ -120,12 +120,8 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
             this.checkWishlistStatus(this.book.id);
           }
           // Load related books based on category
-          if (
-            this.book &&
-            this.book.categories &&
-            this.book.categories.length > 0
-          ) {
-            this.loadRelatedBooks(this.book.categories[0].name, this.book.id);
+          if (this.book) {
+            this.loadRelatedBooks(this.book.id);
           }
           // Check for ebook availability
           if (this.book) {
@@ -141,19 +137,17 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  private loadRelatedBooks(category: string, currentBookId: number): void {
+  private loadRelatedBooks(currentBookId: number): void {
     this.isLoadingRelated = true;
     this.booksService
-      .getPublicBooks(true, '', category, 0, 6) // Load 6 to ensure 5 after filtering
+      .getSimilarBooks(currentBookId, 6)
       .pipe(
         finalize(() => (this.isLoadingRelated = false)),
         takeUntil(this.destroy$),
       )
       .subscribe({
-        next: (response: any) => {
-          const books = response.content || response;
-          // Filter out current book and limit to 5
-          this.relatedBooks = books
+        next: (books: Book[]) => {
+          this.relatedBooks = (books || [])
             .filter((b: Book) => b.id !== currentBookId)
             .slice(0, 5);
         },
