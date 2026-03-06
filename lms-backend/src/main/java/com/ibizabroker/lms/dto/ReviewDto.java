@@ -57,4 +57,9 @@ public class ReviewDto {
     private Long likesCount;
     private Long commentsCount;
     private Boolean currentUserLiked;
+    // Book cover
+    private String bookCoverUrl;
+    // Admin reply
+    private String adminReply;
+    private String adminReplyDate;
 }

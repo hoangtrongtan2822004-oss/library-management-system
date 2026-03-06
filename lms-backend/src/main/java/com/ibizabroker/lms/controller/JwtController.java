@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @CrossOrigin
-@RequestMapping("/auth")
+@RequestMapping("/api/auth")
 public class JwtController {
 
     private final JwtService jwtService;

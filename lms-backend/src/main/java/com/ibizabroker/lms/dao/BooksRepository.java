@@ -11,9 +11,11 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.lang.NonNull;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -56,17 +58,20 @@ public interface BooksRepository extends JpaRepository<Books, Integer>, JpaSpeci
     // ====================================================================
 
     @Override
+    @NonNull
     @EntityGraph(attributePaths = {"authors", "categories"})
     List<Books> findAll();
 
     @Override
+    @NonNull
     @EntityGraph(attributePaths = {"authors", "categories"})
-    Page<Books> findAll(Pageable pageable);
+    Page<Books> findAll(@NonNull Pageable pageable);
 
     @Override
+    @NonNull
     @EntityGraph(attributePaths = {"authors", "categories"})
     @Query("SELECT b FROM Books b LEFT JOIN FETCH b.authors LEFT JOIN FETCH b.categories WHERE b.id = :id")
-    Optional<Books> findById(@Param("id") Integer bookId);
+    Optional<Books> findById(@NonNull @Param("id") Integer bookId);
 
     @EntityGraph(attributePaths = {"authors", "categories"})
     @Query("SELECT b FROM Books b ORDER BY b.id DESC")
@@ -188,26 +193,40 @@ public interface BooksRepository extends JpaRepository<Books, Integer>, JpaSpeci
      * Use @SuppressWarnings to ignore in some IDEs.
      */
 
-    // 1. Natural Language Search
-    @Query(value = "SELECT * FROM books WHERE MATCH(name, isbn) AGAINST(:query IN NATURAL LANGUAGE MODE)", 
-           countQuery = "SELECT COUNT(*) FROM books WHERE MATCH(name, isbn) AGAINST(:query IN NATURAL LANGUAGE MODE)",
+    // 1. Natural Language Search (MATCH...AGAINST is valid MySQL; IDE SQL validator may show false errors)
+    @SuppressWarnings("SqlDialectInspection")
+    @Query(value = "SELECT b.* FROM books b WHERE MATCH(b.name, b.isbn) AGAINST(:query IN NATURAL LANGUAGE MODE)",
+           countQuery = "SELECT COUNT(*) FROM books b WHERE MATCH(b.name, b.isbn) AGAINST(:query IN NATURAL LANGUAGE MODE)",
            nativeQuery = true)
     Page<Books> fullTextSearch(@Param("query") String query, Pageable pageable);
 
     // 2. Boolean Mode Search
-    @Query(value = "SELECT * FROM books WHERE MATCH(name, isbn) AGAINST(:query IN BOOLEAN MODE)",
-           countQuery = "SELECT COUNT(*) FROM books WHERE MATCH(name, isbn) AGAINST(:query IN BOOLEAN MODE)",
+    @SuppressWarnings("SqlDialectInspection")
+    @Query(value = "SELECT b.* FROM books b WHERE MATCH(b.name, b.isbn) AGAINST(:query IN BOOLEAN MODE)",
+           countQuery = "SELECT COUNT(*) FROM books b WHERE MATCH(b.name, b.isbn) AGAINST(:query IN BOOLEAN MODE)",
            nativeQuery = true)
     Page<Books> fullTextSearchBoolean(@Param("query") String query, Pageable pageable);
 
     // 3. Description Search
-    @Query(value = "SELECT * FROM books WHERE MATCH(description) AGAINST(:query IN NATURAL LANGUAGE MODE)",
-           countQuery = "SELECT COUNT(*) FROM books WHERE MATCH(description) AGAINST(:query IN NATURAL LANGUAGE MODE)",
+    @SuppressWarnings("SqlDialectInspection")
+    @Query(value = "SELECT b.* FROM books b WHERE MATCH(b.description) AGAINST(:query IN NATURAL LANGUAGE MODE)",
+           countQuery = "SELECT COUNT(*) FROM books b WHERE MATCH(b.description) AGAINST(:query IN NATURAL LANGUAGE MODE)",
            nativeQuery = true)
     Page<Books> fullTextSearchDescription(@Param("query") String query, Pageable pageable);
 
     // 4. Autocomplete Suggestions (Native)
-    @Query(value = "SELECT DISTINCT name FROM books WHERE MATCH(name, isbn) AGAINST(CONCAT(:query, '*') IN BOOLEAN MODE) LIMIT 10",
+    @SuppressWarnings("SqlDialectInspection")
+    @Query(value = "SELECT DISTINCT b.name FROM books b WHERE MATCH(b.name, b.isbn) AGAINST(CONCAT(:query, '*') IN BOOLEAN MODE) LIMIT 10",
            nativeQuery = true)
     List<String> fullTextSearchSuggestions(@Param("query") String query);
+
+    // ====================================================================
+    // 📊 DASHBOARD CHART DATA
+    // ====================================================================
+
+    @Query("SELECT c.name as categoryName, COUNT(DISTINCT b) as bookCount " +
+           "FROM Books b JOIN b.categories c " +
+           "GROUP BY c.id, c.name " +
+           "ORDER BY bookCount DESC")
+    List<Map<String, Object>> countBooksByCategory(org.springframework.data.domain.Pageable pageable);
 }

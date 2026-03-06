@@ -47,6 +47,7 @@ public class MemberCardService {
     private final MemberCardRepository memberCardRepository;
     private final UsersRepository usersRepository;
 
+    @SuppressWarnings("null")
     public MemberCardDto create(MemberCardRequest request) {
         Users user = usersRepository.findById(request.getUserId())
             .orElseThrow(() -> new NotFoundException("Không tìm thấy người dùng"));
@@ -62,6 +63,7 @@ public class MemberCardService {
         return MemberCardDto.fromEntity(memberCardRepository.save(card));
     }
 
+    @SuppressWarnings("null")
     public MemberCardDto update(Long id, MemberCardRequest request) {
         MemberCard card = getEntity(id);
         Users user = usersRepository.findById(request.getUserId())
@@ -197,6 +199,7 @@ public class MemberCardService {
         return "LIB-" + userId + "-" + RandomStringUtils.randomNumeric(8);
     }
 
+    @SuppressWarnings("null")
     private MemberCard getEntity(Long id) {
         return memberCardRepository.findById(id)
             .orElseThrow(() -> new NotFoundException("Không tìm thấy thẻ"));

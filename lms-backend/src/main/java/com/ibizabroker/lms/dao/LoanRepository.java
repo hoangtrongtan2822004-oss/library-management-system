@@ -59,12 +59,28 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
        List<Integer> findTopCategoryIdsByMemberId(
               @Param("memberId") Integer memberId,
               Pageable pageable);
+
+    /**
+     * Collaborative Filtering: Tìm sách thường được mượn cùng với bookId.
+     * Logic: Những user đã mượn bookId -> họ còn mượn những sách nào khác?
+     * Kết quả sắp xếp theo tần suất xuất hiện (phổ biến nhất trước).
+     * Returns book IDs (not entities) to avoid Hibernate 6 GROUP BY entity issues.
+     */
+    @Query("SELECT l2.book.id FROM Loan l2 " +
+           "WHERE l2.member.userId IN (" +
+           "  SELECT DISTINCT l1.member.userId FROM Loan l1 WHERE l1.book.id = :bookId" +
+           ") " +
+           "AND l2.book.id <> :bookId " +
+           "GROUP BY l2.book.id " +
+           "ORDER BY COUNT(l2.id) DESC")
+    List<Integer> findAlsoBorrowedBookIds(@Param("bookId") Integer bookId, Pageable pageable);
+
     long countByStatus(LoanStatus status);
     List<Loan> findTop5ByOrderByLoanDateDesc();
     List<Loan> findByStatus(LoanStatus status);
 
     @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(" +
-           "l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status, " +
+           "l.id, b.id, b.coverUrl, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status, " +
            "l.fineAmount, " +
            "CAST(" +
            "  CASE " +
@@ -80,7 +96,7 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
     List<LoanDetailsDto> findAllLoanDetails();
 
     @Query("SELECT new com.ibizabroker.lms.dto.LoanDetailsDto(" +
-           "l.id, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status, " +
+           "l.id, b.id, b.coverUrl, b.name, u.name, l.loanDate, l.dueDate, l.returnDate, l.status, " +
            "l.fineAmount, " +
            "CAST(" +
            "  CASE " +
@@ -129,6 +145,8 @@ public interface LoanRepository extends JpaRepository<Loan, Integer>, LoanReposi
     List<FineDetailsDto> findUnpaidFineDetailsByMemberId(@Param("memberId") Integer memberId);
     
     List<Loan> findByStatusAndDueDate(LoanStatus status, LocalDate dueDate);
+
+    Page<Loan> findByStatusAndDueDateBetween(LoanStatus status, LocalDate from, LocalDate to, Pageable pageable);
     
     // === Query cho Chart.js: Thống kê mượn theo tháng ===
        // Return year-month string (YYYY-MM) for compatibility across report consumers

@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.*;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -160,7 +161,24 @@ public class ApiExceptionHandler {
     }
 
     /**
-     * 💥 Handle Generic Exception - Catch-all handler
+     * � Handle MaxUploadSizeExceededException - File too large
+     */
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiResponse<Object>> handleMaxUploadSizeExceeded(MaxUploadSizeExceededException ex) {
+        ApiResponse<Object> response = ApiResponse.builder()
+                .success(false)
+                .message("File quá lớn. Vui lòng chọn file nhỏ hơn 10MB.")
+                .errorCode("FILE_TOO_LARGE")
+                .data(null)
+                .build();
+
+        return ResponseEntity
+                .status(HttpStatus.PAYLOAD_TOO_LARGE)
+                .body(response);
+    }
+
+    /**
+     * �💥 Handle Generic Exception - Catch-all handler
      * 
      * Catches: Unexpected runtime errors, NPE, SQLException, etc.
      * Returns: Generic error message (don't expose internal details)

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { UsersService } from '../services/users.service';
 import { ToastrService } from 'ngx-toastr';
 import { HttpErrorResponse } from '@angular/common/http';
+import { switchMap, of } from 'rxjs';
 import Swal from 'sweetalert2';
 
 @Component({
@@ -230,25 +231,33 @@ export class UpdateUserComponent implements OnInit {
 
     this.isSaving = true;
 
-    // If avatar selected, upload first (mock for now)
-    if (this.selectedFile) {
-      // TODO: Implement actual avatar upload to backend
-      // For now, just proceed with user update
-      console.log('Avatar upload would happen here:', this.selectedFile.name);
-    }
+    const uploadAvatar$ = this.selectedFile
+      ? this.usersService.uploadUserAvatar(this.userId, this.selectedFile)
+      : of(null);
 
-    this.usersService.updateUser(this.userId, payload).subscribe({
-      next: () => {
-        this.toastr.success('Cập nhật người dùng thành công!');
-        this.router.navigate(['/users']);
-      },
-      error: (err: HttpErrorResponse) => {
-        this.toastr.error(
-          err.error?.message || 'Cập nhật người dùng thất bại.',
-        );
-        this.isSaving = false;
-      },
-    });
+    uploadAvatar$
+      .pipe(
+        switchMap((avatarResult: any) => {
+          if (avatarResult?.avatarUrl) {
+            this.currentAvatar = avatarResult.avatarUrl;
+            this.selectedFile = null;
+            this.avatarPreview = null;
+          }
+          return this.usersService.updateUser(this.userId, payload);
+        }),
+      )
+      .subscribe({
+        next: () => {
+          this.toastr.success('Cập nhật người dùng thành công!');
+          this.router.navigate(['/users']);
+        },
+        error: (err: HttpErrorResponse) => {
+          this.toastr.error(
+            err.error?.message || 'Cập nhật người dùng thất bại.',
+          );
+          this.isSaving = false;
+        },
+      });
   }
 
   cancel(): void {

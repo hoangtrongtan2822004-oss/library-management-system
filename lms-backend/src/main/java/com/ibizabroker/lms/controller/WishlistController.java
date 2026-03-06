@@ -65,6 +65,7 @@ public class WishlistController {
 
     @PostMapping(value = "/add/{bookId}")
     @Operation(summary = "Add a book to wishlist")
+    @SuppressWarnings("null")
     public ResponseEntity<?> add(@PathVariable Integer bookId) {
         Users user = currentUser();
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("status","error","error","Unauthorized"));
@@ -81,6 +82,7 @@ public class WishlistController {
 
     @DeleteMapping(value = "/remove/{bookId}")
     @Operation(summary = "Remove a book from wishlist")
+    @SuppressWarnings("null")
     public ResponseEntity<?> remove(@PathVariable Integer bookId) {
         Users user = currentUser();
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("status","error","error","Unauthorized"));
@@ -92,6 +94,7 @@ public class WishlistController {
 
     @PutMapping(value = "/update/{bookId}")
     @Operation(summary = "Update personal notes for a wishlist item")
+    @SuppressWarnings("null")
     public ResponseEntity<?> updateNotes(@PathVariable Integer bookId, @RequestBody Map<String, String> payload) {
         Users user = currentUser();
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("status","error","error","Unauthorized"));
@@ -110,6 +113,7 @@ public class WishlistController {
 
     @GetMapping(value = "/check/{bookId}", produces = MediaType.APPLICATION_JSON_VALUE)
     @Operation(summary = "Check if a book is in wishlist")
+    @SuppressWarnings("null")
     public ResponseEntity<Boolean> check(@PathVariable Integer bookId) {
         Users user = currentUser();
         if (user == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();

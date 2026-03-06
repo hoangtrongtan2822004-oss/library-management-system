@@ -116,6 +116,7 @@ public class WebSecurityConfiguration {
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                 .requestMatchers("/api/auth/**", "/api/public/**").permitAll()
                 .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html", "/h2-console/**", "/error", "/favicon.ico").permitAll()
+                .requestMatchers("/uploads/**").permitAll()
                 
                 // 🔓 Mở khóa tạm thời để test - Cho phép xem dữ liệu công khai không cần đăng nhập
                 .requestMatchers(HttpMethod.GET, "/api/books/**", "/api/categories/**", "/api/authors/**").permitAll()

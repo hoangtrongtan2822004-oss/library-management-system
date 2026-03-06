@@ -129,7 +129,8 @@
             <div class="news-content">
               <h3 class="news-title">{{ item.title }}</h3>
               <p class="news-excerpt">
-                {{ item.content.substring(0, 120) }}...
+                {{ stripHtml(item.content).substring(0, 120)
+                }}{{ stripHtml(item.content).length > 120 ? "..." : "" }}
               </p>
               <div class="news-meta">
                 <span class="news-date">
@@ -345,7 +346,6 @@
             <a routerLink="/borrow-book">Tra cứu sách</a>
             <a routerLink="/my-account">Tài khoản của tôi</a>
             <a routerLink="/rules">Nội quy thư viện</a>
-            <a href="#">Lịch hoạt động</a>
           </nav>
         </div>
 
@@ -365,7 +365,7 @@
 
       <div class="footer-bottom">
         <p>
-          &copy; 2025 Thư Viện Trường THCS Phương Tú. Phát triển bởi Đội ngũ
+          &copy; 2026 Thư Viện Trường THCS Phương Tú. Phát triển bởi Đội ngũ
           CNTT.
         </p>
       </div>

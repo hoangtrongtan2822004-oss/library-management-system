@@ -27,6 +27,11 @@ export class LoanManagementComponent implements OnInit {
   sortBy: string = '';
   sortDirection: 'asc' | 'desc' = 'asc';
 
+  // Return confirmation modal
+  pendingReturnLoan: LoanDetails | null = null;
+  showReturnModal = false;
+  isReturning = false;
+
   constructor(
     private adminService: AdminService,
     private circulationService: CirculationService,
@@ -98,30 +103,50 @@ export class LoanManagementComponent implements OnInit {
     this.applyAllFilters();
   }
 
-  markAsReturned(loanId: number): void {
-    if (!confirm('Are you sure you want to mark this loan as returned?')) {
-      return;
-    }
+  openReturnModal(loan: LoanDetails): void {
+    this.pendingReturnLoan = loan;
+    this.showReturnModal = true;
+  }
 
-    // Tạm thời vô hiệu hóa nút để tránh click đúp
-    const loan = this.filteredLoans.find((l) => l.loanId === loanId);
-    if (loan) loan.status = 'RETURNED'; // Cập nhật giao diện tạm thời
+  cancelReturn(): void {
+    this.pendingReturnLoan = null;
+    this.showReturnModal = false;
+    this.isReturning = false;
+  }
 
-    this.circulationService.returnLoan(loanId).subscribe({
+  confirmReturn(): void {
+    if (!this.pendingReturnLoan) return;
+    const loan = this.pendingReturnLoan;
+    this.isReturning = true;
+
+    this.circulationService.returnLoan(loan.loanId).subscribe({
       next: () => {
-        this.toastr.success('Đã đánh dấu sách đã trả!');
+        this.toastr.success(
+          `"${loan.bookName}" đã được đánh dấu trả thành công!`,
+          'Trả sách thành công',
+          { timeOut: 3500, progressBar: true },
+        );
+        this.cancelReturn();
         this.loadAllLoans();
       },
       error: (err) => {
-        this.toastr.error('Lỗi khi trả sách. Vui lòng thử lại.');
+        this.toastr.error(
+          'Không thể xử lý trả sách. Vui lòng thử lại.',
+          'Lỗi trả sách',
+          { timeOut: 4000, progressBar: true },
+        );
         console.error(err);
+        this.cancelReturn();
         this.loadAllLoans();
       },
     });
   }
 
   sendReminder(loanId: number): void {
-    if (!confirm('Gửi email nhắc nhở tới người mượn?')) {
+    const loan = this.filteredLoans.find((l) => l.loanId === loanId);
+    if (
+      !confirm(`Gửi email nhắc nhở tới người mượn "${loan?.userName ?? ''}"?`)
+    ) {
       return;
     }
 
@@ -137,7 +162,7 @@ export class LoanManagementComponent implements OnInit {
 
   renewLoan(loanId: number): void {
     if (!confirm('Gia hạn thêm 7 ngày cho phiếu mượn này?')) {
-      return;
+      return; // TODO: upgrade to modal later
     }
 
     // TODO: Call API to renew loan

@@ -1,16 +1,18 @@
 package com.ibizabroker.lms.service;
 
 import com.ibizabroker.lms.dao.ChatMessageRepository;
+import com.ibizabroker.lms.dao.ConversationMetadataRepository;
 import com.ibizabroker.lms.entity.ChatMessage;
+import com.ibizabroker.lms.entity.ConversationMetadata;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-// Đã xóa import Redis để fix lỗi build
-// import org.springframework.data.redis.core.StringRedisTemplate;
-// import java.util.concurrent.TimeUnit;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -18,6 +20,7 @@ import java.util.UUID;
 public class ConversationService {
     
     private final ChatMessageRepository chatMessageRepository;
+    private final ConversationMetadataRepository conversationMetadataRepository;
     // Đã xóa redisTemplate vì không dùng Redis nữa
     // private final StringRedisTemplate redisTemplate;
 
@@ -101,6 +104,17 @@ public class ConversationService {
             - Không hứa hẹn "có sẵn" khi không chắc chắn; ưu tiên hướng dẫn bạn đọc xuống thư viện kiểm tra.
             - Luôn xưng hô "mình" với học sinh; "em" nếu người hỏi là giáo viên.
             - Văn phong: trong sáng, khuyến khích đọc sách, tránh thuật ngữ nặng.
+
+            ĐỊNH DẠNG BOOK_CARD (BẮT BUỘC khi gợi ý sách cụ thể):
+            Khi gợi ý hoặc nhắc đến một cuốn sách CỤ THỂ có trong CONTEXT, hãy thêm dòng BOOK_CARD ở cuối phần giới thiệu sách đó.
+            Format CHÍNH XÁC (KHÔNG thay đổi cú pháp, KHÔNG thêm dấu cách):
+            BOOK_CARD:{id:<bookId>,title:'<tên sách>',author:'<tác giả>',available:<true hoặc false>}
+            Ví dụ: BOOK_CARD:{id:42,title:'Toán 6 Tập 1',author:'Nguyễn Văn A',available:true}
+            Lưu ý:
+            - Lấy bookId từ [ID:xx] trong CONTEXT.
+            - available=true nếu "Còn lại" > 0, ngược lại false.
+            - Mỗi sách chỉ 1 BOOK_CARD. Tối đa 3 BOOK_CARD mỗi câu trả lời.
+            - KHÔNG tạo BOOK_CARD cho sách không có trong CONTEXT.
             """;
 
         // 2. Lấy lịch sử chat cũ (nếu có)
@@ -126,6 +140,54 @@ public class ConversationService {
     @Transactional(readOnly = true)
     public List<String> getUserConversations(Integer userId) {
         return chatMessageRepository.findUserConversationIds(userId);
+    }
+
+    /**
+     * Delete all messages in a conversation, verifying the user owns it.
+     * Returns true if any rows were deleted (conversation existed and belonged to user).
+     */
+    @Transactional
+    public boolean deleteConversation(String conversationId, Integer userId) {
+        List<String> owned = chatMessageRepository.findUserConversationIds(userId);
+        if (!owned.contains(conversationId)) {
+            return false;
+        }
+        chatMessageRepository.deleteByConversationIdAndUserId(conversationId, userId);
+        // Also clean up any stored metadata (title, etc.)
+        conversationMetadataRepository.deleteById(conversationId);
+        return true;
+    }
+
+    /**
+     * Rename a conversation by updating (or creating) its metadata entry.
+     * Returns false if the user does not own the conversation.
+     */
+    @Transactional
+    public boolean renameConversation(String conversationId, Integer userId, String title) {
+        List<String> owned = chatMessageRepository.findUserConversationIds(userId);
+        if (!owned.contains(conversationId)) {
+            return false;
+        }
+        ConversationMetadata meta = conversationMetadataRepository.findById(conversationId)
+                .orElse(new ConversationMetadata(conversationId, userId));
+        meta.setTitle(title.substring(0, Math.min(title.length(), 100)));
+        meta.setUpdatedAt(LocalDateTime.now());
+        conversationMetadataRepository.save(meta);
+        return true;
+    }
+
+    /**
+     * Returns a map of conversationId → title for all conversations belonging to a user
+     * that have a custom title stored in metadata.
+     */
+    @Transactional(readOnly = true)
+    public Map<String, String> getTitlesForUser(Integer userId) {
+        return conversationMetadataRepository.findByUserId(userId).stream()
+                .filter(m -> m.getTitle() != null && !m.getTitle().isBlank())
+                .collect(Collectors.toMap(
+                        ConversationMetadata::getConversationId,
+                        ConversationMetadata::getTitle
+                ));
     }
 
     /**

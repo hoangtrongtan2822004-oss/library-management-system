@@ -361,6 +361,18 @@
   >
     <h4 class="mb-4 text-light border-bottom border-secondary pb-2">
       <i class="fa-solid fa-book-open me-2"></i>Có thể bạn cũng thích
+      <span
+        *ngIf="aiRecommendationSource === 'ai'"
+        class="badge bg-info ms-2 small align-middle"
+      >
+        <i class="fa-solid fa-wand-magic-sparkles me-1"></i>AI
+      </span>
+      <span
+        *ngIf="aiRecommendationSource === 'category'"
+        class="badge bg-secondary ms-2 small align-middle"
+      >
+        Cùng thể loại
+      </span>
     </h4>
 
     <div *ngIf="isLoadingRelated" class="text-center py-3">
@@ -375,7 +387,7 @@
         class="col-md-2 col-sm-4 col-6"
       >
         <div class="card related-book-card border-secondary h-100">
-          <a [routerLink]="['/book-details', relatedBook.id]">
+          <a [routerLink]="['/books', relatedBook.id]">
             <img
               [src]="relatedBook.coverUrl || 'assets/images/placeholder.png'"
               class="card-img-top related-book-cover"
@@ -385,7 +397,71 @@
           <div class="card-body p-2 bg-dark text-light">
             <h6 class="card-title text-truncate mb-1">
               <a
-                [routerLink]="['/book-details', relatedBook.id]"
+                [routerLink]="['/books', relatedBook.id]"
+                class="text-decoration-none text-light"
+                >{{ relatedBook.name }}</a
+              >
+            </h6>
+            <p class="card-text text-muted small text-truncate mb-1">
+              <span *ngFor="let a of relatedBook.authors; let last = last"
+                >{{ a.name }}{{ !last ? ", " : "" }}</span
+              >
+            </p>
+            <span
+              *ngIf="relatedBook.numberOfCopiesAvailable > 0"
+              class="badge bg-success small"
+              >Còn {{ relatedBook.numberOfCopiesAvailable }} cuốn</span
+            >
+            <span
+              *ngIf="relatedBook.numberOfCopiesAvailable === 0"
+              class="badge bg-danger small"
+              >Hết sách</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Also Borrowed Section (Collaborative Filtering) -->
+  <div
+    *ngIf="
+      book &&
+      !isLoading &&
+      (alsoBorrowedBooks.length > 0 || isLoadingAlsoBorrowed)
+    "
+    class="related-books-section mt-4"
+  >
+    <h4 class="mb-4 text-light border-bottom border-secondary pb-2">
+      <i class="fa-solid fa-users me-2"></i>Người khác cũng mượn
+    </h4>
+
+    <div *ngIf="isLoadingAlsoBorrowed" class="text-center py-3">
+      <div class="spinner-border text-primary spinner-border-sm" role="status">
+        <span class="visually-hidden">Đang tải...</span>
+      </div>
+    </div>
+
+    <div
+      class="row g-3"
+      *ngIf="!isLoadingAlsoBorrowed && alsoBorrowedBooks.length > 0"
+    >
+      <div
+        *ngFor="let relatedBook of alsoBorrowedBooks"
+        class="col-md-2 col-sm-4 col-6"
+      >
+        <div class="card related-book-card border-secondary h-100">
+          <a [routerLink]="['/books', relatedBook.id]">
+            <img
+              [src]="relatedBook.coverUrl || 'assets/images/placeholder.png'"
+              class="card-img-top related-book-cover"
+              [alt]="relatedBook.name"
+            />
+          </a>
+          <div class="card-body p-2 bg-dark text-light">
+            <h6 class="card-title text-truncate mb-1">
+              <a
+                [routerLink]="['/books', relatedBook.id]"
                 class="text-decoration-none text-light"
                 >{{ relatedBook.name }}</a
               >

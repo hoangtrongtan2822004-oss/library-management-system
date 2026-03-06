@@ -1,4 +1,10 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  EventEmitter,
+  Input,
+  Output,
+} from '@angular/core';
 
 /**
  * Reusable confirmation dialog component.
@@ -33,6 +39,7 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
   templateUrl: './confirm-dialog.component.html',
   styleUrls: ['./confirm-dialog.component.css'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ConfirmDialogComponent {
   @Input() show: boolean = false;

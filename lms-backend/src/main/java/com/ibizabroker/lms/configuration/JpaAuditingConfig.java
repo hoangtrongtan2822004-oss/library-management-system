@@ -14,6 +14,7 @@ import java.util.Optional;
 public class JpaAuditingConfig {
 
     @Bean
+    @SuppressWarnings("null") // Optional.of/ofNullable return types lack @NonNull; usage is safe
     public AuditorAware<String> auditorProvider() {
         return () -> {
             Authentication auth = SecurityContextHolder.getContext().getAuthentication();

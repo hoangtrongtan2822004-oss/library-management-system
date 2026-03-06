@@ -95,7 +95,7 @@ public class OAuth2LoginController {
 
         // Cập nhật thông tin hồ sơ, nhưng tránh chạm unique key
         boolean changed = false;
-        if (hasText(normalizedGoogleId) && (user.getGoogleId() == null || !normalizedGoogleId.equals(user.getGoogleId()))) {
+        if (normalizedGoogleId != null && hasText(normalizedGoogleId) && (user.getGoogleId() == null || !normalizedGoogleId.equals(user.getGoogleId()))) {
             user.setGoogleId(normalizedGoogleId);
             changed = true;
         }

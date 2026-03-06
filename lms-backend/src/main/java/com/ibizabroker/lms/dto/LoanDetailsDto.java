@@ -36,6 +36,8 @@ import java.time.LocalDate;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LoanDetailsDto {
     private Integer loanId;
+    private Integer bookId;
+    private String bookCoverUrl;
     private String bookName;
     private String userName;
     private LocalDate loanDate;
@@ -44,4 +46,19 @@ public class LoanDetailsDto {
     private LoanStatus status;
     private BigDecimal fineAmount;
     private Long overdueDays;
+
+    /** Legacy 9-arg constructor — used by report queries that don't need bookId/coverUrl */
+    public LoanDetailsDto(Integer loanId, String bookName, String userName,
+                          LocalDate loanDate, LocalDate dueDate, LocalDate returnDate,
+                          LoanStatus status, BigDecimal fineAmount, Long overdueDays) {
+        this.loanId = loanId;
+        this.bookName = bookName;
+        this.userName = userName;
+        this.loanDate = loanDate;
+        this.dueDate = dueDate;
+        this.returnDate = returnDate;
+        this.status = status;
+        this.fineAmount = fineAmount;
+        this.overdueDays = overdueDays;
+    }
 }

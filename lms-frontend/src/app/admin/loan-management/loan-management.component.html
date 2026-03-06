@@ -225,7 +225,7 @@
               <button
                 *ngIf="loan.status === 'ACTIVE' || loan.status === 'OVERDUE'"
                 class="btn btn-outline-success"
-                (click)="markAsReturned(loan.loanId)"
+                (click)="openReturnModal(loan)"
                 title="Đánh dấu đã trả"
               >
                 <i class="fa-solid fa-check"></i>
@@ -235,5 +235,149 @@
         </tr>
       </tbody>
     </table>
+  </div>
+</div>
+
+<!-- ==================== Return Confirmation Modal ==================== -->
+<div
+  class="return-modal-backdrop"
+  [class.active]="showReturnModal"
+  (click)="cancelReturn()"
+  aria-hidden="true"
+></div>
+
+<div
+  class="return-modal"
+  [class.show]="showReturnModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="returnModalTitle"
+  tabindex="-1"
+>
+  <div class="return-modal-dialog">
+    <!-- Header -->
+    <div class="return-modal-header">
+      <div class="d-flex align-items-center gap-2">
+        <div class="return-icon-wrap">
+          <i class="fa-solid fa-book-open-reader"></i>
+        </div>
+        <div>
+          <h5 class="mb-0" id="returnModalTitle">Xác nhận trả sách</h5>
+          <p class="text-muted small mb-0">
+            Thao tác này sẽ đánh dấu phiếu mượn là đã trả.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn-close btn-close-white"
+        (click)="cancelReturn()"
+        aria-label="Đóng"
+      ></button>
+    </div>
+
+    <!-- Body: loan details -->
+    <div class="return-modal-body" *ngIf="pendingReturnLoan">
+      <div class="loan-detail-card">
+        <div class="loan-detail-row">
+          <i class="fa-solid fa-hashtag detail-icon"></i>
+          <span class="detail-label">ID Phiếu mượn</span>
+          <span class="detail-value">#{{ pendingReturnLoan.loanId }}</span>
+        </div>
+        <div class="loan-detail-row">
+          <i class="fa-solid fa-book detail-icon" style="color: #9fb4ff"></i>
+          <span class="detail-label">Tên sách</span>
+          <span class="detail-value fw-semibold">{{
+            pendingReturnLoan.bookName
+          }}</span>
+        </div>
+        <div class="loan-detail-row">
+          <i class="fa-solid fa-user detail-icon" style="color: #67d5b5"></i>
+          <span class="detail-label">Người mượn</span>
+          <span class="detail-value">{{ pendingReturnLoan.userName }}</span>
+        </div>
+        <div class="loan-detail-row">
+          <i
+            class="fa-solid fa-calendar-days detail-icon"
+            style="color: #ffc107"
+          ></i>
+          <span class="detail-label">Ngày mượn</span>
+          <span class="detail-value">{{
+            pendingReturnLoan.loanDate | date: "dd/MM/yyyy"
+          }}</span>
+        </div>
+        <div class="loan-detail-row">
+          <i
+            class="fa-solid fa-calendar-xmark detail-icon"
+            [style.color]="
+              pendingReturnLoan.status === 'OVERDUE' ? '#f55' : '#aaa'
+            "
+          ></i>
+          <span class="detail-label">Hạn trả</span>
+          <span
+            class="detail-value"
+            [class.text-danger]="pendingReturnLoan.status === 'OVERDUE'"
+          >
+            {{ pendingReturnLoan.dueDate | date: "dd/MM/yyyy" }}
+            <span
+              *ngIf="pendingReturnLoan.status === 'OVERDUE'"
+              class="badge bg-danger ms-1"
+              >Quá hạn</span
+            >
+          </span>
+        </div>
+        <div class="loan-detail-row">
+          <i class="fa-solid fa-circle-info detail-icon"></i>
+          <span class="detail-label">Trạng thái</span>
+          <span
+            class="badge"
+            [ngClass]="{
+              'bg-success': pendingReturnLoan.status === 'ACTIVE',
+              'bg-danger': pendingReturnLoan.status === 'OVERDUE',
+            }"
+            >{{ pendingReturnLoan.status }}</span
+          >
+        </div>
+      </div>
+
+      <div
+        class="return-warning"
+        *ngIf="pendingReturnLoan.status === 'OVERDUE'"
+      >
+        <i class="fa-solid fa-triangle-exclamation me-2"></i>
+        Phiếu này đang <strong>quá hạn</strong>. Xác nhận sẽ đánh dấu đã trả
+        ngay hôm nay.
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="return-modal-footer">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="cancelReturn()"
+        [disabled]="isReturning"
+      >
+        <i class="fa-solid fa-xmark me-1"></i> Huỷ
+      </button>
+      <button
+        type="button"
+        class="btn btn-confirm-return"
+        (click)="confirmReturn()"
+        [disabled]="isReturning"
+      >
+        <span *ngIf="!isReturning">
+          <i class="fa-solid fa-check me-1"></i> Xác nhận đã trả
+        </span>
+        <span *ngIf="isReturning">
+          <span
+            class="spinner-border spinner-border-sm me-1"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          Đang xử lý...
+        </span>
+      </button>
+    </div>
   </div>
 </div>

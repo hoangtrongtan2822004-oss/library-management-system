@@ -14,6 +14,7 @@ import com.ibizabroker.lms.entity.Users;
 import com.ibizabroker.lms.entity.ReviewLike;
 import com.ibizabroker.lms.entity.ReviewComment;
 import com.ibizabroker.lms.exceptions.NotFoundException;
+import com.ibizabroker.lms.service.AiTaggingService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -40,22 +41,26 @@ public class ReviewController {
     private final ReviewLikeRepository reviewLikeRepository;
     private final ReviewCommentRepository reviewCommentRepository;
     private final ObjectMapper objectMapper;
+    private final AiTaggingService aiTaggingService;
 
-    public ReviewController(ReviewRepository reviewRepository, BooksRepository booksRepository, 
+    public ReviewController(ReviewRepository reviewRepository, BooksRepository booksRepository,
                           UsersRepository usersRepository, ReviewLikeRepository reviewLikeRepository,
-                          ReviewCommentRepository reviewCommentRepository, ObjectMapper objectMapper) {
+                          ReviewCommentRepository reviewCommentRepository, ObjectMapper objectMapper,
+                          AiTaggingService aiTaggingService) {
         this.reviewRepository = reviewRepository;
         this.booksRepository = booksRepository;
         this.usersRepository = usersRepository;
         this.reviewLikeRepository = reviewLikeRepository;
         this.reviewCommentRepository = reviewCommentRepository;
         this.objectMapper = objectMapper;
+        this.aiTaggingService = aiTaggingService;
     }
 
     // --- API CHO NGƯỜI DÙNG ---
 
     @PostMapping("/api/books/{bookId}/reviews")
     @PreAuthorize("hasRole('USER')")
+    @SuppressWarnings("null") // Spring Data findById(Integer) lacks @NonNull; @PathVariable is always non-null
     public ResponseEntity<?> addReview(@PathVariable Integer bookId,
                                        @Valid @RequestBody ReviewDto reviewDto,
                                        @AuthenticationPrincipal UserDetails userDetails) {
@@ -83,6 +88,10 @@ public class ReviewController {
                 return ResponseEntity.badRequest().body(Map.of("message", "Lỗi xử lý ảnh: " + e.getMessage()));
             }
         }
+
+        // AI moderation: auto-approve if content is acceptable, otherwise mark for manual review
+        boolean isAcceptable = aiTaggingService.moderateReview(reviewDto.getComment());
+        review.setApproved(isAcceptable);
 
         Review savedReview = reviewRepository.save(review);
         return ResponseEntity.status(HttpStatus.CREATED).body(toDto(savedReview, null));
@@ -206,6 +215,44 @@ public class ReviewController {
         }
         reviewRepository.deleteById(reviewId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/api/admin/reviews/{reviewId}/reply")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ReviewDto> addAdminReply(
+            @PathVariable Integer reviewId,
+            @RequestBody Map<String, String> body) {
+        @SuppressWarnings("null")
+        Review review = reviewRepository.findById(reviewId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy đánh giá với ID: " + reviewId));
+        String replyText = body.getOrDefault("replyText", "").trim();
+        if (replyText.isEmpty()) {
+            return ResponseEntity.badRequest().build();
+        }
+        review.setAdminReply(replyText);
+        review.setAdminReplyDate(java.time.LocalDateTime.now());
+        Review saved = reviewRepository.save(review);
+        return ResponseEntity.ok(toDto(saved, null));
+    }
+
+    @PostMapping("/api/admin/reviews/bulk-approve")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SuppressWarnings("null") // Spring Data findAllById/saveAll lack @NonNull on Iterable param; List.of() is non-null
+    public ResponseEntity<Map<String, Object>> bulkApprove(@RequestBody Map<String, List<Integer>> body) {
+        List<Integer> ids = body.getOrDefault("reviewIds", List.of());
+        List<Review> reviews = reviewRepository.findAllById(ids);
+        reviews.forEach(r -> r.setApproved(true));
+        reviewRepository.saveAll(reviews);
+        return ResponseEntity.ok(Map.of("updated", reviews.size()));
+    }
+
+    @PostMapping("/api/admin/reviews/bulk-delete")
+    @PreAuthorize("hasRole('ADMIN')")
+    @SuppressWarnings("null") // Spring Data deleteAllById lacks @NonNull on Iterable param; List.of() is non-null
+    public ResponseEntity<Map<String, Object>> bulkDelete(@RequestBody Map<String, List<Integer>> body) {
+        List<Integer> ids = body.getOrDefault("reviewIds", List.of());
+        reviewRepository.deleteAllById(ids);
+        return ResponseEntity.ok(Map.of("deleted", ids.size()));
     }
     
     // --- API LIKE/UNLIKE REVIEW ---
@@ -339,6 +386,17 @@ public class ReviewController {
         // Kiểm tra user hiện tại đã like chưa
         if (currentUserId != null) {
             dto.setCurrentUserLiked(reviewLikeRepository.existsByReview_IdAndUser_UserId(review.getId(), currentUserId));
+        }
+
+        // Ảnh bìa sách
+        dto.setBookCoverUrl(review.getBook().getCoverUrl());
+
+        // Admin reply
+        if (review.getAdminReply() != null) {
+            dto.setAdminReply(review.getAdminReply());
+        }
+        if (review.getAdminReplyDate() != null) {
+            dto.setAdminReplyDate(review.getAdminReplyDate().toString());
         }
         
         return dto;

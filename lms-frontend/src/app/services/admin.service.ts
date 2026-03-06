@@ -32,6 +32,8 @@ export interface DashboardDetails {
 export interface LoanDetails {
   loanId: number;
   bookId?: number;
+  bookCoverUrl?: string;
+  coverUrl?: string;
   bookName: string;
   userName: string;
   loanDate: string;
@@ -398,6 +400,17 @@ export class AdminService {
       `${this.API_URL}/settings/reset-category/${category}`,
       {},
     );
+  }
+
+  public createSetting(payload: {
+    key: string;
+    value: string;
+    defaultValue?: string;
+    description?: string;
+    category: string;
+    dataType: string;
+  }): Observable<any> {
+    return this.http.post(`${this.API_URL}/settings`, payload);
   }
 
   // ---------- AUDIT LOGS ----------

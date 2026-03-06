@@ -28,6 +28,10 @@ public class UserDto {
     private Integer userId;
     private String name;
     private String username;
+    private String email;
+    private String studentClass;
+    private String phoneNumber;
+    private String avatarUrl;
     private Boolean active;
     private List<String> roles;
 }

@@ -1,4 +1,24 @@
 {
-    "java.compile.nullAnalysis.mode": "automatic",
-    "java.configuration.updateBuildConfiguration": "automatic"
+  "java.compile.nullAnalysis.mode": "automatic",
+  "java.configuration.updateBuildConfiguration": "automatic",
+
+  // ─── Terminal: force UTF-8 codepage for all shells in this workspace ──────
+  // Prevents CP437/CP850 garbling of Vietnamese (multibyte UTF-8) characters
+  // in Spring Boot / Maven logs.
+  "terminal.integrated.profiles.windows": {
+    "PowerShell (UTF-8)": {
+      "source": "PowerShell",
+      "args": [
+        "-NoExit",
+        "-Command",
+        "[Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false); $OutputEncoding = [System.Text.UTF8Encoding]::new($false); chcp 65001 | Out-Null; Write-Host '✔ Console UTF-8 (65001)' -ForegroundColor Green"
+      ],
+      "icon": "terminal-powershell"
+    }
+  },
+  "terminal.integrated.defaultProfile.windows": "PowerShell (UTF-8)",
+
+  // ─── Editor ───────────────────────────────────────────────────────────────
+  "files.encoding": "utf8",
+  "files.autoGuessEncoding": false
 }

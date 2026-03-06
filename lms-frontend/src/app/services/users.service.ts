@@ -164,4 +164,13 @@ export class UsersService {
       { active: isActive },
     );
   }
+
+  uploadUserAvatar(userId: number, file: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('file', file);
+    return this.http.post(
+      this.apiService.buildUrl(`/admin/users/${userId}/avatar`),
+      formData,
+    );
+  }
 }

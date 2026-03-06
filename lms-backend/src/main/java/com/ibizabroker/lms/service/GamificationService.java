@@ -3,7 +3,10 @@ package com.ibizabroker.lms.service;
 import com.ibizabroker.lms.dao.*;
 import com.ibizabroker.lms.dto.*;
 import com.ibizabroker.lms.entity.*;
+import com.ibizabroker.lms.exceptions.BadRequestException;
+import com.ibizabroker.lms.exceptions.ConflictException;
 import com.ibizabroker.lms.exceptions.NotFoundException;
+import org.springframework.util.StringUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true) // Mặc định tất cả là chỉ đọc để tối ưu
+@SuppressWarnings("null")
 public class GamificationService {
 
     private final UserPointsRepository pointsRepository;
@@ -96,7 +100,49 @@ public class GamificationService {
 
     @Transactional(readOnly = true)
     public List<Badge> getAllBadges() {
-        return badgeRepository.findByIsActiveTrue();
+        return badgeRepository.findAll();
+    }
+
+    @Transactional
+    public Badge createBadge(Badge badge) {
+        if (!StringUtils.hasText(badge.getCode())) {
+            throw new BadRequestException("Badge code không được để trống", "BADGE_CODE_REQUIRED");
+        }
+        badge.setCode(badge.getCode().trim().toUpperCase());
+        if (badgeRepository.existsByCode(badge.getCode())) {
+            throw new ConflictException("Badge với code '" + badge.getCode() + "' đã tồn tại", "BADGE_CODE_DUPLICATE");
+        }
+        return badgeRepository.save(badge);
+    }
+
+    @Transactional
+    public Badge updateBadge(Long id, Badge payload) {
+        Badge badge = badgeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy badge với ID: " + id));
+        if (payload.getNameVi() != null) badge.setNameVi(payload.getNameVi());
+        if (payload.getNameEn() != null) badge.setNameEn(payload.getNameEn());
+        if (payload.getDescriptionVi() != null) badge.setDescriptionVi(payload.getDescriptionVi());
+        if (payload.getIconUrl() != null) badge.setIconUrl(payload.getIconUrl());
+        if (payload.getPointsReward() != null) badge.setPointsReward(payload.getPointsReward());
+        if (payload.getCategory() != null) badge.setCategory(payload.getCategory());
+        if (payload.getRequirementValue() != null) badge.setRequirementValue(payload.getRequirementValue());
+        if (payload.getIsActive() != null) badge.setIsActive(payload.getIsActive());
+        return badgeRepository.save(badge);
+    }
+
+    @Transactional
+    public void deleteBadge(Long id) {
+        if (!badgeRepository.existsById(id)) {
+            throw new NotFoundException("Không tìm thấy badge với ID: " + id);
+        }
+        badgeRepository.deleteById(id);
+    }
+
+    @Transactional
+    public void awardBadgeToUser(Integer userId, Long badgeId) {
+        Badge badge = badgeRepository.findById(badgeId)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy badge với ID: " + badgeId));
+        awardBadge(userId, badge);
     }
 
     @Transactional(readOnly = true)
@@ -163,6 +209,47 @@ public class GamificationService {
     @Transactional(readOnly = true)
     public List<ReadingChallenge> getActiveChallenges() {
         return challengeRepository.findActiveChallenges(LocalDate.now());
+    }
+
+    @Transactional(readOnly = true)
+    public List<ReadingChallenge> getAllChallenges() {
+        return challengeRepository.findAll();
+    }
+
+    @Transactional
+    public ReadingChallenge createChallenge(ReadingChallenge challenge) {
+        return challengeRepository.save(challenge);
+    }
+
+    @Transactional
+    public ReadingChallenge updateChallenge(Long id, ReadingChallenge payload) {
+        ReadingChallenge challenge = challengeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy thử thách với ID: " + id));
+        if (payload.getNameVi() != null) challenge.setNameVi(payload.getNameVi());
+        if (payload.getNameEn() != null) challenge.setNameEn(payload.getNameEn());
+        if (payload.getDescriptionVi() != null) challenge.setDescriptionVi(payload.getDescriptionVi());
+        if (payload.getStartDate() != null) challenge.setStartDate(payload.getStartDate());
+        if (payload.getEndDate() != null) challenge.setEndDate(payload.getEndDate());
+        if (payload.getTargetBooks() != null) challenge.setTargetBooks(payload.getTargetBooks());
+        if (payload.getPointsReward() != null) challenge.setPointsReward(payload.getPointsReward());
+        if (payload.getIsActive() != null) challenge.setIsActive(payload.getIsActive());
+        return challengeRepository.save(challenge);
+    }
+
+    @Transactional
+    public void deleteChallenge(Long id) {
+        if (!challengeRepository.existsById(id)) {
+            throw new NotFoundException("Không tìm thấy thử thách với ID: " + id);
+        }
+        challengeRepository.deleteById(id);
+    }
+
+    @Transactional
+    public ReadingChallenge toggleChallengeActive(Long id) {
+        ReadingChallenge challenge = challengeRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("Không tìm thấy thử thách với ID: " + id));
+        challenge.setIsActive(!challenge.getIsActive());
+        return challengeRepository.save(challenge);
     }
 
     @Transactional(readOnly = true)

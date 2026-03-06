@@ -16,6 +16,7 @@ public class AuditLogService {
 
     private final AuditLogRepository auditLogRepository;
 
+    @SuppressWarnings("null")
     public AuditLogEntry save(AuditLogEntry entry) {
         return auditLogRepository.save(entry);
     }

@@ -90,6 +90,7 @@ public class AdminMemberCardController {
 
     @GetMapping("/{id}/barcode")
     @PreAuthorize("hasRole('ADMIN')")
+    @SuppressWarnings("null") // MediaType constants lack @NonNull; usage is safe
     public ResponseEntity<byte[]> downloadBarcode(
         @PathVariable Long id,
         @RequestParam(defaultValue = "300") int width,
@@ -104,6 +105,7 @@ public class AdminMemberCardController {
 
     @GetMapping("/{id}/pdf")
     @PreAuthorize("hasRole('ADMIN')")
+    @SuppressWarnings("null") // MediaType constants lack @NonNull; usage is safe
     public ResponseEntity<byte[]> downloadPdf(@PathVariable Long id) throws IOException {
         byte[] data = memberCardService.generateCardPdf(id);
         return ResponseEntity.ok()

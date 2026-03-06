@@ -213,9 +213,17 @@ export class CreateUserComponent {
         this.router.navigate(['/users']);
       },
       error: (err: HttpErrorResponse) => {
-        const msg =
-          err.error?.message || err.message || 'Không thể tạo người dùng.';
-        this.toastr.error(msg);
+        const fieldErrors: Record<string, string> | undefined =
+          err.error?.data?.fieldErrors;
+        if (fieldErrors && Object.keys(fieldErrors).length > 0) {
+          Object.values(fieldErrors).forEach((msg) =>
+            this.toastr.error(msg as string),
+          );
+        } else {
+          const msg =
+            err.error?.message || err.message || 'Không thể tạo người dùng.';
+          this.toastr.error(msg);
+        }
         this.isLoading = false;
       },
     });

@@ -116,6 +116,12 @@ export class DashboardComponent implements OnInit, OnDestroy {
           this.renderLoansChart(result.chartData.monthlyLoans);
           this.renderStatusChart(result.chartData.statusDistribution);
           this.renderTopBooksChart();
+          this.renderTopBorrowersChart(result.chartData.topBorrowers || []);
+          this.renderFinesChart(
+            result.chartData.totalFines || 0,
+            result.chartData.totalUnpaidFines || 0,
+          );
+          this.renderCategoryChart(result.chartData.categoryDistribution || []);
         }, 0);
       },
       error: (err: any) => {
@@ -324,7 +330,7 @@ export class DashboardComponent implements OnInit, OnDestroy {
           y: {
             beginAtZero: true,
             grid: { color: this.GRID_COLOR }, // Sửa màu lưới
-            ticks: { color: this.TEXT_COLOR }, // Sửa màu chữ trục Y
+            ticks: { color: this.TEXT_COLOR, precision: 0 }, // precision:0 → chỉ hiển thị số nguyên
           },
           x: {
             grid: { display: false },
@@ -424,6 +430,147 @@ export class DashboardComponent implements OnInit, OnDestroy {
             grid: { display: false },
             ticks: { color: this.TEXT_COLOR },
           },
+        },
+      },
+    });
+    this.charts.push(chart);
+  }
+
+  // 4. Biểu đồ Top 5 Độc Giả Mượn Nhiều Nhất (horizontal bar)
+  renderTopBorrowersChart(data: any[]) {
+    const ctx = document.getElementById(
+      'topBorrowersChart',
+    ) as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const labels = data.map((d: any) => (d.userName || 'N/A').substring(0, 15));
+    const counts = data.map((d: any) => Number(d.loanCount) || 0);
+
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Số lượt mượn',
+            data: counts,
+            backgroundColor: [
+              '#58a6ff',
+              '#3fb950',
+              '#ff7b72',
+              '#f0883e',
+              '#d2a8ff',
+            ],
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: this.GRID_COLOR },
+            ticks: { color: this.TEXT_COLOR, precision: 0 },
+          },
+          y: { grid: { display: false }, ticks: { color: this.TEXT_COLOR } },
+        },
+      },
+    });
+    this.charts.push(chart);
+  }
+
+  // 5. Biểu đồ Tiền Phạt: Đã Thu vs Chưa Thu (doughnut)
+  renderFinesChart(totalFines: number, totalUnpaidFines: number) {
+    const ctx = document.getElementById('finesChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const paid = Math.max(0, totalFines - totalUnpaidFines);
+    const unpaid = Math.max(0, totalUnpaidFines);
+
+    const chart = new Chart(ctx, {
+      type: 'doughnut',
+      data: {
+        labels: ['Đã thu', 'Chưa thu'],
+        datasets: [
+          {
+            data: [paid, unpaid],
+            backgroundColor: ['#3fb950', '#f85149'],
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            position: 'bottom',
+            labels: { color: this.TEXT_COLOR, padding: 16 },
+          },
+          tooltip: {
+            callbacks: {
+              label: (ctx) => {
+                const val = ctx.raw as number;
+                return ` ${ctx.label}: ${val.toLocaleString('vi-VN')} ₫`;
+              },
+            },
+          },
+        },
+        cutout: '60%',
+      },
+    });
+    this.charts.push(chart);
+  }
+
+  // 6. Biểu đồ Sách Theo Thể Loại (horizontal bar)
+  renderCategoryChart(data: any[]) {
+    const ctx = document.getElementById('categoryChart') as HTMLCanvasElement;
+    if (!ctx) return;
+
+    const PALETTE = [
+      '#58a6ff',
+      '#3fb950',
+      '#f0883e',
+      '#d2a8ff',
+      '#ffa657',
+      '#ff7b72',
+      '#79c0ff',
+      '#56d364',
+    ];
+    const labels = data.map((d: any) =>
+      (d.categoryName || 'Khác').substring(0, 18),
+    );
+    const counts = data.map((d: any) => Number(d.bookCount) || 0);
+
+    const chart = new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Số sách',
+            data: counts,
+            backgroundColor: PALETTE.slice(0, labels.length),
+            borderWidth: 0,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+        plugins: { legend: { display: false } },
+        scales: {
+          x: {
+            beginAtZero: true,
+            grid: { color: this.GRID_COLOR },
+            ticks: { color: this.TEXT_COLOR, precision: 0 },
+          },
+          y: { grid: { display: false }, ticks: { color: this.TEXT_COLOR } },
         },
       },
     });

@@ -52,3 +52,105 @@
   transform: translateY(-2px);
   transition: transform 150ms ease;
 }
+
+/* ===== Revoke modal ===== */
+.revoke-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1100;
+  animation: fadeInOverlay 0.15s ease;
+}
+
+.revoke-modal {
+  background: #1e293b;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  animation: slideInModal 0.2s ease;
+  color: #e2e8f0;
+}
+
+.revoke-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.25rem 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.revoke-modal-header h5 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.revoke-modal-close {
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25rem;
+  transition: color 0.15s;
+}
+.revoke-modal-close:hover {
+  color: #f8fafc;
+}
+
+.revoke-modal-body {
+  padding: 1rem 1.25rem;
+}
+
+.revoke-reason-input {
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(99, 102, 241, 0.25);
+  color: #e2e8f0;
+  resize: vertical;
+}
+.revoke-reason-input:focus {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(239, 68, 68, 0.5);
+  box-shadow: 0 0 0 0.2rem rgba(239, 68, 68, 0.15);
+  color: #e2e8f0;
+}
+.revoke-reason-input::placeholder {
+  color: #475569;
+}
+.revoke-reason-input:disabled {
+  opacity: 0.5;
+}
+
+.revoke-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+@keyframes fadeInOverlay {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInModal {
+  from {
+    opacity: 0;
+    transform: translateY(-16px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

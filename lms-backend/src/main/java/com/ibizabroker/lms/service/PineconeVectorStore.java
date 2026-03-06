@@ -92,6 +92,26 @@ public class PineconeVectorStore implements VectorStore {
         }
     }
 
+    @Override
+    public void delete(String id) {
+        if (!isConfigured() || id == null || id.isBlank()) return;
+        try {
+            var payload = Map.of(
+                    "ids", List.of(id),
+                    "namespace", "books"
+            );
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(indexUrl + "/vectors/delete"))
+                    .timeout(Duration.ofSeconds(10))
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_JSON_VALUE)
+                    .header("Api-Key", apiKey)
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(payload), StandardCharsets.UTF_8))
+                    .build();
+            CLIENT.send(request, HttpResponse.BodyHandlers.discarding());
+        } catch (Exception ignored) {
+        }
+    }
+
     private boolean isConfigured() {
         return apiKey != null && !apiKey.isBlank() && indexUrl != null && !indexUrl.isBlank();
     }

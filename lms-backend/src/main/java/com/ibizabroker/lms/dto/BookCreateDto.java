@@ -57,6 +57,8 @@ public class BookCreateDto {
 
     private String shelfCode;
 
+    private String description;
+
     @NotNull(message = "Tác giả không được để trống")
     @Size(min = 1, message = "Phải có ít nhất 1 ID tác giả")
     @ExistsInDatabase(repository = AuthorRepository.class)

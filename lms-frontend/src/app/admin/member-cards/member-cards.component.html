@@ -170,8 +170,9 @@
                 </button>
                 <button
                   class="btn btn-sm btn-outline-danger"
-                  (click)="revokeCard(card)"
+                  (click)="openRevokeModal(card)"
                   title="Revoke card"
+                  [disabled]="card.status === 'REVOKED'"
                 >
                   Revoke
                 </button>
@@ -211,6 +212,82 @@
           Next
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- Revoke Confirmation Modal -->
+<div
+  class="revoke-modal-overlay"
+  *ngIf="revokeTargetCard"
+  (click)="cancelRevoke()"
+>
+  <div
+    class="revoke-modal"
+    (click)="$event.stopPropagation()"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="revokeModalTitle"
+  >
+    <div class="revoke-modal-header">
+      <h5 id="revokeModalTitle">
+        <i class="fa-solid fa-ban me-2 text-danger"></i>Thu hồi thẻ thư viện
+      </h5>
+      <button
+        class="revoke-modal-close"
+        (click)="cancelRevoke()"
+        aria-label="Close"
+      >
+        &times;
+      </button>
+    </div>
+    <div class="revoke-modal-body">
+      <p class="mb-3">
+        Bạn đang thu hồi thẻ của
+        <strong>{{
+          revokeTargetCard!.fullName || revokeTargetCard!.username
+        }}</strong>
+        (<code>{{ revokeTargetCard!.cardNumber }}</code
+        >).
+      </p>
+      <label class="form-label small" for="revokeReasonInput"
+        >Lý do thu hồi <span class="text-muted">(tuỳ chọn)</span></label
+      >
+      <textarea
+        id="revokeReasonInput"
+        class="form-control form-control-sm revoke-reason-input"
+        rows="3"
+        [(ngModel)]="revokeReason"
+        name="revokeReason"
+        placeholder="Nhập lý do thu hồi..."
+        maxlength="255"
+        [disabled]="isRevoking"
+        autofocus
+      ></textarea>
+      <div class="text-end small text-muted mt-1">
+        {{ revokeReason.length }}/255
+      </div>
+    </div>
+    <div class="revoke-modal-footer">
+      <button
+        class="btn btn-sm btn-secondary"
+        (click)="cancelRevoke()"
+        [disabled]="isRevoking"
+      >
+        Huỷ
+      </button>
+      <button
+        class="btn btn-sm btn-danger"
+        (click)="confirmRevoke()"
+        [disabled]="isRevoking"
+      >
+        <span
+          *ngIf="isRevoking"
+          class="spinner-border spinner-border-sm me-1"
+          role="status"
+        ></span>
+        Xác nhận thu hồi
+      </button>
     </div>
   </div>
 </div>

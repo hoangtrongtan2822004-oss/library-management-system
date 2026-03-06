@@ -8,12 +8,18 @@
     >
       <i class="fas fa-robot" aria-hidden="true"></i>
     </button>
+    <span
+      class="fab-badge"
+      *ngIf="unreadCount > 0"
+      aria-label="{{ unreadCount }} unread messages"
+      >{{ unreadCount > 9 ? "9+" : unreadCount }}</span
+    >
     <span class="fab-tooltip" role="status" aria-hidden="true"
       >Chat (Ctrl/Cmd+K)</span
     >
   </div>
 
-  <div class="chat-window" [class.open]="isOpen">
+  <div class="chat-window" [class.open]="isOpen" [class.expanded]="isExpanded">
     <div class="chat-header">
       <div class="header-title">
         <h5>Library Assistant 📚</h5>
@@ -43,7 +49,36 @@
         >
           <i class="fas fa-rotate-right" aria-hidden="true"></i>
         </button>
-        <div class="header-ctrls d-flex align-items-center" aria-hidden="false">
+        <div class="btn-action-group d-flex align-items-center gap-1">
+          <button
+            class="btn-action"
+            (click)="exportChat()"
+            title="Xuất lịch sử chat"
+            *ngIf="messages.length > 1"
+            aria-label="Export chat"
+          >
+            <i class="fas fa-file-download" aria-hidden="true"></i>
+          </button>
+          <button
+            class="btn-action"
+            (click)="toggleExpand()"
+            [title]="isExpanded ? 'Thu nhỏ' : 'Phóng to'"
+            [attr.aria-label]="isExpanded ? 'Collapse chat' : 'Expand chat'"
+          >
+            <i
+              class="fas"
+              [ngClass]="isExpanded ? 'fa-compress' : 'fa-expand'"
+              aria-hidden="true"
+            ></i>
+          </button>
+          <button
+            class="btn-action"
+            (click)="toggleHistory()"
+            title="Lịch sử hội thoại"
+            aria-label="Toggle conversation history"
+          >
+            <i class="fas fa-history" aria-hidden="true"></i>
+          </button>
           <button
             class="btn-action"
             (click)="clearChat()"
@@ -54,15 +89,100 @@
             <i class="fas fa-trash-alt" aria-hidden="true"></i>
           </button>
           <button
-            class="btn-close ms-2"
+            class="btn-chat-close ms-2"
             (click)="toggleChat()"
             aria-label="Close chat"
-          ></button>
+            title="Đóng"
+          >
+            <i class="fas fa-times" aria-hidden="true"></i>
+          </button>
         </div>
       </div>
     </div>
 
-    <div class="chat-body" #chatBody>
+    <!-- Conversation History Sidebar -->
+    <div class="history-panel" *ngIf="showHistory">
+      <div class="history-header">
+        <span>Lịch sử hội thoại</span>
+        <button
+          class="btn-action"
+          (click)="startNewConversation()"
+          title="Cuộc trò chuyện mới"
+        >
+          <i class="fas fa-plus" aria-hidden="true"></i>
+        </button>
+      </div>
+      <div class="history-search-wrapper">
+        <i class="fas fa-search history-search-icon" aria-hidden="true"></i>
+        <input
+          type="text"
+          class="history-search"
+          [(ngModel)]="historySearchQuery"
+          name="historySearch"
+          placeholder="Tìm hội thoại..."
+          autocomplete="off"
+          aria-label="Search conversations"
+        />
+      </div>
+      <div class="history-list" *ngIf="!isLoadingHistory">
+        <div
+          class="history-item"
+          *ngFor="let conv of filteredConversationList"
+          [class.active]="conv === conversationId"
+          (click)="renamingConvId !== conv && loadConversation(conv)"
+        >
+          <i class="fas fa-comment-dots" aria-hidden="true"></i>
+          <ng-container *ngIf="renamingConvId === conv; else showTitle">
+            <input
+              #renameInputEl
+              class="rename-input"
+              type="text"
+              [value]="conversationTitles[conv] || ''"
+              (keydown.enter)="confirmRename(conv, renameInputEl.value)"
+              (keydown.escape)="cancelRename()"
+              (blur)="confirmRename(conv, renameInputEl.value)"
+              (click)="$event.stopPropagation()"
+              maxlength="100"
+              aria-label="Rename conversation"
+            />
+          </ng-container>
+          <ng-template #showTitle>
+            <span class="history-item-id" [title]="conv">
+              {{ conversationTitles[conv] || (conv | slice: 0 : 8) + "..." }}
+            </span>
+            <button
+              class="btn-rename-conv"
+              (click)="startRename(conv, $event)"
+              title="Đổi tên"
+              aria-label="Đổi tên hội thoại"
+            >
+              <i class="fas fa-pencil-alt" aria-hidden="true"></i>
+            </button>
+          </ng-template>
+          <button
+            class="btn-delete-conv"
+            (click)="deleteConversation(conv, $event)"
+            title="Xóa hội thoại"
+            aria-label="Xóa hội thoại"
+          >
+            <i class="fas fa-trash-alt" aria-hidden="true"></i>
+          </button>
+        </div>
+        <div class="history-empty" *ngIf="conversationList.length === 0">
+          Chưa có hội thoại nào
+        </div>
+      </div>
+      <div class="history-loading" *ngIf="isLoadingHistory">
+        <span>Đang tải...</span>
+      </div>
+    </div>
+
+    <div
+      class="chat-body"
+      [class.with-history]="showHistory"
+      #chatBody
+      (scroll)="onChatScroll()"
+    >
       <div
         *ngFor="let message of messages"
         class="message"
@@ -71,7 +191,29 @@
         <div class="message-content">
           <ng-container *ngIf="message.author === 'bot'; else userMessage">
             <markdown [data]="message.text"></markdown>
+            <span
+              class="stream-cursor"
+              *ngIf="message.isStreaming"
+              aria-hidden="true"
+              >▋</span
+            >
             <div class="feedback-row" *ngIf="message.author === 'bot'">
+              <button
+                type="button"
+                class="copy-btn"
+                (click)="copyMessage(message.text, message.id)"
+                [title]="
+                  copiedMessageId === message.id ? 'Đã sao chép!' : 'Sao chép'
+                "
+                aria-label="Copy message"
+              >
+                <i
+                  class="fas"
+                  [ngClass]="
+                    copiedMessageId === message.id ? 'fa-check' : 'fa-copy'
+                  "
+                ></i>
+              </button>
               <button
                 type="button"
                 class="feedback-btn"
@@ -94,37 +236,100 @@
               >
                 👎
               </button>
+              <button
+                type="button"
+                class="feedback-btn pin-btn"
+                [class.selected]="message.pinned"
+                (click)="togglePin(message)"
+                title="Ghim tin nhắn"
+                aria-label="Pin message"
+              >
+                📌
+              </button>
             </div>
 
-            <!-- Book Card for interactive responses -->
-            <div class="book-card" *ngIf="message.bookCard">
-              <div class="book-card-image">
-                <img
-                  [src]="
-                    message.bookCard.imageUrl || 'assets/books/default-book.png'
-                  "
-                  [alt]="message.bookCard.title"
-                  onerror="this.src = 'assets/books/default-book.png'"
-                />
-              </div>
-              <div class="book-card-info">
-                <h6 class="book-title">{{ message.bookCard.title }}</h6>
-                <p class="book-author">{{ message.bookCard.author }}</p>
-                <div class="book-card-actions">
-                  <button
-                    class="btn-borrow"
-                    (click)="borrowBook(message.bookCard.id)"
-                    [disabled]="!message.bookCard.available"
+            <!-- Book Cards – scrollable carousel (supports multiple books per message) -->
+            <div
+              class="book-cards-list"
+              *ngIf="message.bookCards && message.bookCards.length > 0"
+            >
+              <div class="book-card" *ngFor="let card of message.bookCards">
+                <div class="book-card-image">
+                  <img
+                    [src]="card.imageUrl || 'assets/books/default-book.png'"
+                    [alt]="card.title"
+                    onerror="this.src = 'assets/books/default-book.png'"
+                  />
+                </div>
+                <div class="book-card-info">
+                  <h6 class="book-title">{{ card.title }}</h6>
+                  <p class="book-author">{{ card.author }}</p>
+                  <span
+                    class="book-availability"
+                    [class.available]="card.available"
                   >
-                    <i class="fas fa-book"></i>
-                    {{ message.bookCard.available ? "Mượn ngay" : "Hết sách" }}
-                  </button>
+                    {{ card.available ? "✅ Còn sách" : "❌ Hết sách" }}
+                  </span>
+                  <div class="book-card-actions">
+                    <button
+                      class="btn-borrow"
+                      (click)="borrowBook(card.id)"
+                      [disabled]="!card.available"
+                    >
+                      <i class="fas fa-book"></i>
+                      {{ card.available ? "Mượn ngay" : "Hết sách" }}
+                    </button>
+                    <button
+                      class="btn-details"
+                      (click)="viewBookDetails(card.id)"
+                    >
+                      <i class="fas fa-info-circle"></i>
+                      Chi tiết
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- AI Recommendation Cards -->
+            <div
+              class="rec-grid"
+              *ngIf="
+                message.recommendations && message.recommendations.length > 0
+              "
+            >
+              <div class="rec-card" *ngFor="let rec of message.recommendations">
+                <div class="rec-card-icon">📖</div>
+                <div class="rec-card-body">
+                  <div class="rec-title">{{ rec.title }}</div>
+                  <div class="rec-reason">{{ rec.reason }}</div>
+                </div>
+                <div class="rec-card-actions">
                   <button
-                    class="btn-details"
-                    (click)="viewBookDetails(message.bookCard.id)"
+                    *ngIf="rec.id"
+                    class="rec-btn rec-btn-details"
+                    (click)="viewBookDetails(rec.id!)"
+                    title="Xem chi tiết"
+                    aria-label="Xem chi tiết {{ rec.title }}"
                   >
                     <i class="fas fa-info-circle"></i>
-                    Chi tiết
+                  </button>
+                  <button
+                    *ngIf="rec.id"
+                    class="rec-btn rec-btn-borrow"
+                    (click)="borrowBook(rec.id!)"
+                    title="Mượn sách"
+                    aria-label="Mượn {{ rec.title }}"
+                  >
+                    <i class="fas fa-book-open"></i>
+                  </button>
+                  <button
+                    class="rec-btn rec-btn-search"
+                    (click)="fillMessage('Tìm sách: ' + rec.title)"
+                    title="Tìm sách này"
+                    aria-label="Tìm {{ rec.title }}"
+                  >
+                    <i class="fas fa-search"></i>
                   </button>
                 </div>
               </div>
@@ -162,12 +367,96 @@
       </div>
     </div>
 
+    <!-- Scroll to bottom floating button -->
+    <button
+      class="scroll-down-btn"
+      *ngIf="showScrollDown"
+      (click)="scrollDown()"
+      title="Xuống cuối"
+      aria-label="Scroll to bottom"
+    >
+      <i class="fas fa-chevron-down" aria-hidden="true"></i>
+    </button>
+
     <div class="chat-footer">
       <form
         (ngSubmit)="sendMessage()"
         role="form"
         aria-label="Send message form"
       >
+        <!-- Hidden file input for OCR -->
+        <input
+          type="file"
+          #imageInput
+          accept="image/*"
+          style="display: none"
+          (change)="onImageSelected($event)"
+        />
+        <button
+          type="button"
+          class="btn-ocr"
+          (click)="imageInput.click()"
+          [disabled]="isLoading"
+          title="Chụp/tải ảnh bìa sách để tra cứu"
+          aria-label="Upload book cover image"
+        >
+          <i class="fas fa-camera" aria-hidden="true"></i>
+        </button>
+        <button
+          type="button"
+          class="btn-rec"
+          (click)="getAiRecommendations()"
+          [disabled]="isLoading || isLoadingRecommendations"
+          title="AI gợi ý sách cá nhân hóa cho bạn"
+          aria-label="Get AI book recommendations"
+        >
+          <i
+            class="fas"
+            [ngClass]="
+              isLoadingRecommendations
+                ? 'fa-spinner fa-spin'
+                : 'fa-wand-magic-sparkles'
+            "
+            aria-hidden="true"
+          ></i>
+        </button>
+        <button
+          type="button"
+          class="btn-insight"
+          (click)="getReadingInsight()"
+          [disabled]="isLoading || isLoadingInsight"
+          title="AI phân tích thói quen đọc sách của bạn"
+          aria-label="Get reading insight"
+        >
+          <i
+            class="fas"
+            [ngClass]="
+              isLoadingInsight ? 'fa-spinner fa-spin' : 'fa-chart-line'
+            "
+            aria-hidden="true"
+          ></i>
+        </button>
+        <button
+          type="button"
+          class="btn-regenerate"
+          (click)="regenerateLastResponse()"
+          [disabled]="isLoading"
+          *ngIf="messages.length > 1"
+          title="Tạo lại câu trả lời"
+          aria-label="Regenerate last response"
+        >
+          <i class="fas fa-rotate-left" aria-hidden="true"></i>
+        </button>
+        <div
+          class="voice-preview-banner"
+          *ngIf="voicePreviewActive"
+          aria-live="polite"
+        >
+          <i class="fas fa-microphone-alt" aria-hidden="true"></i>
+          <span
+            >Giọng nói đã ghi nhận — nhấn <strong>Gửi</strong> để xác nhận</span
+          >
+        </div>
         <input
           type="text"
           [(ngModel)]="currentMessage"
@@ -195,11 +484,20 @@
         </button>
         <button
           type="submit"
-          [disabled]="isLoading || !currentMessage.trim()"
+          [disabled]="
+            isLoading || !currentMessage.trim() || rateLimitCountdown > 0
+          "
           aria-label="Send message"
         >
           <i class="fas fa-paper-plane" aria-hidden="true"></i>
         </button>
+        <span
+          class="rate-limit-badge"
+          *ngIf="rateLimitCountdown > 0"
+          aria-live="polite"
+          title="Vui lòng đợi trước khi gửi tiếp"
+          >⏳ {{ rateLimitCountdown }}s</span
+        >
       </form>
     </div>
   </div>

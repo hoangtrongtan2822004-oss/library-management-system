@@ -25,6 +25,11 @@ export class MemberCardsComponent implements OnInit {
   newExpiredAt = '';
   newMetadata = '';
 
+  // Revoke modal state
+  revokeTargetCard: MemberCard | null = null;
+  revokeReason = '';
+  isRevoking = false;
+
   constructor(private adminService: AdminService) {}
 
   ngOnInit(): void {
@@ -100,11 +105,36 @@ export class MemberCardsComponent implements OnInit {
       });
   }
 
-  revokeCard(card: MemberCard): void {
-    const reason = window.prompt('Reason for revoke?') || undefined;
-    this.adminService.revokeMemberCard(card.id, reason).subscribe({
-      next: () => this.loadCards(),
-    });
+  openRevokeModal(card: MemberCard): void {
+    this.revokeTargetCard = card;
+    this.revokeReason = '';
+    this.isRevoking = false;
+  }
+
+  cancelRevoke(): void {
+    this.revokeTargetCard = null;
+    this.revokeReason = '';
+  }
+
+  confirmRevoke(): void {
+    if (!this.revokeTargetCard) return;
+    this.isRevoking = true;
+    this.adminService
+      .revokeMemberCard(
+        this.revokeTargetCard.id,
+        this.revokeReason.trim() || undefined,
+      )
+      .subscribe({
+        next: () => {
+          this.revokeTargetCard = null;
+          this.revokeReason = '';
+          this.isRevoking = false;
+          this.loadCards();
+        },
+        error: () => {
+          this.isRevoking = false;
+        },
+      });
   }
 
   downloadPdf(card: MemberCard): void {

@@ -11,7 +11,10 @@ import com.ibizabroker.lms.dto.LoanRequest;
 import com.ibizabroker.lms.dto.RenewRequest;
 import com.ibizabroker.lms.dto.ReservationRequest;
 import com.ibizabroker.lms.entity.*;
+import com.ibizabroker.lms.event.BookBorrowedEvent;
+import com.ibizabroker.lms.event.BookReturnedEvent;
 import com.ibizabroker.lms.exceptions.NotFoundException;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
@@ -30,9 +33,14 @@ public class CirculationService {
     private final RenewalRequestRepository renewalRepo;
     private final SystemSettingService systemSettingService;
     private final UsersRepository usersRepo;
+    private final ApplicationEventPublisher eventPublisher;
 
-    public CirculationService(BooksRepository b, LoanRepository l, ReservationRepository r, SystemSettingService settings, RenewalRequestRepository renewalRepo, UsersRepository usersRepo){
-        this.booksRepo=b; this.loanRepo=l; this.reservationRepo=r; this.systemSettingService = settings; this.renewalRepo = renewalRepo; this.usersRepo = usersRepo;
+    public CirculationService(BooksRepository b, LoanRepository l, ReservationRepository r,
+                               SystemSettingService settings, RenewalRequestRepository renewalRepo,
+                               UsersRepository usersRepo, ApplicationEventPublisher eventPublisher) {
+        this.booksRepo = b; this.loanRepo = l; this.reservationRepo = r;
+        this.systemSettingService = settings; this.renewalRepo = renewalRepo;
+        this.usersRepo = usersRepo; this.eventPublisher = eventPublisher;
     }
 
     /**
@@ -110,14 +118,27 @@ public class CirculationService {
                 r.setStatus(ReservationStatus.FULFILLED);
                 reservationRepo.save(r);
             }
+
+            // Publish domain event (async: gamification, audit, email handled by listener)
+            Books bookSnapshot = loan.getBook();
+            eventPublisher.publishEvent(new BookBorrowedEvent(
+                    loan.getId(),
+                    bookSnapshot.getId(),
+                    bookSnapshot.getName(),
+                    member.getUserId(),
+                    member.getEmail(),
+                    member.getName() != null ? member.getName() : member.getUsername(),
+                    loan.getLoanDate(),
+                    loan.getDueDate()
+            ));
         }
         
         return lastLoan; // Trả về đơn cuối cùng để lấy trạng thái
     }
 
     @Transactional
+    @SuppressWarnings("null")
     public Loan returnBook(Integer loanId){
-        @SuppressWarnings("null")
         Loan loan = loanRepo.findById(loanId).orElseThrow(() -> new NotFoundException("Loan not found"));
         if(loan.getStatus() != LoanStatus.ACTIVE && loan.getStatus() != LoanStatus.OVERDUE) return loan;
         
@@ -136,7 +157,27 @@ public class CirculationService {
         }
         
         booksRepo.incrementAvailable(loan.getBookId());
-        return loanRepo.save(loan);
+        Loan saved = loanRepo.save(loan);
+
+        // Publish domain event (async: gamification, audit, email, websocket)
+        long overdueDays = loan.getReturnDate() != null && loan.getReturnDate().isAfter(loan.getDueDate())
+                ? ChronoUnit.DAYS.between(loan.getDueDate(), loan.getReturnDate()) : 0;
+        Users member = usersRepo.findById(loan.getMemberId()).orElse(null);
+        String memberEmail = member != null ? member.getEmail() : null;
+        String memberName  = member != null && member.getName() != null ? member.getName() : (member != null ? member.getUsername() : "Unknown");
+        eventPublisher.publishEvent(new BookReturnedEvent(
+                saved.getId(),
+                loan.getBookId(),
+                loan.getBook() != null ? loan.getBook().getName() : "(unknown)",
+                loan.getMemberId(),
+                memberEmail,
+                memberName,
+                loan.getDueDate(),
+                loan.getReturnDate(),
+                overdueDays,
+                loan.getFineAmount()
+        ));
+        return saved;
     }
 
     @Transactional

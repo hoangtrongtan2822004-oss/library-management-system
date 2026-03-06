@@ -97,7 +97,36 @@ public class PublicBooksController {
         List<BookListDto> dtos = books.stream()
                 .map(BookListDto::fromEntity)
                 .collect(Collectors.toList());
-
         return ResponseEntity.ok(ApiResponse.success(dtos, "Lấy danh sách sách tương tự thành công"));
+    }
+
+    @GetMapping("/{id}/also-borrowed")
+    @Operation(summary = "Người dùng khác cũng mượn",
+               description = "Collaborative Filtering - Sách thường được mượn cùng bởi những người đã mượn cuốn này")
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thành công")
+    public ResponseEntity<ApiResponse<List<BookListDto>>> getAlsoBorrowedBooks(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "6") int size) {
+        List<Books> books = bookService.getAlsoBorrowedBooks(id, size);
+        List<BookListDto> dtos = books.stream()
+                .map(BookListDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(dtos, "Lấy danh sách sách thành công"));
+    }
+
+    @GetMapping("/{id}/ai-similar")
+    @Operation(
+        summary = "AI Gợi ý sách tương tự",
+        description = "Dùng vector embedding (Pinecone) để tìm 5 cuốn sách có nội dung/chủ đề gần nhất. Fallback về category-based nếu Pinecone chưa cấu hình."
+    )
+    @io.swagger.v3.oas.annotations.responses.ApiResponse(responseCode = "200", description = "Thành công")
+    public ResponseEntity<ApiResponse<List<BookListDto>>> getAiSimilarBooks(
+            @PathVariable Integer id,
+            @RequestParam(defaultValue = "5") int size) {
+        List<Books> books = bookService.getAiSimilarBooks(id, size);
+        List<BookListDto> dtos = books.stream()
+                .map(BookListDto::fromEntity)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(ApiResponse.success(dtos, "AI gợi ý sách tương tự thành công"));
     }
 }

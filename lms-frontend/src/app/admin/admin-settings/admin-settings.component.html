@@ -43,7 +43,7 @@
         </div>
         <div class="list-group list-group-flush">
           <button
-            *ngFor="let category of categories"
+            *ngFor="let category of filteredCategories"
             class="list-group-item list-group-item-action bg-dark text-light border-secondary"
             [class.active]="activeTab === category"
             (click)="activeTab = category"
@@ -299,6 +299,180 @@
           Khôi phục
         </button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- ==================== Create Setting Modal ==================== -->
+<div
+  class="create-modal-backdrop"
+  [class.active]="showCreateModal"
+  (click)="closeCreateModal()"
+  aria-hidden="true"
+></div>
+
+<div
+  class="create-modal"
+  [class.show]="showCreateModal"
+  role="dialog"
+  aria-modal="true"
+  aria-labelledby="createSettingTitle"
+>
+  <div class="create-modal-dialog">
+    <!-- Header -->
+    <div class="create-modal-header">
+      <div class="d-flex align-items-center gap-2">
+        <div class="create-icon-wrap">
+          <i class="fa-solid fa-plus"></i>
+        </div>
+        <div>
+          <h5 class="mb-0" id="createSettingTitle">Tạo cấu hình mới</h5>
+          <p class="text-muted small mb-0">
+            Thêm một khóa cấu hình động vào hệ thống.
+          </p>
+        </div>
+      </div>
+      <button
+        type="button"
+        class="btn-close btn-close-white"
+        (click)="closeCreateModal()"
+        aria-label="Đóng"
+      ></button>
+    </div>
+
+    <!-- Form Body -->
+    <div class="create-modal-body">
+      <div class="create-form-grid">
+        <!-- Key -->
+        <div class="create-field">
+          <label class="create-label" for="cs-key">
+            <i class="fa-solid fa-key me-1"></i> Khóa cấu hình
+            <span class="text-danger">*</span>
+          </label>
+          <input
+            id="cs-key"
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Ví dụ: MY_CUSTOM_KEY"
+            [(ngModel)]="createForm.key"
+            [disabled]="isSubmittingCreate"
+            style="text-transform: uppercase"
+          />
+          <div class="create-hint">Tự động chuyển thành chữ HOA khi lưu.</div>
+        </div>
+
+        <!-- Value -->
+        <div class="create-field">
+          <label class="create-label" for="cs-value">
+            <i class="fa-solid fa-pen me-1"></i> Giá trị
+            <span class="text-danger">*</span>
+          </label>
+          <input
+            id="cs-value"
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Nhập giá trị..."
+            [(ngModel)]="createForm.value"
+            [disabled]="isSubmittingCreate"
+          />
+        </div>
+
+        <!-- Default Value -->
+        <div class="create-field">
+          <label class="create-label" for="cs-default">
+            <i class="fa-solid fa-retweet me-1"></i> Giá trị mặc định
+            <span class="text-muted small">(tuỳ chọn)</span>
+          </label>
+          <input
+            id="cs-default"
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Dùng khi khôi phục..."
+            [(ngModel)]="createForm.defaultValue"
+            [disabled]="isSubmittingCreate"
+          />
+        </div>
+
+        <!-- Description -->
+        <div class="create-field create-field--full">
+          <label class="create-label" for="cs-desc">
+            <i class="fa-solid fa-circle-info me-1"></i> Mô tả
+            <span class="text-muted small">(tuỳ chọn)</span>
+          </label>
+          <input
+            id="cs-desc"
+            type="text"
+            class="form-control form-control-sm"
+            placeholder="Mô tả ngắn về cấu hình này..."
+            [(ngModel)]="createForm.description"
+            [disabled]="isSubmittingCreate"
+          />
+        </div>
+
+        <!-- Category -->
+        <div class="create-field">
+          <label class="create-label" for="cs-category">
+            <i class="fa-solid fa-folder me-1"></i> Danh mục
+          </label>
+          <select
+            id="cs-category"
+            class="form-select form-select-sm"
+            [(ngModel)]="createForm.category"
+            [disabled]="isSubmittingCreate"
+          >
+            <option *ngFor="let opt of categoryOptions" [value]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Data Type -->
+        <div class="create-field">
+          <label class="create-label" for="cs-dtype">
+            <i class="fa-solid fa-sliders me-1"></i> Kiểu dữ liệu
+          </label>
+          <select
+            id="cs-dtype"
+            class="form-select form-select-sm"
+            [(ngModel)]="createForm.dataType"
+            [disabled]="isSubmittingCreate"
+          >
+            <option *ngFor="let opt of dataTypeOptions" [value]="opt.value">
+              {{ opt.label }}
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="create-modal-footer">
+      <button
+        type="button"
+        class="btn btn-outline-secondary"
+        (click)="closeCreateModal()"
+        [disabled]="isSubmittingCreate"
+      >
+        <i class="fa-solid fa-xmark me-1"></i> Hủy
+      </button>
+      <button
+        type="button"
+        class="btn btn-create"
+        (click)="submitCreateSetting()"
+        [disabled]="isSubmittingCreate"
+      >
+        <span *ngIf="!isSubmittingCreate">
+          <i class="fa-solid fa-plus me-1"></i> Tạo cấu hình
+        </span>
+        <span *ngIf="isSubmittingCreate">
+          <span
+            class="spinner-border spinner-border-sm me-1"
+            role="status"
+            aria-hidden="true"
+          ></span>
+          Đang tạo...
+        </span>
+      </button>
     </div>
   </div>
 </div>

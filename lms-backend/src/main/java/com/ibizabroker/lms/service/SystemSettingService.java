@@ -1,9 +1,11 @@
 package com.ibizabroker.lms.service;
 
 import com.ibizabroker.lms.dao.SystemSettingRepository;
+import com.ibizabroker.lms.dto.CreateSettingRequest;
 import com.ibizabroker.lms.dto.GroupedSettingsResponse;
 import com.ibizabroker.lms.dto.SettingDto;
 import com.ibizabroker.lms.entity.SettingCategory;
+import com.ibizabroker.lms.entity.SettingDataType;
 import com.ibizabroker.lms.entity.SystemSetting;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.CacheEvict;
@@ -81,6 +83,45 @@ public class SystemSettingService {
                 setting.getUpdatedBy(),
                 setting.getUpdatedAt()
         );
+    }
+
+    /**
+     * Tạo mới một cấu hình — lỗi nếu key đã tồn tại.
+     */
+    @CacheEvict(value = "system-settings", allEntries = true)
+    public SystemSetting createSetting(CreateSettingRequest req, String createdBy) {
+        String normalizedKey = req.getKey().trim().toUpperCase();
+        if (repo.findByKeyIgnoreCase(normalizedKey).isPresent()) {
+            throw new IllegalStateException("Khóa cấu hình đã tồn tại: " + normalizedKey);
+        }
+
+        SettingCategory category;
+        try {
+            category = req.getCategory() != null
+                    ? SettingCategory.valueOf(req.getCategory().toUpperCase())
+                    : SettingCategory.SYSTEM;
+        } catch (IllegalArgumentException e) {
+            category = SettingCategory.SYSTEM;
+        }
+
+        SettingDataType dataType;
+        try {
+            dataType = req.getDataType() != null
+                    ? SettingDataType.valueOf(req.getDataType().toUpperCase())
+                    : SettingDataType.TEXT;
+        } catch (IllegalArgumentException e) {
+            dataType = SettingDataType.TEXT;
+        }
+
+        SystemSetting s = new SystemSetting();
+        s.setKey(normalizedKey);
+        s.setValue(req.getValue());
+        s.setDefaultValue(req.getDefaultValue());
+        s.setDescription(req.getDescription());
+        s.setCategory(category);
+        s.setDataType(dataType);
+        s.setUpdatedBy(createdBy);
+        return repo.save(s);
     }
 
     @CacheEvict(value = "system-settings", allEntries = true)

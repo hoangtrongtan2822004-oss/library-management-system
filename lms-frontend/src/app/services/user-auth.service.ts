@@ -42,13 +42,42 @@ export class UserAuthService {
   // --- TRUY XUẤT THÔNG TIN ---
   public getRoles(): string[] {
     const raw = localStorage.getItem(this.ROLES_KEY);
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      return [];
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      } catch {
+        /* fall through */
+      }
     }
+
+    // Fallback: decode roles directly from the JWT so users are never
+    // locked out just because 'roles' key was missing in localStorage.
+    const token = this.getToken();
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        const jwtRoles: unknown = payload?.roles;
+        if (Array.isArray(jwtRoles) && jwtRoles.length > 0) {
+          const normalized = (jwtRoles as any[])
+            .map((r) => {
+              const s =
+                typeof r === 'string' ? r : (r?.authority ?? r?.roleName ?? '');
+              const up = s.toUpperCase();
+              return up.startsWith('ROLE_') ? up : `ROLE_${up}`;
+            })
+            .filter(Boolean);
+          // Persist so subsequent calls don't need to re-decode
+          if (normalized.length > 0) {
+            localStorage.setItem(this.ROLES_KEY, JSON.stringify(normalized));
+            return normalized;
+          }
+        }
+      } catch {
+        /* ignore decode errors */
+      }
+    }
+    return [];
   }
 
   public getToken(): string | null {
@@ -83,13 +112,15 @@ export class UserAuthService {
 
   // --- KIỂM TRA QUYỀN ---
   public isAdmin(): boolean {
-    const roles = this.getRoles();
-    return roles.includes('Admin') || roles.includes('ROLE_ADMIN');
+    return this.getRoles().some(
+      (r) => r.toUpperCase() === 'ROLE_ADMIN' || r.toUpperCase() === 'ADMIN',
+    );
   }
 
   public isUser(): boolean {
-    const roles = this.getRoles();
-    return roles.includes('User') || roles.includes('ROLE_USER');
+    return this.getRoles().some(
+      (r) => r.toUpperCase() === 'ROLE_USER' || r.toUpperCase() === 'USER',
+    );
   }
 
   public roleMatch(allowedRoles: string[]): boolean {

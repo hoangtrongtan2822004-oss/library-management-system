@@ -6,6 +6,7 @@ import {
   CategoryGroup,
   SettingDto,
   SettingDataType,
+  SettingCategory,
 } from '../../models/setting';
 
 @Component({
@@ -17,20 +18,48 @@ import {
 export class AdminSettingsComponent implements OnInit {
   groupedSettings: GroupedSettingsResponse | null = null;
   categories: string[] = [];
+  filteredCategories: string[] = [];
+  categoryQuery: string = '';
   activeTab: string = 'LOAN_POLICY';
   loading = false;
   savingKeys = new Set<string>();
   resettingKeys = new Set<string>();
 
-  // Expose enum to template
+  // Expose enums to template
   SettingDataType = SettingDataType;
+  SettingCategory = SettingCategory;
 
-  // Confirmation modal state
+  // Reset confirmation modal state
   showResetModal = false;
   resetModalKey: string = '';
   resetModalTitle: string = '';
   resetModalDefaultValue: string = '';
   isResettingCategory = false;
+
+  // Create setting modal state
+  showCreateModal = false;
+  isSubmittingCreate = false;
+  createForm: {
+    key: string;
+    value: string;
+    defaultValue: string;
+    description: string;
+    category: string;
+    dataType: string;
+  } = this.emptyCreateForm();
+
+  dataTypeOptions = [
+    { label: 'Văn bản (TEXT)', value: 'TEXT' },
+    { label: 'Số (NUMBER)', value: 'NUMBER' },
+    { label: 'Bật/Tắt (BOOLEAN)', value: 'BOOLEAN' },
+    { label: 'Văn bản dài (TEXTAREA)', value: 'TEXTAREA' },
+    { label: 'Giờ (TIME)', value: 'TIME' },
+  ];
+  categoryOptions = [
+    { label: 'Chính sách mượn trả', value: 'LOAN_POLICY' },
+    { label: 'Email & Thông báo', value: 'EMAIL_NOTIFICATION' },
+    { label: 'Hệ thống', value: 'SYSTEM' },
+  ];
 
   constructor(
     private adminService: AdminService,
@@ -47,6 +76,7 @@ export class AdminSettingsComponent implements OnInit {
       next: (response) => {
         this.groupedSettings = response;
         this.categories = Object.keys(response.groups);
+        this.filteredCategories = [...this.categories];
         if (this.categories.length > 0 && !this.activeTab) {
           this.activeTab = this.categories[0];
         }
@@ -54,6 +84,22 @@ export class AdminSettingsComponent implements OnInit {
       error: () => this.toastr.error('Không tải được cấu hình'),
       complete: () => (this.loading = false),
     });
+  }
+
+  filterCategories(): void {
+    const q = this.categoryQuery.toLowerCase().trim();
+    if (!q) {
+      this.filteredCategories = [...this.categories];
+      return;
+    }
+    this.filteredCategories = this.categories.filter((cat) =>
+      this.getCategoryDisplayName(cat).toLowerCase().includes(q),
+    );
+  }
+
+  refreshGroup(): void {
+    this.load();
+    this.toastr.info('Dữ liệu đã được làm mới', '', { timeOut: 1500 });
   }
 
   getActiveGroup(): CategoryGroup | null {
@@ -162,6 +208,78 @@ export class AdminSettingsComponent implements OnInit {
     this.resetModalTitle = '';
     this.resetModalDefaultValue = '';
     this.isResettingCategory = false;
+  }
+
+  // ==================== Create Setting Modal ====================
+  private emptyCreateForm() {
+    return {
+      key: '',
+      value: '',
+      defaultValue: '',
+      description: '',
+      category: this.activeTab || 'SYSTEM',
+      dataType: 'TEXT',
+    };
+  }
+
+  openCreateSettingModal(): void {
+    this.createForm = {
+      key: '',
+      value: '',
+      defaultValue: '',
+      description: '',
+      category: this.activeTab || 'SYSTEM',
+      dataType: 'TEXT',
+    };
+    this.isSubmittingCreate = false;
+    this.showCreateModal = true;
+  }
+
+  closeCreateModal(): void {
+    this.showCreateModal = false;
+    this.isSubmittingCreate = false;
+  }
+
+  submitCreateSetting(): void {
+    const key = this.createForm.key.trim().toUpperCase();
+    if (!key) {
+      this.toastr.warning('Khóa cấu hình không được để trống');
+      return;
+    }
+    if (!this.createForm.value.trim()) {
+      this.toastr.warning('Giá trị không được để trống');
+      return;
+    }
+
+    this.isSubmittingCreate = true;
+    this.adminService
+      .createSetting({
+        key,
+        value: this.createForm.value.trim(),
+        defaultValue: this.createForm.defaultValue.trim() || undefined,
+        description: this.createForm.description.trim() || undefined,
+        category: this.createForm.category,
+        dataType: this.createForm.dataType,
+      })
+      .subscribe({
+        next: () => {
+          this.toastr.success(
+            `Cấu hình “${key}” đã được tạo thành công!`,
+            'Tạo mới thành công',
+            { timeOut: 3500, progressBar: true },
+          );
+          this.closeCreateModal();
+          this.activeTab = this.createForm.category || this.activeTab;
+          this.load();
+        },
+        error: (err) => {
+          const msg =
+            err.error?.message ||
+            'Tạo cấu hình thất bại. Khóa có thể đã tồn tại.';
+          this.toastr.error(msg, 'Lỗi tạo cấu hình', { progressBar: true });
+          this.isSubmittingCreate = false;
+        },
+      });
   }
 
   formatDateTime(dateTime: string | null): string {

@@ -284,6 +284,21 @@ export class HomeComponent implements OnInit, OnDestroy {
     });
   }
 
+  /** Strip HTML tags and decode basic HTML entities for plain-text excerpts */
+  stripHtml(html: string): string {
+    if (!html) return '';
+    return html
+      .replace(/<[^>]*>/g, ' ') // remove all tags
+      .replace(/&nbsp;/g, ' ') // decode &nbsp;
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, ' ') // collapse whitespace
+      .trim();
+  }
+
   getLevelBadgeClass(level: number): string {
     if (level >= 5) return 'badge-diamond';
     if (level >= 4) return 'badge-platinum';

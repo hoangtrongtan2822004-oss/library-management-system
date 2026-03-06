@@ -48,6 +48,7 @@ public class InventoryService {
         return InventorySessionDto.fromEntity(sessionRepository.save(session));
     }
 
+    @SuppressWarnings("null")
     public InventoryScanResultDto recordScan(Long sessionId, InventoryScanRequest request) {
         InventorySession session = sessionRepository.findById(sessionId)
             .orElseThrow(() -> new NotFoundException("Không tìm thấy phiên kiểm kê"));
@@ -90,6 +91,7 @@ public class InventoryService {
             .build();
     }
 
+    @SuppressWarnings("null")
     public InventorySessionDto completeSession(Long sessionId) {
         InventorySession session = sessionRepository.findById(sessionId)
             .orElseThrow(() -> new NotFoundException("Không tìm thấy phiên kiểm kê"));
@@ -99,6 +101,7 @@ public class InventoryService {
     }
 
     @Transactional(readOnly = true)
+    @SuppressWarnings("null")
     public InventorySummaryDto buildSummary(Long sessionId) {
         InventorySession session = sessionRepository.findById(sessionId)
             .orElseThrow(() -> new NotFoundException("Không tìm thấy phiên kiểm kê"));

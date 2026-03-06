@@ -18,8 +18,8 @@ import { UsersService } from '../services/users.service';
 import { EbookService, Ebook } from '../services/ebook.service';
 import { ToastrService } from 'ngx-toastr';
 import { ApiService } from '../services/api.service';
-import { finalize, takeUntil } from 'rxjs/operators';
-import { Subject } from 'rxjs';
+import { finalize, takeUntil, catchError } from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
 
 @Component({
   selector: 'app-book-details',
@@ -33,6 +33,9 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
   isUser = false;
   relatedBooks: Book[] = [];
   isLoadingRelated = false;
+  aiRecommendationSource: 'ai' | 'category' = 'category';
+  alsoBorrowedBooks: Book[] = [];
+  isLoadingAlsoBorrowed = false;
   reviewsSummary: BookReviewsSummary | null = null;
   userCanReview = false;
   isCheckingPermission = true;
@@ -82,19 +85,23 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
 
   ngOnInit(): void {
     this.isUser = this.userAuthService.isUser();
-    const bookIdParam =
-      this.route.snapshot.paramMap.get('id') ??
-      this.route.snapshot.paramMap.get('bookId');
-    const bookId = Number(bookIdParam);
-
-    if (bookIdParam && !isNaN(bookId)) {
-      this.loadBookDetails(bookId);
-      this.loadReviewsAndCheckPermission(bookId);
-    } else {
-      this.errorMessage = 'Không tìm thấy ID sách.';
-      this.toastr.error(this.errorMessage, 'Lỗi');
-      this.isLoading = false;
-    }
+    this.route.paramMap.pipe(takeUntil(this.destroy$)).subscribe((params) => {
+      const bookIdParam = params.get('id') ?? params.get('bookId');
+      const bookId = Number(bookIdParam);
+      if (bookIdParam && !isNaN(bookId)) {
+        // Reset state when navigating to a different book
+        this.book = null;
+        this.relatedBooks = [];
+        this.alsoBorrowedBooks = [];
+        this.reviewsSummary = null;
+        this.loadBookDetails(bookId);
+        this.loadReviewsAndCheckPermission(bookId);
+      } else {
+        this.errorMessage = 'Không tìm thấy ID sách.';
+        this.toastr.error(this.errorMessage, 'Lỗi');
+        this.isLoading = false;
+      }
+    });
   }
 
   ngOnDestroy(): void {
@@ -122,6 +129,7 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
           // Load related books based on category
           if (this.book) {
             this.loadRelatedBooks(this.book.id);
+            this.loadAlsoBorrowedBooks(this.book.id);
           }
           // Check for ebook availability
           if (this.book) {
@@ -137,11 +145,36 @@ export class BookDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
+  private loadAlsoBorrowedBooks(currentBookId: number): void {
+    this.isLoadingAlsoBorrowed = true;
+    this.booksService
+      .getAlsoBorrowedBooks(currentBookId, 6)
+      .pipe(
+        finalize(() => (this.isLoadingAlsoBorrowed = false)),
+        takeUntil(this.destroy$),
+      )
+      .subscribe({
+        next: (books: Book[]) => {
+          this.alsoBorrowedBooks = (books || [])
+            .filter((b: Book) => b.id !== currentBookId)
+            .slice(0, 5);
+        },
+        error: () => {
+          this.alsoBorrowedBooks = [];
+        },
+      });
+  }
+
   private loadRelatedBooks(currentBookId: number): void {
     this.isLoadingRelated = true;
+    this.aiRecommendationSource = 'ai';
     this.booksService
-      .getSimilarBooks(currentBookId, 6)
+      .getAiSimilarBooks(currentBookId, 6)
       .pipe(
+        catchError(() => {
+          this.aiRecommendationSource = 'category';
+          return this.booksService.getSimilarBooks(currentBookId, 6);
+        }),
         finalize(() => (this.isLoadingRelated = false)),
         takeUntil(this.destroy$),
       )

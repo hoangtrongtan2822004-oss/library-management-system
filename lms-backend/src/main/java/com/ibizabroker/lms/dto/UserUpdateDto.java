@@ -40,6 +40,12 @@ public class UserUpdateDto {
     
     @Size(min = 3, message = "Username phải có ít nhất 3 ký tự")
     private String username;
+
+    private String email;
+
+    private String studentClass;
+
+    private String phoneNumber;
     
     private List<String> roles;
 }

@@ -34,11 +34,7 @@ import { BorrowBookComponent } from './borrow-book/borrow-book.component';
 import { ReturnBookComponent } from './return-book/return-book.component';
 import { SignupComponent } from './signup/signup.component';
 import { UserAuthService } from './services/user-auth.service';
-import { DashboardComponent } from './admin/dashboard/dashboard.component';
-import { LoanManagementComponent } from './admin/loan-management/loan-management.component';
 import { MyAccountComponent } from './my-account/my-account.component';
-import { ManageFinesComponent } from './admin/manage-fines/manage-fines.component';
-import { ReportsComponent } from './admin/reports/reports.component';
 import {
   CommonModule,
   DatePipe,
@@ -46,19 +42,14 @@ import {
   UpperCasePipe,
 } from '@angular/common';
 import { ToastrModule } from 'ngx-toastr';
-import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.component';
-import { AuditLogsComponent } from './admin/audit-logs/audit-logs.component';
-import { MemberCardsComponent } from './admin/member-cards/member-cards.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { CreateUserComponent } from './create-user/create-user.component';
 import { ChatbotComponent } from './chatbot/chatbot.component';
-import { CreateLoanComponent } from './admin/create-loan/create-loan.component';
+import { ServiceWorkerModule } from '@angular/service-worker';
 import { ZXingScannerModule } from '@zxing/ngx-scanner';
 import { QRCodeComponent } from 'angularx-qrcode';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
-import { AdminSettingsComponent } from './admin/admin-settings/admin-settings.component';
-import { RenewalsComponent } from './admin/renewals/renewals.component';
 import { GamificationComponent } from './gamification/gamification.component';
 import { RulesComponent } from './rules/rules.component';
 import { WishlistComponent } from './wishlist/wishlist.component';
@@ -90,21 +81,11 @@ import { environment } from '../environments/environment';
     BorrowBookComponent,
     ReturnBookComponent,
     SignupComponent,
-    DashboardComponent,
-    LoanManagementComponent,
     MyAccountComponent,
-    ManageFinesComponent,
-    ReportsComponent,
-    ManageReviewsComponent,
-    AuditLogsComponent,
-    MemberCardsComponent,
     CreateUserComponent,
-    CreateLoanComponent,
     ChatbotComponent,
     ForgotPasswordComponent,
     ResetPasswordComponent,
-    AdminSettingsComponent,
-    RenewalsComponent,
     GamificationComponent,
     RulesComponent,
   ],
@@ -129,6 +110,10 @@ import { environment } from '../environments/environment';
     GoogleSigninButtonModule,
     MarkdownModule.forRoot({
       sanitize: SecurityContext.HTML,
+    }),
+    ServiceWorkerModule.register('ngsw-worker.js', {
+      enabled: environment.production,
+      registrationStrategy: 'registerWhenStable:30000',
     }),
   ],
   providers: [

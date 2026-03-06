@@ -5,6 +5,7 @@ import {
   GamificationAdminService,
   RewardItem,
 } from '../gamification-admin.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-manage-rewards',
@@ -218,6 +219,22 @@ import {
                 <i class="fas fa-check"></i> Cập Nhật
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Toast -->
+      <div class="confirm-toast" *ngIf="pendingDeleteId !== null">
+        <div class="confirm-toast-content">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Bạn có chắc muốn xóa phần thưởng này không?</span>
+          <div class="confirm-toast-actions">
+            <button class="btn-confirm-yes" (click)="confirmDelete()">
+              <i class="fas fa-trash"></i> Xóa
+            </button>
+            <button class="btn-confirm-no" (click)="cancelDelete()">
+              <i class="fas fa-times"></i> Hủy
+            </button>
           </div>
         </div>
       </div>
@@ -574,6 +591,88 @@ import {
       .btn-secondary:hover {
         background: #30363d;
       }
+
+      /* Delete confirmation toast */
+      .confirm-toast {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        animation: slideUpToast 0.25s ease;
+      }
+
+      .confirm-toast-content {
+        background: #2d1f0e;
+        border: 1px solid #f59e0b;
+        border-radius: 10px;
+        padding: 0.875rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        color: #fde68a;
+        white-space: nowrap;
+        font-size: 0.9375rem;
+      }
+
+      .confirm-toast-content .fa-exclamation-triangle {
+        color: #f59e0b;
+        font-size: 1.125rem;
+      }
+
+      .confirm-toast-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 0.5rem;
+      }
+
+      .btn-confirm-yes {
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.375rem 0.875rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: background 0.2s;
+      }
+
+      .btn-confirm-yes:hover {
+        background: #b91c1c;
+      }
+
+      .btn-confirm-no {
+        background: #21262d;
+        color: #f0f6fc;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 0.375rem 0.875rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: background 0.2s;
+      }
+
+      .btn-confirm-no:hover {
+        background: #30363d;
+      }
+
+      @keyframes slideUpToast {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
     `,
   ],
 })
@@ -585,8 +684,13 @@ export class ManageRewardsComponent implements OnInit {
   currentReward: RewardItem = this.getEmptyReward();
   selectedReward: RewardItem | null = null;
   newStock: number = 0;
+  pendingDeleteId: number | null = null;
+  private deleteTimer: any = null;
 
-  constructor(private gamificationService: GamificationAdminService) {}
+  constructor(
+    private gamificationService: GamificationAdminService,
+    private toastr: ToastrService,
+  ) {}
 
   ngOnInit(): void {
     this.loadRewards();
@@ -599,7 +703,7 @@ export class ManageRewardsComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading rewards:', error);
-        alert('Không thể tải danh sách phần thưởng');
+        this.toastr.error('Không thể tải danh sách phần thưởng', 'Lỗi');
       },
     });
   }
@@ -632,34 +736,47 @@ export class ManageRewardsComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        alert(
+        this.toastr.success(
           this.isEditMode
             ? 'Cập nhật phần thưởng thành công!'
             : 'Tạo phần thưởng mới thành công!',
+          'Thành công',
         );
         this.loadRewards();
         this.closeModal();
       },
       error: (error) => {
         console.error('Error saving reward:', error);
-        alert('Có lỗi xảy ra khi lưu phần thưởng');
+        this.toastr.error('Có lỗi xảy ra khi lưu phần thưởng', 'Lỗi');
       },
     });
   }
 
   deleteReward(id: number): void {
-    if (confirm('Bạn có chắc muốn xóa phần thưởng này?')) {
-      this.gamificationService.deleteReward(id).subscribe({
-        next: () => {
-          alert('Xóa phần thưởng thành công!');
-          this.loadRewards();
-        },
-        error: (error) => {
-          console.error('Error deleting reward:', error);
-          alert('Không thể xóa phần thưởng này');
-        },
-      });
-    }
+    this.pendingDeleteId = id;
+    clearTimeout(this.deleteTimer);
+    this.deleteTimer = setTimeout(() => this.cancelDelete(), 5000);
+  }
+
+  cancelDelete(): void {
+    clearTimeout(this.deleteTimer);
+    this.pendingDeleteId = null;
+  }
+
+  confirmDelete(): void {
+    if (this.pendingDeleteId === null) return;
+    const id = this.pendingDeleteId;
+    this.cancelDelete();
+    this.gamificationService.deleteReward(id).subscribe({
+      next: () => {
+        this.toastr.success('Xóa phần thưởng thành công!', 'Thành công');
+        this.loadRewards();
+      },
+      error: (error) => {
+        console.error('Error deleting reward:', error);
+        this.toastr.error('Không thể xóa phần thưởng này', 'Lỗi');
+      },
+    });
   }
 
   adjustStock(reward: RewardItem): void {
@@ -680,13 +797,13 @@ export class ManageRewardsComponent implements OnInit {
         .updateRewardStock(this.selectedReward.id, this.newStock)
         .subscribe({
           next: () => {
-            alert('Cập nhật tồn kho thành công!');
+            this.toastr.success('Cập nhật tồn kho thành công!', 'Thành công');
             this.loadRewards();
             this.closeStockModal();
           },
           error: (error) => {
             console.error('Error updating stock:', error);
-            alert('Không thể cập nhật tồn kho');
+            this.toastr.error('Không thể cập nhật tồn kho', 'Lỗi');
           },
         });
     }

@@ -13,6 +13,7 @@ interface BookCreateModel {
   isbn?: string;
   coverUrl?: string;
   shelfCode?: string;
+  description?: string;
   authorIds?: number[];
   categoryIds?: number[];
 }
@@ -37,6 +38,8 @@ export class CreateBookComponent implements OnInit {
   newAuthorName = '';
   savingAuthor = false;
   fetchingIsbn = false;
+  isExtractingOcr = false;
+  isGeneratingDescription = false;
   coverPreviewError = false;
 
   allAuthors: Author[] = [];
@@ -117,6 +120,41 @@ export class CreateBookComponent implements OnInit {
     });
   }
 
+  extractFromImage(event: any): void {
+    const file: File = event?.target?.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      this.toastr.error('Vui lòng chọn file ảnh (JPG, PNG, ...).');
+      return;
+    }
+    this.isExtractingOcr = true;
+    this.errorMessage = '';
+    this.booksService.extractBookInfo(file).subscribe({
+      next: (data: any) => {
+        if (data?.title) this.book.name = data.title;
+        if (data?.isbn) this.book.isbn = data.isbn;
+        if (data?.authors?.length > 0)
+          this.autoSelectOrCreateAuthors(data.authors);
+        if (data?.coverUrl) {
+          this.book.coverUrl = data.coverUrl;
+          this.coverPreviewError = false;
+        }
+        this.toastr.success('AI đã trích xuất thông tin sách!');
+        this.isExtractingOcr = false;
+        // Reset file input
+        event.target.value = '';
+      },
+      error: (err: any) => {
+        const message =
+          err?.error?.message || 'Không thể trích xuất thông tin.';
+        this.errorMessage = message;
+        this.toastr.error(message);
+        this.isExtractingOcr = false;
+        event.target.value = '';
+      },
+    });
+  }
+
   private autoSelectOrCreateAuthors(authorNames: string[]): void {
     const selectedIds: number[] = [];
 
@@ -165,6 +203,40 @@ export class CreateBookComponent implements OnInit {
     this.toastr.info('Chức năng Import hàng loạt ở trang Admin.');
   }
 
+  generateDescription(): void {
+    if (!this.book.name || this.isGeneratingDescription) return;
+
+    const authorNames = (this.book.authorIds || [])
+      .map((id) => this.allAuthors.find((a) => a.id === id)?.name)
+      .filter((n): n is string => !!n);
+
+    const categoryNames = (this.book.categoryIds || [])
+      .map((id) => this.allCategories.find((c) => c.id === id)?.name)
+      .filter((n): n is string => !!n);
+
+    this.isGeneratingDescription = true;
+    this.booksService
+      .previewBookDescription(this.book.name, authorNames, categoryNames)
+      .subscribe({
+        next: (res: any) => {
+          const desc = res?.data?.description || res?.description;
+          if (desc) {
+            this.book.description = desc;
+            this.toastr.success('AI đã tạo mô tả sách!');
+          } else {
+            this.toastr.warning('AI không trả về mô tả. Vui lòng thử lại.');
+          }
+          this.isGeneratingDescription = false;
+        },
+        error: (err: any) => {
+          this.toastr.error(
+            err?.error?.message || 'Không thể tạo mô tả lúc này.',
+          );
+          this.isGeneratingDescription = false;
+        },
+      });
+  }
+
   saveBook(bookForm: NgForm) {
     if (bookForm.invalid) {
       this.errorMessage = 'Please fill in all required fields.';
@@ -183,6 +255,7 @@ export class CreateBookComponent implements OnInit {
       isbn: this.book.isbn,
       coverUrl: this.book.coverUrl,
       shelfCode: this.book.shelfCode,
+      description: this.book.description,
     };
 
     // Cast payload cho đúng kiểu tham số của createBook

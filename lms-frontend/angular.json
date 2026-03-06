@@ -17,7 +17,11 @@
             "index": "src/index.html",
             "polyfills": ["src/polyfills.ts"],
             "tsConfig": "tsconfig.app.json",
-            "assets": ["src/favicon.ico", "src/assets"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets",
+              "src/manifest.webmanifest"
+            ],
             "styles": [
               "node_modules/bootstrap/dist/css/bootstrap.min.css",
               "node_modules/ngx-toastr/toastr.css",
@@ -32,8 +36,8 @@
             "budgets": [
               {
                 "type": "initial",
-                "maximumWarning": "2mb",
-                "maximumError": "5mb"
+                "maximumWarning": "4mb",
+                "maximumError": "6mb"
               },
               {
                 "type": "anyComponentStyle",
@@ -54,6 +58,7 @@
                   "inline": false
                 }
               },
+              "serviceWorker": "ngsw-config.json",
               "budgets": [
                 {
                   "type": "initial",

@@ -24,7 +24,7 @@ public class ExistsInDatabaseValidator implements ConstraintValidator<ExistsInDa
     }
 
     @Override
-    @SuppressWarnings({"rawtypes", "unchecked"})
+    @SuppressWarnings({"rawtypes", "unchecked", "null"})
     public boolean isValid(Collection<Integer> values, ConstraintValidatorContext context) {
         if (values == null || values.isEmpty()) return true; // other annotations enforce non-empty
         try {

@@ -1,11 +1,14 @@
 package com.ibizabroker.lms.controller;
 
+import com.ibizabroker.lms.dto.CreateSettingRequest;
 import com.ibizabroker.lms.dto.GroupedSettingsResponse;
 import com.ibizabroker.lms.entity.SettingCategory;
 import com.ibizabroker.lms.entity.SystemSetting;
 import com.ibizabroker.lms.service.SystemSettingService;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -27,6 +30,24 @@ public class AdminSettingsController {
     @GetMapping
     public ResponseEntity<List<SystemSetting>> list() {
         return ResponseEntity.ok(settingsService.findAll());
+    }
+
+    /**
+     * Tạo mới một cấu hình động.
+     * Trả về 409 nếu key đã tồn tại.
+     */
+    @PostMapping
+    public ResponseEntity<?> create(
+            @Valid @RequestBody CreateSettingRequest body,
+            @AuthenticationPrincipal UserDetails userDetails) {
+        try {
+            String username = userDetails != null ? userDetails.getUsername() : "SYSTEM";
+            SystemSetting s = settingsService.createSetting(body, username);
+            return ResponseEntity.status(HttpStatus.CREATED).body(s);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(Map.of("message", e.getMessage()));
+        }
     }
 
     /**

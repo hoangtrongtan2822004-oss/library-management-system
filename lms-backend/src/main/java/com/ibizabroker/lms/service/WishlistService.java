@@ -15,6 +15,7 @@ import java.util.List;
 
 @Service
 @Transactional
+@SuppressWarnings("null")
 public class WishlistService {
 
     @Autowired private WishlistRepository wishlistRepository;

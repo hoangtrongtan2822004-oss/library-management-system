@@ -393,4 +393,80 @@
     (confirmed)="onEmailPreviewConfirmed()"
     (cancelled)="onEmailPreviewCancelled()"
   ></app-email-preview-modal>
+
+  <!-- Delete Confirmation Modal -->
+  <div
+    class="modal fade show"
+    tabindex="-1"
+    [ngStyle]="{ display: showDeleteModal ? 'block' : 'none' }"
+    *ngIf="showDeleteModal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="delete-news-modal-title"
+  >
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+          <h5 id="delete-news-modal-title" class="modal-title">
+            <i class="fa-solid fa-triangle-exclamation me-2"></i>
+            Xác Nhận Xóa Tin Tức
+          </h5>
+          <button
+            type="button"
+            class="btn-close btn-close-white"
+            (click)="cancelDelete()"
+            [disabled]="isDeleting"
+            aria-label="Đóng"
+          ></button>
+        </div>
+        <div class="modal-body">
+          <p class="mb-2">Bạn chắc chắn muốn xóa tin tức sau?</p>
+          <div class="alert alert-warning d-flex align-items-center gap-2 mb-0">
+            <i class="fa-solid fa-newspaper fa-lg"></i>
+            <div>
+              <strong>{{ deletingItem?.title }}</strong>
+              <div class="text-muted small" *ngIf="deletingItem?.createdAt">
+                Tạo lúc:
+                {{ deletingItem?.createdAt | date: "dd/MM/yyyy HH:mm" }}
+              </div>
+            </div>
+          </div>
+          <p class="text-danger small mt-2 mb-0">
+            <i class="fa-solid fa-circle-exclamation me-1"></i>
+            Hành động này không thể hoàn tác.
+          </p>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn btn-secondary"
+            (click)="cancelDelete()"
+            [disabled]="isDeleting"
+          >
+            <i class="fa-solid fa-xmark me-1"></i>Hủy
+          </button>
+          <button
+            type="button"
+            class="btn btn-danger"
+            (click)="confirmDelete()"
+            [disabled]="isDeleting"
+          >
+            <span *ngIf="!isDeleting">
+              <i class="fa-solid fa-trash me-1"></i>Xác nhận xóa
+            </span>
+            <span *ngIf="isDeleting">
+              <i class="fa-solid fa-spinner fa-spin me-1"></i>Đang xóa...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Delete Modal Backdrop -->
+  <div
+    class="modal-backdrop fade show"
+    *ngIf="showDeleteModal"
+    (click)="cancelDelete()"
+  ></div>
 </div>

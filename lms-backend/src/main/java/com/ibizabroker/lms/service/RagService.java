@@ -12,9 +12,11 @@ import org.apache.hc.core5.http.ContentType;
 import org.apache.hc.core5.http.io.entity.StringEntity;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 🤖 RAG Service - Retrieval Augmented Generation
@@ -46,6 +48,7 @@ public class RagService {
     private final ObjectMapper objectMapper;
     private final EmbeddingService embeddingService;
     private final PineconeVectorStore pineconeVectorStore;
+    private final AiTaggingService aiTaggingService;
 
     @Value("${gemini.api.key:}")
     private String geminiApiKey;
@@ -69,8 +72,10 @@ public class RagService {
      */
     public String retrieveContext(String userQuery) {
         try {
-            // 1. Convert user query to vector
-            List<Double> queryVector = embeddingService.embed(userQuery);
+            // 1. Expand query with AI to broaden semantic coverage
+            String enrichedQuery = aiTaggingService.expandSearchQuery(userQuery);
+            // 2. Convert enriched query to vector
+            List<Double> queryVector = embeddingService.embed(enrichedQuery != null ? enrichedQuery : userQuery);
             
             if (queryVector == null || queryVector.isEmpty()) {
                 // Fallback: Vector embedding failed, use simple DB query
@@ -103,21 +108,23 @@ public class RagService {
                 return "Không tìm thấy thông tin liên quan trong cơ sở dữ liệu thư viện.";
             }
 
-            // 4. Build context string
+            // 4. Build context string (include book ID for BOOK_CARD rendering)
             StringBuilder context = new StringBuilder("Thông tin sách trong thư viện:\n");
             books.forEach(book -> {
-                context.append("- Tên sách: ").append(book.getName());
+                context.append("- [ID:").append(book.getId()).append("] Tên sách: ").append(book.getName());
                 
                 // Add authors if available
+                String authorNames = "N/A";
                 if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
-                    context.append(" | Tác giả: ");
-                    context.append(book.getAuthors().stream()
+                    authorNames = book.getAuthors().stream()
                             .map(a -> a.getName())
                             .reduce((a, b) -> a + ", " + b)
-                            .orElse("N/A"));
+                            .orElse("N/A");
+                    context.append(" | Tác giả: ").append(authorNames);
                 }
                 
                 // Add availability
+                boolean isAvailable = book.getNumberOfCopiesAvailable() > 0;
                 context.append(" | Còn lại: ").append(book.getNumberOfCopiesAvailable()).append(" cuốn");
                 
                 // Add ISBN
@@ -185,7 +192,8 @@ public class RagService {
 
             StringBuilder context = new StringBuilder("Thông tin sách trong thư viện:\n");
             books.forEach(book -> {
-                context.append("- Tên sách: ").append(book.getName());
+                // Include book ID for BOOK_CARD rendering (same as vector search path)
+                context.append("- [ID:").append(book.getId()).append("] Tên sách: ").append(book.getName());
                 
                 // Add authors if available
                 if (book.getAuthors() != null && !book.getAuthors().isEmpty()) {
@@ -202,6 +210,20 @@ public class RagService {
                 // Add ISBN
                 if (book.getIsbn() != null && !book.getIsbn().isEmpty()) {
                     context.append(" | ISBN: ").append(book.getIsbn());
+                }
+
+                // Add description (truncated)
+                if (book.getDescription() != null && !book.getDescription().isBlank()) {
+                    String desc = book.getDescription().length() > 200
+                            ? book.getDescription().substring(0, 200) + "..."
+                            : book.getDescription();
+                    context.append(" | Mô tả: ").append(desc);
+                }
+
+                // Add AI tags
+                List<String> tags = aiTaggingService.parseTags(book.getAiTags());
+                if (!tags.isEmpty()) {
+                    context.append(" | Tags: ").append(String.join(", ", tags));
                 }
                 
                 context.append("\n");
@@ -233,6 +255,82 @@ public class RagService {
     }
 
     /**
+     * 📸 OCR + AI: Extracts book information from an uploaded cover/TOC image.
+     * Uses Gemini Vision (gemini-1.5-flash inlineData) and returns a map with
+     * title, authors, isbn, description.
+     */
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> extractBookInfoFromImage(MultipartFile image) {
+        try {
+            if (geminiApiKey == null || geminiApiKey.isBlank()) {
+                return Map.of("error", "Gemini API key not configured");
+            }
+
+            byte[] imageBytes = image.getBytes();
+            String base64Data = Base64.getEncoder().encodeToString(imageBytes);
+            String mimeType = image.getContentType() != null ? image.getContentType() : "image/jpeg";
+
+            String prompt = """
+                    Phân tích ảnh bìa sách hoặc mục lục này và trích xuất thông tin.
+                    Trả về JSON thuần túy (không có markdown, không có ```json), với đúng các trường sau:
+                    - title: Tên sách (string)
+                    - authors: Danh sách tên tác giả (array of strings)
+                    - isbn: Mã ISBN nếu nhìn thấy trong ảnh (string hoặc null)
+                    - description: Mô tả ngắn 1-2 câu về nội dung sách (string)
+                    Chỉ trả về JSON, không thêm bất kỳ giải thích nào.
+                    """;
+
+            Map<String, Object> textPart = Map.of("text", prompt);
+            Map<String, Object> imageData = Map.of("mimeType", mimeType, "data", base64Data);
+            Map<String, Object> inlineDataPart = Map.of("inlineData", imageData);
+            Map<String, Object> content = Map.of("parts", List.of(textPart, inlineDataPart));
+            Map<String, Object> requestBody = Map.of("contents", List.of(content));
+
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
+            String jsonPayload = objectMapper.writeValueAsString(requestBody);
+
+            try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
+                HttpPost httpPost = new HttpPost(url);
+                httpPost.setHeader("Content-Type", "application/json");
+                httpPost.setEntity(new StringEntity(jsonPayload, ContentType.APPLICATION_JSON));
+
+                return httpClient.execute(httpPost, httpResponse -> {
+                    int statusCode = httpResponse.getCode();
+                    String responseBody = EntityUtils.toString(httpResponse.getEntity());
+                    if (statusCode != 200) {
+                        // Log raw error for debugging
+                        org.slf4j.LoggerFactory.getLogger(RagService.class)
+                            .error("Gemini OCR API error {}: {}", statusCode, responseBody);
+                        return Map.of("error", "Gemini API lỗi (" + statusCode + "). Vui lòng thử lại.");
+                    }
+                    try {
+                        Map<String, Object> responseMap = objectMapper.readValue(responseBody, Map.class);
+                        List<Map<String, Object>> candidates = (List<Map<String, Object>>) responseMap.get("candidates");
+                        if (candidates != null && !candidates.isEmpty()) {
+                            Map<String, Object> candidate = candidates.get(0);
+                            Map<String, Object> responseContent = (Map<String, Object>) candidate.get("content");
+                            List<Map<String, Object>> parts = (List<Map<String, Object>>) responseContent.get("parts");
+                            if (parts != null && !parts.isEmpty()) {
+                                String text = (String) parts.get(0).get("text");
+                                // Strip any markdown code fences Gemini might add
+                                text = text.replaceAll("```json\\s*", "").replaceAll("```\\s*", "").trim();
+                                return objectMapper.readValue(text, Map.class);
+                            }
+                        }
+                    } catch (Exception e) {
+                        org.slf4j.LoggerFactory.getLogger(RagService.class)
+                            .error("OCR parse error. Raw response: {}", responseBody, e);
+                        return Map.of("error", "Không thể phân tích phản hồi AI: " + e.getMessage());
+                    }
+                    return Map.of("error", "Không có phản hồi từ AI");
+                });
+            }
+        } catch (Exception e) {
+            return Map.of("error", "Lỗi trích xuất thông tin: " + e.getMessage());
+        }
+    }
+
+    /**
      * Ask AI using Gemini API via HTTP call
      */
     @SuppressWarnings("unchecked")
@@ -243,7 +341,7 @@ public class RagService {
             }
 
             String prompt = buildAugmentedPrompt(userQuery);
-            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + geminiApiKey;
+            String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=" + geminiApiKey;
 
             // Build request payload for Gemini API
             Map<String, Object> requestBody = new HashMap<>();

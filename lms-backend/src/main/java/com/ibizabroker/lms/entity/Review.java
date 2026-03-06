@@ -41,6 +41,12 @@ public class Review {
     @Column(nullable = false)
     private boolean approved = false; // Trạng thái phê duyệt, mặc định là false
 
+    @Column(name = "admin_reply", columnDefinition = "TEXT")
+    private String adminReply;
+
+    @Column(name = "admin_reply_date")
+    private LocalDateTime adminReplyDate;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -66,6 +72,10 @@ public class Review {
     public void setImages(String images) { this.images = images; }
     public boolean isApproved() { return approved; }
     public void setApproved(boolean approved) { this.approved = approved; }
+    public String getAdminReply() { return adminReply; }
+    public void setAdminReply(String adminReply) { this.adminReply = adminReply; }
+    public LocalDateTime getAdminReplyDate() { return adminReplyDate; }
+    public void setAdminReplyDate(LocalDateTime adminReplyDate) { this.adminReplyDate = adminReplyDate; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public java.util.List<ReviewLike> getLikes() { return likes; }

@@ -67,6 +67,16 @@ public class UserService {
         user.setName(userDetails.getName());
         user.setUsername(userDetails.getUsername());
 
+        if (userDetails.getEmail() != null) {
+            user.setEmail(userDetails.getEmail());
+        }
+        if (userDetails.getStudentClass() != null) {
+            user.setStudentClass(userDetails.getStudentClass());
+        }
+        if (userDetails.getPhoneNumber() != null) {
+            user.setPhoneNumber(userDetails.getPhoneNumber());
+        }
+
         if (userDetails.getRoles() != null && !userDetails.getRoles().isEmpty()) {
             Set<Role> newRoles = mapRoles(new HashSet<>(userDetails.getRoles()));
             user.setRoles(newRoles);
@@ -103,6 +113,10 @@ public class UserService {
         dto.setUserId(user.getUserId());
         dto.setName(user.getName());
         dto.setUsername(user.getUsername());
+        dto.setEmail(user.getEmail());
+        dto.setStudentClass(user.getStudentClass());
+        dto.setPhoneNumber(user.getPhoneNumber());
+        dto.setAvatarUrl(user.getAvatar());
         dto.setActive(user.getActive());
         dto.setRoles(user.getRoles().stream().map(Role::getRoleName).collect(Collectors.toList()));
         return dto;
@@ -111,6 +125,11 @@ public class UserService {
     public Users updateUserStatus(Integer id, Boolean active) {
         Users user = getUserById(id);
         user.setActive(active);
+        return usersRepository.save(user);
+    }
+
+    @SuppressWarnings("null")
+    public Users saveUser(Users user) {
         return usersRepository.save(user);
     }
 

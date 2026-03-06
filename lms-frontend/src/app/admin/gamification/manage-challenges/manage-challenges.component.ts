@@ -5,6 +5,7 @@ import {
   GamificationAdminService,
   Challenge,
 } from '../gamification-admin.service';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-manage-challenges',
@@ -188,6 +189,22 @@ import {
               </button>
             </div>
           </form>
+        </div>
+      </div>
+
+      <!-- Delete Confirmation Toast -->
+      <div class="confirm-toast" *ngIf="pendingDeleteId !== null">
+        <div class="confirm-toast-content">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span>Bạn có chắc muốn xóa thử thách này không?</span>
+          <div class="confirm-toast-actions">
+            <button class="btn-confirm-yes" (click)="confirmDelete()">
+              <i class="fas fa-trash"></i> Xóa
+            </button>
+            <button class="btn-confirm-no" (click)="cancelDelete()">
+              <i class="fas fa-times"></i> Hủy
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -467,6 +484,88 @@ import {
       .btn-secondary:hover {
         background: #30363d;
       }
+
+      /* Delete confirmation toast */
+      .confirm-toast {
+        position: fixed;
+        bottom: 2rem;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 9999;
+        animation: slideUpToast 0.25s ease;
+      }
+
+      .confirm-toast-content {
+        background: #2d1f0e;
+        border: 1px solid #f59e0b;
+        border-radius: 10px;
+        padding: 0.875rem 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        color: #fde68a;
+        white-space: nowrap;
+        font-size: 0.9375rem;
+      }
+
+      .confirm-toast-content .fa-exclamation-triangle {
+        color: #f59e0b;
+        font-size: 1.125rem;
+      }
+
+      .confirm-toast-actions {
+        display: flex;
+        gap: 0.5rem;
+        margin-left: 0.5rem;
+      }
+
+      .btn-confirm-yes {
+        background: #dc2626;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 0.375rem 0.875rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: background 0.2s;
+      }
+
+      .btn-confirm-yes:hover {
+        background: #b91c1c;
+      }
+
+      .btn-confirm-no {
+        background: #21262d;
+        color: #f0f6fc;
+        border: 1px solid #30363d;
+        border-radius: 6px;
+        padding: 0.375rem 0.875rem;
+        cursor: pointer;
+        font-size: 0.8125rem;
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        transition: background 0.2s;
+      }
+
+      .btn-confirm-no:hover {
+        background: #30363d;
+      }
+
+      @keyframes slideUpToast {
+        from {
+          opacity: 0;
+          transform: translateX(-50%) translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(-50%) translateY(0);
+        }
+      }
     `,
   ],
 })
@@ -475,8 +574,13 @@ export class ManageChallengesComponent implements OnInit {
   showModal = false;
   isEditMode = false;
   currentChallenge: Challenge = this.getEmptyChallenge();
+  pendingDeleteId: number | null = null;
+  private deleteTimer: any = null;
 
-  constructor(private gamificationService: GamificationAdminService) {}
+  constructor(
+    private gamificationService: GamificationAdminService,
+    private toastr: ToastrService,
+  ) {}
 
   ngOnInit(): void {
     this.loadChallenges();
@@ -489,7 +593,7 @@ export class ManageChallengesComponent implements OnInit {
       },
       error: (error) => {
         console.error('Error loading challenges:', error);
-        alert('Không thể tải danh sách thử thách');
+        this.toastr.error('Không thể tải danh sách thử thách', 'Lỗi');
       },
     });
   }
@@ -522,17 +626,18 @@ export class ManageChallengesComponent implements OnInit {
 
     request.subscribe({
       next: () => {
-        alert(
+        this.toastr.success(
           this.isEditMode
             ? 'Cập nhật thử thách thành công!'
             : 'Tạo thử thách mới thành công!',
+          'Thành công',
         );
         this.loadChallenges();
         this.closeModal();
       },
       error: (error) => {
         console.error('Error saving challenge:', error);
-        alert('Có lỗi xảy ra khi lưu thử thách');
+        this.toastr.error('Có lỗi xảy ra khi lưu thử thách', 'Lỗi');
       },
     });
   }
@@ -542,29 +647,41 @@ export class ManageChallengesComponent implements OnInit {
       this.gamificationService.toggleChallengeActive(challenge.id).subscribe({
         next: () => {
           challenge.active = !challenge.active;
-          alert(`Đã ${challenge.active ? 'kích hoạt' : 'tạm dừng'} thử thách!`);
+          this.toastr.success(`Đã ${challenge.active ? 'kích hoạt' : 'tạm dừng'} thử thách!`, 'Thành công');
         },
         error: (error) => {
           console.error('Error toggling challenge:', error);
-          alert('Không thể thay đổi trạng thái thử thách');
+          this.toastr.error('Không thể thay đổi trạng thái thử thách', 'Lỗi');
         },
       });
     }
   }
 
   deleteChallenge(id: number): void {
-    if (confirm('Bạn có chắc muốn xóa thử thách này?')) {
-      this.gamificationService.deleteChallenge(id).subscribe({
-        next: () => {
-          alert('Xóa thử thách thành công!');
-          this.loadChallenges();
-        },
-        error: (error) => {
-          console.error('Error deleting challenge:', error);
-          alert('Không thể xóa thử thách này');
-        },
-      });
-    }
+    this.pendingDeleteId = id;
+    clearTimeout(this.deleteTimer);
+    this.deleteTimer = setTimeout(() => this.cancelDelete(), 5000);
+  }
+
+  cancelDelete(): void {
+    clearTimeout(this.deleteTimer);
+    this.pendingDeleteId = null;
+  }
+
+  confirmDelete(): void {
+    if (this.pendingDeleteId === null) return;
+    const id = this.pendingDeleteId;
+    this.cancelDelete();
+    this.gamificationService.deleteChallenge(id).subscribe({
+      next: () => {
+        this.toastr.success('Xóa thử thách thành công!', 'Thành công');
+        this.loadChallenges();
+      },
+      error: (error) => {
+        console.error('Error deleting challenge:', error);
+        this.toastr.error('Không thể xóa thử thách này', 'Lỗi');
+      },
+    });
   }
 
   formatDate(dateString: string): string {

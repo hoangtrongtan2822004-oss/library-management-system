@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+  <!-- ==========================================
+       Logback Spring configuration
+       Forces UTF-8 for all appenders so that
+       Vietnamese characters display correctly
+       in the terminal and log files.
+       ========================================== -->
+
+  <springProperty scope="context" name="APP_NAME" source="spring.application.name" defaultValue="lms-backend"/>
+  <springProperty scope="context" name="LOG_FILE"  source="logging.file.name"       defaultValue="logs/application.log"/>
+
+  <!-- ── Console appender (UTF-8) ── -->
+  <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>UTF-8</charset>
+      <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %highlight(%-5level) ${PID:- } --- [%15.15t] %cyan(%-40.40logger{39}) : %msg%n</pattern>
+    </encoder>
+  </appender>
+
+  <!-- ── Rolling file appender (UTF-8) ── -->
+  <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <file>${LOG_FILE}</file>
+    <encoder class="ch.qos.logback.classic.encoder.PatternLayoutEncoder">
+      <charset>UTF-8</charset>
+      <pattern>%d{yyyy-MM-dd'T'HH:mm:ss.SSSXXX} %-5level ${PID:- } --- [%t] %-40.40logger{39} : %msg%n</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+      <fileNamePattern>logs/application.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+      <maxFileSize>10MB</maxFileSize>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>200MB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <!-- ── Spring profile: dev — verbose, console only ── -->
+  <springProfile name="dev">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+    </root>
+    <logger name="com.ibizabroker.lms" level="DEBUG" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+    </logger>
+    <logger name="org.springframework.web"      level="DEBUG" additivity="false"><appender-ref ref="CONSOLE"/></logger>
+    <logger name="org.springframework.security" level="INFO"  additivity="false"><appender-ref ref="CONSOLE"/></logger>
+    <logger name="org.hibernate.SQL"            level="DEBUG" additivity="false"><appender-ref ref="CONSOLE"/></logger>
+  </springProfile>
+
+  <!-- ── Spring profile: prod — INFO+, file only ── -->
+  <springProfile name="prod">
+    <root level="INFO">
+      <appender-ref ref="FILE"/>
+    </root>
+    <logger name="com.ibizabroker.lms" level="INFO" additivity="false">
+      <appender-ref ref="FILE"/>
+    </logger>
+    <logger name="SECURITY" level="WARN" additivity="false">
+      <appender-ref ref="FILE"/>
+    </logger>
+  </springProfile>
+
+  <!-- ── Default (no profile) — INFO+, both appenders ── -->
+  <springProfile name="!dev &amp; !prod">
+    <root level="INFO">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </root>
+    <logger name="com.ibizabroker.lms" level="INFO" additivity="false">
+      <appender-ref ref="CONSOLE"/>
+      <appender-ref ref="FILE"/>
+    </logger>
+  </springProfile>
+
+</configuration>

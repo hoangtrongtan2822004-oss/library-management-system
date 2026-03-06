@@ -82,6 +82,19 @@ public class Books extends BaseEntity {
     private String coverUrl;
 
     /**
+     * Mô tả / tóm tắt nội dung sách.
+     * AI Auto-Tagging: khi admin nhập description, Gemini AI tự động sinh tags.
+     */
+    @Column(name = "description", columnDefinition = "TEXT")
+    private String description;
+
+    /**
+     * Tags do AI sinh ra (lưu dạng JSON array, ví dụ: ["Kỹ năng sống","Công nghệ"]).
+     */
+    @Column(name = "ai_tags", length = 1000)
+    private String aiTags;
+
+    /**
      * Ngày sách được thêm vào thư viện (tự động gán khi persist nếu null)
      */
     @Column(name = "added_date")

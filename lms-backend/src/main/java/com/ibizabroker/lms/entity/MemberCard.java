@@ -15,6 +15,7 @@ import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.CreationTimestamp;
 
 @Getter
 @Setter
@@ -56,10 +57,17 @@ public class MemberCard {
     @JoinColumn(name = "user_id", nullable = false)
     private Users user;
 
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private LocalDateTime createdAt;
+
     @PrePersist
     public void onCreate() {
         if (issuedAt == null) {
             issuedAt = LocalDateTime.now();
+        }
+        if (createdAt == null) {
+            createdAt = LocalDateTime.now();
         }
         if (status == null) {
             status = MemberCardStatus.ACTIVE;

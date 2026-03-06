@@ -9,6 +9,8 @@ import java.util.Optional;
 public interface BadgeRepository extends JpaRepository<Badge, Long> {
 
     Optional<Badge> findByCode(String code);
+
+    boolean existsByCode(String code);
     
     List<Badge> findByIsActiveTrue();
     

@@ -43,6 +43,17 @@ public class JwtRequestFilter extends OncePerRequestFilter {
         // 🔍 Bước 1: Nếu có header Authorization, thử parse token
         if (header != null && header.startsWith("Bearer ")) {
             token = header.substring(7);
+        }
+        
+        // 🔍 SSE fallback: EventSource không gửi được header, nên chấp nhận token qua query param
+        if (token == null) {
+            String queryToken = request.getParameter("token");
+            if (queryToken != null && !queryToken.isBlank()) {
+                token = queryToken;
+            }
+        }
+        
+        if (token != null) {
             try {
                 username = jwtUtil.getUsernameFromToken(token);
             } catch (IllegalArgumentException e) {

@@ -56,6 +56,12 @@ public class AdminAuditLogFilter extends OncePerRequestFilter {
             return;
         }
 
+        // Only log state-changing operations; skip read-only requests
+        String method = request.getMethod();
+        if ("GET".equalsIgnoreCase(method) || "HEAD".equalsIgnoreCase(method) || "OPTIONS".equalsIgnoreCase(method)) {
+            return;
+        }
+
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth == null) {
             return;

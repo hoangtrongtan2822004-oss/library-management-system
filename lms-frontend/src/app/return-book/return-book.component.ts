@@ -3,7 +3,7 @@ import { Router } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { BorrowService } from '../services/borrow.service';
 import { UserAuthService } from '../services/user-auth.service';
-import { LoanDetails } from '../services/admin.service';
+import { LoanDetails, AdminService } from '../services/admin.service';
 import { ToastrService } from 'ngx-toastr';
 import { BooksService } from '../services/books.service';
 
@@ -59,7 +59,7 @@ export class ReturnBookComponent implements OnInit {
     {
       value: 'SLIGHTLY_DAMAGED',
       label: 'Hư hỏng nhẹ',
-      damageFee: 50000,
+      damageFee: 20000,
       description: 'Rách nhẹ, gấp góc trang',
       icon: 'fa-triangle-exclamation',
       examples: 'Nhàu bìa, gấp góc, rách mép nhỏ, bẩn nhẹ',
@@ -69,7 +69,7 @@ export class ReturnBookComponent implements OnInit {
     {
       value: 'DAMAGED',
       label: 'Hư hỏng nặng',
-      damageFee: 100000,
+      damageFee: 50000,
       description: 'Rách nhiều trang, bẩn nặng',
       icon: 'fa-circle-xmark',
       examples: 'Rách nhiều trang, bung gáy, ẩm mốc, mất trang',
@@ -79,7 +79,7 @@ export class ReturnBookComponent implements OnInit {
     {
       value: 'LOST',
       label: 'Mất sách',
-      damageFee: 200000,
+      damageFee: 100000,
       description: 'Không tìm thấy sách (đền 200% giá trị)',
       icon: 'fa-book',
       examples: 'Không hoàn trả được bản sách đã mượn',
@@ -100,16 +100,19 @@ export class ReturnBookComponent implements OnInit {
   searchResults: LoanDetails[] = [];
   isSearching = false;
 
+  isAdmin = false;
+
   errorMessage = '';
   successMessage = '';
 
   // Fine calculation settings (TODO: load from backend)
-  finePerDay = 5000; // 5,000 VND per day
+  finePerDay = 2000; // 2,000 VND per day
   maxFine = 200000; // Max 200,000 VND
 
   constructor(
     private borrowService: BorrowService,
     private booksService: BooksService,
+    private adminService: AdminService,
     private userAuthService: UserAuthService,
     private router: Router,
     private toastr: ToastrService,
@@ -117,6 +120,7 @@ export class ReturnBookComponent implements OnInit {
 
   ngOnInit(): void {
     this.userId = this.userAuthService.getUserId();
+    this.isAdmin = this.userAuthService.isAdmin();
 
     if (!this.userId) {
       this.router.navigate(['/login'], {
@@ -128,15 +132,26 @@ export class ReturnBookComponent implements OnInit {
   }
 
   private loadUserBorrows() {
-    this.borrowService.getMyLoanHistory().subscribe({
-      next: (data: LoanDetails[]) => {
-        this.borrows = (data || []).filter((b) => b.status !== 'RETURNED');
-      },
-      error: (err: HttpErrorResponse) => {
-        console.error('[ReturnBook] getMyLoanHistory error:', err);
-        this.errorMessage = 'Could not retrieve your borrowed books list.';
-      },
-    });
+    if (this.isAdmin) {
+      this.adminService.getAllLoans().subscribe({
+        next: (data: LoanDetails[]) => {
+          this.borrows = (data || []).filter((b) => b.status !== 'RETURNED');
+        },
+        error: () => {
+          this.errorMessage = 'Không thể tải danh sách phiếu mượn.';
+        },
+      });
+    } else {
+      this.borrowService.getMyLoanHistory().subscribe({
+        next: (data: LoanDetails[]) => {
+          this.borrows = (data || []).filter((b) => b.status !== 'RETURNED');
+        },
+        error: (err: HttpErrorResponse) => {
+          console.error('[ReturnBook] getMyLoanHistory error:', err);
+          this.errorMessage = 'Could not retrieve your borrowed books list.';
+        },
+      });
+    }
   }
 
   // Search by Loan ID or User
@@ -213,28 +228,27 @@ export class ReturnBookComponent implements OnInit {
   openPreviewModal(loan: LoanDetails): void {
     this.selectedCondition = 'NORMAL';
     this.finePaymentMethod = 'CASH';
-    this.returnPreview = this.calculateFine(loan);
+    // Use coverUrl from loan data directly (now included in LoanDetailsDto)
+    const coverUrl = loan.bookCoverUrl || (loan as any).coverUrl;
+    this.returnPreview = {
+      ...this.calculateFine(loan),
+      bookCoverUrl: coverUrl,
+    } as ReturnPreview;
     this.showPreviewModal = true;
 
-    if (loan.bookId) {
+    // Fallback: fetch cover if not in loan data
+    if (!coverUrl && loan.bookId) {
       this.booksService.getBookById(loan.bookId).subscribe({
         next: (book) => {
-          if (
-            !this.returnPreview ||
-            this.returnPreview.loanId !== loan.loanId
-          ) {
+          if (!this.returnPreview || this.returnPreview.loanId !== loan.loanId)
             return;
-          }
-
           this.returnPreview = {
             ...this.returnPreview,
             bookName: this.returnPreview.bookName || book.name,
-            bookCoverUrl: book.coverUrl || this.returnPreview.bookCoverUrl,
+            bookCoverUrl: book.coverUrl,
           } as ReturnPreview;
         },
-        error: () => {
-          // Keep fallback image and existing data when detail API fails
-        },
+        error: () => {},
       });
     }
   }

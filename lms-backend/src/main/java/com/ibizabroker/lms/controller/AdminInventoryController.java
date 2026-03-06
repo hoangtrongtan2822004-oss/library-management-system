@@ -65,6 +65,7 @@ public class AdminInventoryController {
 
     @GetMapping("/sessions/{sessionId}/export/excel")
     @PreAuthorize("hasRole('ADMIN')")
+    @SuppressWarnings("null") // MediaType.APPLICATION_OCTET_STREAM is a non-null constant; Spring API lacks @NonNull
     public ResponseEntity<byte[]> exportExcel(@PathVariable Long sessionId) throws IOException {
         byte[] data = inventoryService.exportSummaryExcel(sessionId);
         String filename = "inventory-report-" + LocalDate.now() + ".xlsx";

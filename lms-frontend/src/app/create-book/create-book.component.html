@@ -57,6 +57,39 @@
             >
           </div>
 
+          <!-- AI OCR Card -->
+          <div class="alert alert-info p-2 mb-3">
+            <div class="d-flex align-items-center gap-2">
+              <i class="fas fa-robot fa-lg"></i>
+              <div class="grow">
+                <strong>✨ AI Nhận diện ảnh</strong>
+                <div class="small text-muted">
+                  Upload ảnh bìa/mục lục, AI tự điền tên sách, tác giả, ISBN
+                </div>
+              </div>
+              <label
+                class="btn btn-info btn-sm mb-0"
+                [class.disabled]="isExtractingOcr"
+                title="Chọn ảnh bìa hoặc mục lục để AI trích xuất thông tin"
+              >
+                <i
+                  class="fas"
+                  [ngClass]="
+                    isExtractingOcr ? 'fa-spinner fa-spin' : 'fa-camera'
+                  "
+                ></i>
+                {{ isExtractingOcr ? "Đang xử lý..." : "Chọn ảnh" }}
+                <input
+                  type="file"
+                  accept="image/*"
+                  class="d-none"
+                  (change)="extractFromImage($event)"
+                  [disabled]="isExtractingOcr"
+                />
+              </label>
+            </div>
+          </div>
+
           <div class="mb-3">
             <label for="name" class="form-label"
               >Tên Sách <span class="required">*</span></label
@@ -90,6 +123,42 @@
             />
             <small class="form-text text-muted"
               >Dùng cho kiểm kê để xác định sách đúng kệ.</small
+            >
+          </div>
+
+          <!-- Mô tả sách với AI -->
+          <div class="mb-3">
+            <label
+              for="description"
+              class="form-label d-flex align-items-center gap-2"
+            >
+              Mô tả sách
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                (click)="generateDescription()"
+                [disabled]="!book.name || isGeneratingDescription"
+                title="AI tự động tạo mô tả dựa trên tên, tác giả và thể loại"
+              >
+                <span
+                  *ngIf="isGeneratingDescription"
+                  class="spinner-border spinner-border-sm me-1"
+                ></span>
+                <span *ngIf="!isGeneratingDescription">✨</span>
+                {{ isGeneratingDescription ? "Đang tạo..." : "AI tạo mô tả" }}
+              </button>
+            </label>
+            <textarea
+              class="form-control"
+              id="description"
+              name="description"
+              [(ngModel)]="book.description"
+              rows="4"
+              placeholder="Nhập mô tả sách hoặc dùng AI tạo tự động..."
+            ></textarea>
+            <small class="form-text text-muted"
+              >Nhập tên sách trước, sau đó nhấn ✨ AI tạo mô tả để tự động
+              điền.</small
             >
           </div>
 

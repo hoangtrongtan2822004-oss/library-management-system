@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { ChangeDetectorRef, Component } from '@angular/core';
 import { Router, NavigationEnd, RouterOutlet } from '@angular/router';
 import {
   trigger,
@@ -63,10 +63,17 @@ export class AppComponent {
   constructor(
     private router: Router,
     private themeService: ThemeService,
+    private cdr: ChangeDetectorRef,
   ) {
     this.router.events
       .pipe(filter((e) => e instanceof NavigationEnd))
-      .subscribe(() => this.updateFlag());
+      .subscribe(() => {
+        this.updateFlag();
+        // Flush state immediately so Angular's consistency check sees the settled
+        // value — prevents NG0100 when outlet animation switches from 'root' to
+        // the actual route animation key (e.g. 'forbidden') in dev mode.
+        this.cdr.detectChanges();
+      });
     this.updateFlag(); // set lần đầu khi load trang
   }
 

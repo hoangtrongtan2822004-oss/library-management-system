@@ -49,6 +49,11 @@ export class AdminNewsComponent implements OnInit {
   previewingItem?: NewsItem;
   isCreatingNewItem = false;
 
+  // Delete confirmation modal state
+  showDeleteModal = false;
+  deletingItem?: NewsItem;
+  isDeleting = false;
+
   private apiUrl = environment.apiBaseUrl;
 
   // Quill editor configuration
@@ -151,18 +156,45 @@ export class AdminNewsComponent implements OnInit {
 
   delete(item: NewsItem) {
     if (!item.id) return;
+    this.deletingItem = item;
+    this.showDeleteModal = true;
+  }
 
-    if (!confirm(`Xác nhận xóa tin tức: ${item.title}?`)) {
-      return;
-    }
+  confirmDelete() {
+    if (!this.deletingItem?.id) return;
+    this.isDeleting = true;
+    const id = this.deletingItem.id;
+    const title = this.deletingItem.title;
 
-    this.http.delete<void>(`${this.apiUrl}/admin/news/${item.id}`).subscribe({
+    this.http.delete<void>(`${this.apiUrl}/admin/news/${id}`).subscribe({
       next: () => {
-        this.items = this.items.filter((i) => i.id !== item.id);
-        this.toastr.success('Xóa tin tức thành công');
+        this.items = this.items.filter((i) => i.id !== id);
+        this.toastr.success(
+          `Đã xóa tin tức "${title}" thành công`,
+          'Xóa thành công',
+          {
+            timeOut: 4000,
+            progressBar: true,
+          },
+        );
+        this.showDeleteModal = false;
+        this.deletingItem = undefined;
+        this.isDeleting = false;
       },
-      error: () => this.toastr.error('Xóa thất bại'),
+      error: () => {
+        this.toastr.error('Xóa tin tức thất bại. Vui lòng thử lại.', 'Lỗi', {
+          timeOut: 4000,
+          progressBar: true,
+        });
+        this.isDeleting = false;
+      },
     });
+  }
+
+  cancelDelete() {
+    this.showDeleteModal = false;
+    this.deletingItem = undefined;
+    this.isDeleting = false;
   }
 
   onImageSelect(event: Event, isEditing: boolean = false) {

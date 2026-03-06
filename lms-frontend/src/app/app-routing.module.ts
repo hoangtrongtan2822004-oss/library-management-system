@@ -14,28 +14,14 @@ import { UserDetailsComponent } from './user-details/user-details.component';
 import { UsersListComponent } from './users-list/users-list.component';
 import { AuthGuard } from './auth/auth.guard';
 import { SignupComponent } from './signup/signup.component';
-import { DashboardComponent } from './admin/dashboard/dashboard.component';
-import { LoanManagementComponent } from './admin/loan-management/loan-management.component';
 import { MyAccountComponent } from './my-account/my-account.component';
-import { ManageFinesComponent } from './admin/manage-fines/manage-fines.component';
-import { ManageReviewsComponent } from './admin/manage-reviews/manage-reviews.component';
-import { CreateUserComponent } from './create-user/create-user.component'; // <-- THÊM IMPORT
+import { CreateUserComponent } from './create-user/create-user.component';
 import { LogoutComponent } from './logout/logout.component';
-import { CreateLoanComponent } from './admin/create-loan/create-loan.component';
 import { WishlistComponent } from './wishlist/wishlist.component';
-import { AdminScannerComponent } from './admin/admin-scanner/admin-scanner.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
-import { AdminSettingsComponent } from './admin/admin-settings/admin-settings.component';
-import { ManageCategoriesComponent } from './admin/manage-categories/manage-categories.component';
-import { ManageAuthorsComponent } from './admin/manage-authors/manage-authors.component';
-import { ImportExportComponent } from './admin/import-export/import-export.component';
-import { AdminNewsComponent } from './admin/admin-news/admin-news.component';
-import { RenewalsComponent } from './admin/renewals/renewals.component';
 import { RulesComponent } from './rules/rules.component';
 import { GamificationComponent } from './gamification/gamification.component';
-import { AuditLogsComponent } from './admin/audit-logs/audit-logs.component';
-import { MemberCardsComponent } from './admin/member-cards/member-cards.component';
 
 const routes: Routes = [
   // ADMIN pages
@@ -87,98 +73,13 @@ const routes: Routes = [
     canActivate: [AuthGuard],
     data: { roles: ['ROLE_ADMIN'] },
   },
+  // 🔐 Admin module — lazy-loaded (never bundled into the initial JS sent to users)
   {
-    path: 'admin/dashboard',
-    component: DashboardComponent,
+    path: 'admin',
     canActivate: [AuthGuard],
     data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/loans',
-    component: LoanManagementComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/fines',
-    component: ManageFinesComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/reviews',
-    component: ManageReviewsComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/categories',
-    component: ManageCategoriesComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/authors',
-    component: ManageAuthorsComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/import-export',
-    component: ImportExportComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/news',
-    component: AdminNewsComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/create-loan',
-    component: CreateLoanComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/scanner',
-    component: AdminScannerComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/settings',
-    component: AdminSettingsComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/renewals',
-    component: RenewalsComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/audit-logs',
-    component: AuditLogsComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/member-cards',
-    component: MemberCardsComponent,
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
-  },
-  {
-    path: 'admin/gamification',
     loadChildren: () =>
-      import('./admin/gamification/gamification.routes').then(
-        (m) => m.gamificationRoutes,
-      ),
-    canActivate: [AuthGuard],
-    data: { roles: ['ROLE_ADMIN'] },
+      import('./admin/admin.module').then((m) => m.AdminModule),
   },
 
   // USER pages

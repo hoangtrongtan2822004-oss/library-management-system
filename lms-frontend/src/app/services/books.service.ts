@@ -154,6 +154,50 @@ export class BooksService {
   }
 
   /**
+   * Collaborative Filtering: Books frequently borrowed together with this book
+   */
+  public getAlsoBorrowedBooks(
+    bookId: number,
+    size: number = 6,
+  ): Observable<Book[]> {
+    const params = new HttpParams().set('size', size.toString());
+    return this.http
+      .get<
+        ApiResponse<Book[]>
+      >(this.apiService.buildUrl(`/public/books/${bookId}/also-borrowed`), { params, context: new HttpContext().set(IS_PUBLIC_API, true) })
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * AI-powered similar books using Pinecone vector search
+   */
+  public getAiSimilarBooks(
+    bookId: number,
+    size: number = 5,
+  ): Observable<Book[]> {
+    const params = new HttpParams().set('size', size.toString());
+    return this.http
+      .get<
+        ApiResponse<Book[]>
+      >(this.apiService.buildUrl(`/public/books/${bookId}/ai-similar`), { params, context: new HttpContext().set(IS_PUBLIC_API, true) })
+      .pipe(map((response) => response.data));
+  }
+
+  /**
+   * AI OCR: extract book info from cover/TOC image via Gemini Vision
+   */
+  public extractBookInfo(image: File): Observable<any> {
+    const formData = new FormData();
+    formData.append('image', image);
+    return this.http
+      .post<any>(
+        this.apiService.buildUrl('/admin/books/extract-info'),
+        formData,
+      )
+      .pipe(map((response: any) => response?.data || response));
+  }
+
+  /**
    * Get personalized recommendations for current user
    */
   public getRecommendations(size: number = 6): Observable<Book[]> {
@@ -425,6 +469,32 @@ export class BooksService {
     return this.http.get(
       this.apiService.buildUrl('/admin/import/template/books'),
       { responseType: 'blob' },
+    );
+  }
+
+  /**
+   * Ask AI to generate a Vietnamese book description (150-250 words) for an existing book
+   */
+  public generateBookDescription(
+    bookId: number,
+  ): Observable<{ data: { description: string } }> {
+    return this.http.post<{ data: { description: string } }>(
+      this.apiService.buildUrl(`/admin/books/${bookId}/generate-description`),
+      {},
+    );
+  }
+
+  /**
+   * Preview AI-generated description for a book not yet saved (no ID needed)
+   */
+  public previewBookDescription(
+    name: string,
+    authors: string[],
+    categories: string[],
+  ): Observable<{ data: { description: string } }> {
+    return this.http.post<{ data: { description: string } }>(
+      this.apiService.buildUrl('/admin/books/describe'),
+      { name, authors, categories },
     );
   }
 }

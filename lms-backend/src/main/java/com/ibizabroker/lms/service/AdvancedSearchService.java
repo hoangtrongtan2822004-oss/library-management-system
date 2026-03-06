@@ -45,6 +45,7 @@ public class AdvancedSearchService {
      * Gợi ý sách tương tự (dựa trên thể loại và tác giả)
      */
     @Cacheable(value = "similar-books", key = "#bookId + '|' + #limit")
+    @SuppressWarnings("null")
     public List<Books> getSimilarBooks(Integer bookId, int limit) {
         Books book = booksRepository.findById(bookId).orElse(null);
         if (book == null) return Collections.emptyList();

@@ -1,4 +1,5 @@
 import {
+  ChangeDetectionStrategy,
   Component,
   EventEmitter,
   Input,
@@ -29,6 +30,7 @@ import {
   templateUrl: './pagination.component.html',
   styleUrls: ['./pagination.component.css'],
   standalone: false,
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PaginationComponent implements OnChanges {
   @Input() currentPage: number = 0; // 0-indexed

@@ -24,6 +24,7 @@ import static org.mockito.Mockito.*;
  * Unit tests for BookService
  */
 @ExtendWith(MockitoExtension.class)
+@SuppressWarnings("null")
 class BookServiceTest {
 
     @Mock

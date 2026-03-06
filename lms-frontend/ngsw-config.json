@@ -1,0 +1,49 @@
+{
+  "$schema": "./node_modules/@angular/service-worker/config/schema.json",
+  "index": "/index.html",
+  "assetGroups": [
+    {
+      "name": "app-shell",
+      "installMode": "prefetch",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": [
+          "/favicon.ico",
+          "/index.html",
+          "/manifest.webmanifest",
+          "/*.css",
+          "/*.js"
+        ]
+      }
+    },
+    {
+      "name": "assets",
+      "installMode": "lazy",
+      "updateMode": "prefetch",
+      "resources": {
+        "files": ["/assets/**"]
+      }
+    }
+  ],
+  "dataGroups": [
+    {
+      "name": "api-books",
+      "urls": ["/api/public/books*", "/api/public/categories*"],
+      "cacheConfig": {
+        "maxSize": 50,
+        "maxAge": "1h",
+        "timeout": "10s",
+        "strategy": "freshness"
+      }
+    },
+    {
+      "name": "api-auth",
+      "urls": ["/api/auth/**"],
+      "cacheConfig": {
+        "maxSize": 5,
+        "maxAge": "0s",
+        "strategy": "freshness"
+      }
+    }
+  ]
+}
