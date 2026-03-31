@@ -25,9 +25,12 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import java.util.Arrays;
 import java.util.List;
 
+import lombok.RequiredArgsConstructor;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
+@RequiredArgsConstructor
 public class WebSecurityConfiguration {
 
     private final JwtRequestFilter jwtRequestFilter;
@@ -35,18 +38,8 @@ public class WebSecurityConfiguration {
     private final JwtAuthenticationEntryPoint authenticationEntryPoint;
     private final UserDetailsService userDetailsService;
 
-    @Value("${allowed.origins:http://localhost:4200}")
+    @Value("${app.cors.allowed-origins:${allowed.origins:http://localhost:4200}}")
     private String allowedOrigins;
-
-    public WebSecurityConfiguration(JwtRequestFilter jwtRequestFilter,
-                                    AdminAuditLogFilter adminAuditLogFilter,
-                                    JwtAuthenticationEntryPoint authenticationEntryPoint,
-                                    UserDetailsService userDetailsService) {
-        this.jwtRequestFilter = jwtRequestFilter;
-        this.adminAuditLogFilter = adminAuditLogFilter;
-        this.authenticationEntryPoint = authenticationEntryPoint;
-        this.userDetailsService = userDetailsService;
-    }
 
     @Bean
     public PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
@@ -70,6 +63,7 @@ public class WebSecurityConfiguration {
         CorsConfiguration c = new CorsConfiguration();
         List<String> origins = Arrays.stream(allowedOrigins.split(","))
             .map(String::trim)
+            .map(s -> s.endsWith("/") ? s.substring(0, s.length() - 1) : s)
             .filter(s -> !s.isEmpty())
             .toList();
         
