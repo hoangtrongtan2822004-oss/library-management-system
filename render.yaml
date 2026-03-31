@@ -45,11 +45,15 @@ services:
           type: redis
           name: lms-redis
           property: port
-      - key: REDIS_PASSWORD
+      - key: SPRING_DATA_REDIS_URL
         fromService:
           type: redis
           name: lms-redis
-          property: password
+          property: connectionString
+
+      # Optional manual override if your Redis plan requires explicit password env.
+      - key: REDIS_PASSWORD
+        sync: false
 
       - key: JAVA_OPTS
         value: -Xms256m -Xmx512m -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
