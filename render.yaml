@@ -66,12 +66,13 @@ services:
       - key: MAIL_PASSWORD
         sync: false
 
+  - type: redis
+    name: lms-redis
+    ipAllowList: []
+    plan: free
+
 databases:
   - name: lms-db
     databaseName: lms_db
     user: lms_user
     plan: free
-
-  - name: lms-redis
-    plan: free
-    maxmemoryPolicy: allkeys-lru
