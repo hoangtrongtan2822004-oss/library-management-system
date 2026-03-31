@@ -1,52 +1,17 @@
-# 🚂 Deploy Backend lên Render - MIỄN PHÍ!
-
-## ✅ Tại sao chọn Render?
-
-- ✨ **Miễn phí** (với giới hạn hợp lý)
-- 🗄️ **PostgreSQL/MySQL free tier**
-- ⚡ **Auto deploy** từ GitHub
-- 🔒 **HTTPS tự động**
-- 🐳 **Hỗ trợ Docker** natively
-- 💪 **No credit card required**
-
----
-
-## 🚀 Bước 1: Chuẩn bị Backend
-
-### 1.1. Tạo Dockerfile (đã có sẵn)
-
-Kiểm tra `lms-backend/Dockerfile`:
-
-```dockerfile
-# Multi-stage build
-FROM maven:3.9.9-eclipse-temurin-21-alpine AS build
-WORKDIR /app
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
-COPY src ./src
-RUN mvn clean package -DskipTests -B
-
-FROM eclipse-temurin:21-jre-alpine
-WORKDIR /app
-RUN apk add --no-cache wget
-COPY --from=build /app/target/*.jar app.jar
-EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "java ${JAVA_OPTS} -jar app.jar"]
-```
-
-### 1.2. Tạo file render.yaml (Blueprint)
-
-```yaml
 services:
-  # Spring Boot Backend
   - type: web
     name: lms-backend
     env: docker
     dockerfilePath: ./lms-backend/Dockerfile
     dockerContext: ./lms-backend
+    healthCheckPath: /actuator/health
+    autoDeploy: true
     envVars:
       - key: SPRING_PROFILES_ACTIVE
         value: prod
+
+      # DB_URL is preferred by application-prod.properties
+      # Render will inject the database connection string from managed Postgres.
       - key: DB_URL
         fromDatabase:
           name: lms-db
@@ -59,9 +24,17 @@ services:
         fromDatabase:
           name: lms-db
           property: password
+      - key: DB_DRIVER_CLASS_NAME
+        value: org.postgresql.Driver
+      - key: DB_DIALECT
+        value: org.hibernate.dialect.PostgreSQLDialect
+
       - key: APP_JWT_SECRET
         generateValue: true
-        length: 32
+
+      - key: CORS_ALLOWED_ORIGINS
+        sync: false
+
       - key: REDIS_HOST
         fromService:
           type: redis
@@ -72,19 +45,33 @@ services:
           type: redis
           name: lms-redis
           property: port
+      - key: REDIS_PASSWORD
+        fromService:
+          type: redis
+          name: lms-redis
+          property: password
+
       - key: JAVA_OPTS
-        value: "-Xms256m -Xmx512m"
-    healthCheckPath: /actuator/health
-    autoDeploy: true
+        value: -Xms256m -Xmx512m -XX:MaxRAMPercentage=75.0 -XX:+UseG1GC
+
+      # Optional integrations: set these in Render dashboard if needed.
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MAIL_HOST
+        value: smtp.gmail.com
+      - key: MAIL_PORT
+        value: "587"
+      - key: MAIL_USERNAME
+        sync: false
+      - key: MAIL_PASSWORD
+        sync: false
 
 databases:
-  # MySQL Database (Free tier: 1GB storage)
   - name: lms-db
     databaseName: lms_db
     user: lms_user
-    plan: starter  # FREE tier
+    plan: free
 
-  # Redis (Free tier: 25MB)
   - name: lms-redis
-    plan: starter  # FREE tier
+    plan: free
     maxmemoryPolicy: allkeys-lru
